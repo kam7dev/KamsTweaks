@@ -35,6 +35,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.Particle.DustOptions;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -68,8 +69,8 @@ public class LandClaims implements Listener {
             Location corner1,
             Location corner2,
             double step,
-            Particle particle,
-            int durationTicks
+            int durationTicks,
+	    Color color
     ) {
         double minX = Math.min(corner1.getX(), corner2.getX());
         double maxX = Math.max(corner1.getX(), corner2.getX()) + 1;
@@ -104,7 +105,8 @@ public class LandClaims implements Listener {
                             // Only edges and corners
                             if (faces >= 2) {
                                 Location loc = new Location(world, x, y, z);
-                                player.spawnParticle(particle, loc, 0, 0, 0, 0, 0);
+				DustOptions options = new DustOptions(color, 1.0F); 
+                                player.spawnParticle(Particle.DUST, loc, 0, 0, 0, 0, 0, options);
                             }
                         }
                     }
@@ -174,7 +176,29 @@ public class LandClaims implements Listener {
                 e.getWhoClicked().closeInventory();
                 Player plr = Bukkit.getPlayer(e.getWhoClicked().getUniqueId());
                 for (Claim claim : claims) {
-                    showArea(plr.getPlayer(), claim.m_start, claim.m_end, 1, Particle.CLOUD, 100);
+			Color c;
+			if (claim.m_owner == plr) {
+				c = Color.GREEN;
+			} else {
+				switch(claim.m_perms.getOrDefault(plr, claim.m_default)) {
+					case NONE: 
+						c = Color.RED;
+						break;
+					case DOORS:
+						c = Color.ORANGE;
+						break;
+					case INTERACT: 
+						c = Color.PURPLE;
+						break;
+					case BLOCKS:
+						c = Color.AQUA;
+						break;
+					default:
+						c = Color.SILVER;
+						break;
+				}
+			}
+                    showArea(plr.getPlayer(), claim.m_start, claim.m_end, 1, 100, c);
                 }
             }
         }
