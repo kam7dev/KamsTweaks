@@ -1,6 +1,8 @@
 package kam.kamsTweaks.features;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -15,17 +17,18 @@ public class ItemManager {
     public enum ItemType {
         CLAIMER
     }
-    private Map<ItemType, ItemStack> items;
-    private boolean initialized = false;
+    private static Map<ItemType, ItemStack> items;
+    private static boolean initialized = false;
 
-    void init() {
+    static void init() {
         initialized = true;
         items = new HashMap<>();
         {
-            ItemStack item = new ItemStack(Material.BAMBOO_FENCE);
+            ItemStack item = new ItemStack(Material.STRUCTURE_VOID);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Land Claim Tool"));
+                meta.displayName(
+                        Component.text("Land Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
                 meta.addEnchant(Enchantment.PROTECTION, 5, true);
                 NamespacedKey key = new NamespacedKey("kamstweaks", "item");
                 meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "claimer");
@@ -35,12 +38,12 @@ public class ItemManager {
         }
     }
 
-    public ItemStack createItem(ItemType type) {
+    public static ItemStack createItem(ItemType type) {
         if (!initialized) init();
         return items.get(type);
     }
 
-    public ItemType getType(ItemStack item) {
+    public static ItemType getType(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             NamespacedKey key = new NamespacedKey("kamstweaks", "item");

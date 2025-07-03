@@ -1,5 +1,10 @@
 package kam.kamsTweaks;
 
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.features.landclaims.LandClaims;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -16,6 +21,7 @@ public final class KamsTweaks extends JavaPlugin {
         return m_instance;
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     @Override
     public void onEnable() {
         m_instance = this;
@@ -25,6 +31,11 @@ public final class KamsTweaks extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(m_seedDispenser, this);
         getServer().getPluginManager().registerEvents(m_landClaims, this);
+
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+            m_landClaims.registerCommands(commands);
+        });
+
     }
 
     @Override
