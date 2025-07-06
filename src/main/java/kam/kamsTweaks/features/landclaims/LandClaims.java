@@ -19,21 +19,8 @@ import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.TNTPrimed;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.inventory.*;
+import org.bukkit.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.Particle.DustOptions;
 import org.jetbrains.annotations.NotNull;
@@ -42,29 +29,30 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import static kam.kamsTweaks.features.landclaims.LandClaimGui.createGuiItem;
 import static org.bukkit.Bukkit.getServer;
 
-public class LandClaims implements Listener {
-    private final List<Claim> claims = new ArrayList<>();
-    private final List<Claim> claiming = new ArrayList<>();
-    public record Result(boolean permission, Claim claim) {}
+public class LandClaims {
+    public final List<Claim> claims = new ArrayList<>();
+    public final List<Claim> claiming = new ArrayList<>();
+
     private File claimsFile;
     private FileConfiguration claimsConfig;
     boolean loadSuccess = false;
 
-    private final Inventory inv;
-    private final ItemStack claimGuiItem;
-    private final ItemStack showClaimsItem;
-    private final ItemStack editPermissionItem;
+    public List<Entity> cleanupList = new ArrayList<>();
+
+    LandClaimsProtection prot;
+    LandClaimGui gui;
+
+    public void setup() {
+        getServer().getPluginManager().registerEvents(prot, KamsTweaks.getInstance());
+        getServer().getPluginManager().registerEvents(gui, KamsTweaks.getInstance());
+    }
 
     public LandClaims() {
-        inv = Bukkit.createInventory(null, 9, Component.text("Land Claims"));
-        claimGuiItem = createGuiItem(Material.SHIELD, Component.text("Claim").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Claim land.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-        showClaimsItem = createGuiItem(Material.GLASS, Component.text("View Claims").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Show claims with particles.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-        editPermissionItem = createGuiItem(Material.IRON_DOOR, Component.text("Edit Permissions").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Edit permissions for the claim you're currently in.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Only works if you own the claim you're in").color(NamedTextColor.LIGHT_PURPLE).decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true));
-        inv.setItem(3, editPermissionItem);
-        inv.setItem(4, claimGuiItem);
-        inv.setItem(5, showClaimsItem);
+        prot = new LandClaimsProtection(this);
+        gui = new LandClaimGui(this);
     }
 
     public void showArea(
@@ -134,123 +122,21 @@ public class LandClaims implements Listener {
         return false;
     }
 
-    Result getClaim(Player player, Location where, ClaimPermission perm) {
+    boolean hasPermission(Player player, Claim claim, ClaimPermission perm) {
+        if (player != null && claim != null && claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) return true;
+        ClaimPermission claimPerm = claim.m_perms.getOrDefault(player != null ? getServer().getOfflinePlayer(player.getUniqueId()) : null, claim.m_default);
+        return claimPerm.compareTo(perm) >= 0;
+    }
+
+    Claim getClaim(Location where) {
         for (Claim claim : claims) {
             if (claim.m_start.getWorld() != where.getWorld()) continue;
             if (inBounds(where, claim.m_start, claim.m_end)) {
-                if (claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) return new Result(true, claim);
-                ClaimPermission claimPerm = claim.m_perms.getOrDefault(getServer().getOfflinePlayer(player.getUniqueId()), claim.m_default);
-                if (claimPerm.compareTo(perm) >= 0) {
-                    return new Result(true, claim);
-                }
-                return new Result(false, claim);
+                return claim;
             }
         }
-        return new Result(true, null);
-    }
-
-    @EventHandler
-    public void onInventoryDrag(final InventoryDragEvent e) {
-        if (e.getInventory().equals(inv)) {
-            e.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onInventoryClick(final InventoryClickEvent e) {
-        if (e.getInventory().equals(inv)) {
-            e.setCancelled(true);
-            if(e.getCurrentItem() == null) return;
-            if (e.getCurrentItem().isSimilar(claimGuiItem)) {
-                e.getWhoClicked().closeInventory();
-                OfflinePlayer plr = Bukkit.getOfflinePlayer(e.getWhoClicked().getUniqueId());
-                for (Claim claim : claiming) {
-                    if (claim.m_owner.getUniqueId().equals(plr.getUniqueId())) {
-                        e.getWhoClicked().sendMessage(Component.text("You're already currently claiming land!").color(NamedTextColor.RED));
-                        return;
-                    }
-                }
-                e.getWhoClicked().sendMessage(Component.text("Click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW)).append(Component.text(")").color(NamedTextColor.GOLD)).color(NamedTextColor.GOLD));
-                Claim c = new Claim(plr, null, null);
-                claiming.add(c);
-            } else if (e.getCurrentItem().isSimilar(showClaimsItem)) {
-                e.getWhoClicked().closeInventory();
-                Player plr = Bukkit.getPlayer(e.getWhoClicked().getUniqueId());
-                for (Claim claim : claims) {
-                    Color c;
-                    if (claim.m_owner != null && claim.m_owner.getUniqueId().equals(plr.getUniqueId())) {
-                        c = Color.GREEN;
-                    } else {
-                        switch(claim.m_perms.getOrDefault(getServer().getOfflinePlayer(plr.getUniqueId()), claim.m_default)) {
-                            case NONE:
-                                c = Color.RED;
-                                break;
-                            case DOORS:
-                                c = Color.ORANGE;
-                                break;
-                            case INTERACT:
-                                c = Color.PURPLE;
-                                break;
-                            case BLOCKS:
-                                c = Color.AQUA;
-                                break;
-                            default:
-                                c = Color.SILVER;
-                                break;
-                        }
-                    }
-                    showArea(plr.getPlayer(), claim.m_start, claim.m_end, 1, 1000, c);
-                }
-            } else if (e.getCurrentItem().isSimilar(editPermissionItem)) {
-                e.getWhoClicked().closeInventory();
-                Player plr = Bukkit.getPlayer(e.getWhoClicked().getUniqueId());
-                for (Claim claim : claims) {
-                    Color c;
-                    if (claim.m_owner != null && claim.m_owner.getUniqueId().equals(plr.getUniqueId())) {
-                        c = Color.GREEN;
-                    } else {
-                        switch(claim.m_perms.getOrDefault(getServer().getOfflinePlayer(plr.getUniqueId()), claim.m_default)) {
-                            case NONE:
-                                c = Color.RED;
-                                break;
-                            case DOORS:
-                                c = Color.ORANGE;
-                                break;
-                            case INTERACT:
-                                c = Color.PURPLE;
-                                break;
-                            case BLOCKS:
-                                c = Color.AQUA;
-                                break;
-                            default:
-                                c = Color.SILVER;
-                                break;
-                        }
-                    }
-                    showArea(plr.getPlayer(), claim.m_start, claim.m_end, 1, 1000, c);
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onBreak(BlockBreakEvent e) {
-        Player player = e.getPlayer();
-        Result res = getClaim(player, e.getBlock().getLocation(), ClaimPermission.BLOCKS);
-        if (!res.permission) {
-            player.sendMessage(Component.text("This land is claimed by ").append(Component.text(res.claim.m_owner == null ? "Unknown" : res.claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
-            e.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onPlace(BlockPlaceEvent e) {
-        Player player = e.getPlayer();
-        Result res = getClaim(player, e.getBlock().getLocation(), ClaimPermission.BLOCKS);
-        if (!res.permission) {
-            player.sendMessage(Component.text("This land is claimed by ").append(Component.text(res.claim.m_owner == null ? "Unknown" : res.claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
-            e.setCancelled(true);
-        }
+        // TRUE
+        return null;
     }
 
     void handleItem(PlayerInteractEvent e) {
@@ -297,81 +183,7 @@ public class LandClaims implements Listener {
                 }
             }
         }
-        e.getPlayer().openInventory(inv);
-    }
-
-    @EventHandler
-    public void onInteract(PlayerInteractEvent e) {
-        if (e.getItem() != null && e.getItem().isSimilar(ItemManager.createItem(ItemManager.ItemType.CLAIMER)) && (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
-            handleItem(e);
-            e.setCancelled(true);
-            return;
-        }
-
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            Player player = e.getPlayer();
-            assert e.getClickedBlock() != null;
-            if (e.getClickedBlock().getType().toString().contains("DOOR")) {
-                Result res = getClaim(player, e.getClickedBlock().getLocation(), ClaimPermission.DOORS);
-                if (!res.permission) {
-                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(res.claim.m_owner == null ? "Unknown" : res.claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
-                    e.setCancelled(true);
-                }
-            } else {
-                Result res = getClaim(player, e.getClickedBlock().getLocation(), ClaimPermission.INTERACT);
-                if (!res.permission) {
-                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(res.claim.m_owner == null ? "Unknown" : res.claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
-                    e.setCancelled(true);
-                }
-            }
-        }
-    }
-
-    protected ItemStack createGuiItem(final Material material, final Component name, final Component... lore) {
-        final ItemStack item = new ItemStack(material, 1);
-        final ItemMeta meta = item.getItemMeta();
-        meta.displayName(name);
-        meta.lore(Arrays.asList(lore));
-        item.setItemMeta(meta);
-
-        return item;
-    }
-
-    @EventHandler
-    public void onTnt(EntityExplodeEvent e) {
-        if (e.getEntity() instanceof TNTPrimed tnt) {
-            if (tnt.getSource() instanceof Player player) {
-                Result res = getClaim(player, e.getEntity().getLocation(), ClaimPermission.BLOCKS);
-                if (!res.permission) {
-                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(res.claim.m_owner == null ? "Unknown" : res.claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
-                    e.setCancelled(true);
-                    tnt.remove();
-                }
-            } else {
-                Result res = getClaim(null, e.getEntity().getLocation(), ClaimPermission.BLOCKS);
-                if (!res.permission) {
-                    e.setCancelled(true);
-                    tnt.remove();
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onItemDamage(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof TNTPrimed tnt) {
-            if (tnt.getSource() instanceof Player player) {
-                Result res = getClaim(player, tnt.getLocation(), ClaimPermission.BLOCKS);
-                if (!res.permission) {
-                    event.setCancelled(true);
-                }
-            } else {
-                Result res = getClaim(null, tnt.getLocation(), ClaimPermission.BLOCKS);
-                if (!res.permission) {
-                    event.setCancelled(true);
-                }
-            }
-        }
+        gui.showClaimGui(e.getPlayer());
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -399,13 +211,13 @@ public class LandClaims implements Listener {
                             sender.sendMessage("Cannot check owner of claim without position.");
                             return Command.SINGLE_SUCCESS;
                         }
-                        Result res = getClaim(null, loc.toLocation(exec == null ? getServer().getWorlds().get(0) : exec.getWorld()), ClaimPermission.NONE);
-                        if (res.claim == null)
+                        Claim res = getClaim(loc.toLocation(exec == null ? getServer().getWorlds().get(0) : exec.getWorld()));
+                        if (res == null)
                             sender.sendMessage(Component.text("This land isn't claimed."));
-                        else if (res.claim.m_owner == null)
-                            sender.sendMessage(Component.text("This claim doesn't have an owner."));
+                        else if (res.m_owner == null)
+                            sender.sendMessage(Component.text("This claim is owned by the server."));
                         else
-                            sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.claim.m_owner.getName()).color(NamedTextColor.GOLD)));
+                            sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName()).color(NamedTextColor.GOLD)));
                         return Command.SINGLE_SUCCESS;
                     })
                     .then(Commands.argument("world", ArgumentTypes.world())
@@ -422,13 +234,13 @@ public class LandClaims implements Listener {
                                 sender.sendMessage("Cannot check owner of claim without world.");
                                 return Command.SINGLE_SUCCESS;
                             }
-                            Result res = getClaim(null, loc.toLocation(world), ClaimPermission.NONE);
-                            if (res.claim == null)
+                            Claim res = getClaim(loc.toLocation(world));
+                            if (res == null)
                                 sender.sendMessage(Component.text("This land isn't claimed."));
-                            else if (res.claim.m_owner == null)
-                                sender.sendMessage(Component.text("This claim doesn't have an owner."));
+                            else if (res.m_owner == null)
+                                sender.sendMessage(Component.text("This claim is owned by the server."));
                             else
-                                sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.claim.m_owner.getName()).color(NamedTextColor.GOLD)));
+                                sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName()).color(NamedTextColor.GOLD)));
                             return Command.SINGLE_SUCCESS;
                         }))
                     )
@@ -439,13 +251,13 @@ public class LandClaims implements Listener {
                             sender.sendMessage("Cannot check owner of claim without position.");
                             return Command.SINGLE_SUCCESS;
                         }
-                        Result res = getClaim(null, executor.getLocation(), ClaimPermission.NONE);
-                        if (res.claim == null)
+                        Claim res = getClaim(executor.getLocation());
+                        if (res == null)
                             sender.sendMessage(Component.text("This land isn't claimed."));
-                        else if (res.claim.m_owner == null)
-                            sender.sendMessage(Component.text("This claim doesn't have an owner."));
+                        else if (res.m_owner == null)
+                            sender.sendMessage(Component.text("This claim is owned by the server."));
                         else
-                            sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.claim.m_owner.getName()).color(NamedTextColor.GOLD)));
+                            sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName()).color(NamedTextColor.GOLD)));
                         return Command.SINGLE_SUCCESS;
                     })
                 );
@@ -528,6 +340,12 @@ public class LandClaims implements Listener {
                 Double.parseDouble(parts[2]),
                 Double.parseDouble(parts[3])
         );
+    }
+
+    public void onExit() {
+        for (Entity e : cleanupList) {
+            e.remove();
+        }
     }
 
     public static class Claim {

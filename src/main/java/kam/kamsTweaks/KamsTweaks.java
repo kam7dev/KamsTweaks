@@ -15,7 +15,7 @@ import java.io.File;
 public final class KamsTweaks extends JavaPlugin {
     private static KamsTweaks m_instance = null;
     SeedDispenser m_seedDispenser = new SeedDispenser();
-    LandClaims m_landClaims = new LandClaims();
+    public LandClaims m_landClaims = new LandClaims();
 
     public static KamsTweaks getInstance() {
         return m_instance;
@@ -30,7 +30,7 @@ public final class KamsTweaks extends JavaPlugin {
         m_landClaims.loadClaims();
 
         getServer().getPluginManager().registerEvents(m_seedDispenser, this);
-        getServer().getPluginManager().registerEvents(m_landClaims, this);
+        m_landClaims.setup();
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             m_landClaims.registerCommands(commands);
@@ -41,5 +41,6 @@ public final class KamsTweaks extends JavaPlugin {
     @Override
     public void onDisable() {
         m_landClaims.saveClaims();
+        m_landClaims.onExit();
     }
 }
