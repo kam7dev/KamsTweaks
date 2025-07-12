@@ -131,7 +131,7 @@ public class LandClaimGui implements Listener {
             int page = 0;
             public Screen(int size, Component title) {
                 this.title = title;
-                size = Math.max(9, size);
+                size = Math.max(9, (size / 9) * 9);
                 limit = size > 54 ? 45 : size;
                 inv = Bukkit.createInventory(null, Math.min(size, 54), title);
             }
@@ -163,7 +163,7 @@ public class LandClaimGui implements Listener {
                 });
             }
             void changeSize(int size) {
-                size = Math.max(9, size);
+                size = Math.max(9, (size / 9) * 9);
                 limit = size > 54 ? 45 : size;
                 inv = Bukkit.createInventory(null, Math.min(size, 54), title);
             }
@@ -279,6 +279,11 @@ public class LandClaimGui implements Listener {
                     lc.showArea(player, claim.m_start, claim.m_end, 1, 20 * 10, c);
                     Location l = new Location(claim.m_start.getWorld(), (claim.m_start.x() + claim.m_end.x())/2, (claim.m_start.y() + claim.m_end.y())/2, (claim.m_start.z() + claim.m_end.z())/2);
                     TextDisplay display = player.getWorld().spawn(l, TextDisplay.class, entity -> {
+                        if (claim == null) {
+                            entity.text(Component.text("This land isn't claimed'").appendNewline());
+                            entity.setBillboard(Display.Billboard.CENTER);
+                            lc.cleanupList.add(entity);
+                        }
                         String s;
                         if (claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
                             s = "You own this claim.";
@@ -313,6 +318,8 @@ public class LandClaimGui implements Listener {
                     ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                     SkullMeta meta = (SkullMeta) head.getItemMeta();
                     meta.setOwningPlayer(oplr);
+                    head.setItemMeta(meta);
+                    meta.displayName(Component.text(oplr.getName()).color(NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
                     playerScreen.addItem(head, (player_, inv_, item_) -> {
                         ui.editing = player_;
                         ui.changeToScreen(permScreen);

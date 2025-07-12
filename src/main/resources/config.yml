@@ -1,1 +1,8 @@
-adminBypass: true
+# Seed Dispenser configuration (allow dispensers to place seeds on farmland)
+seed-dispenser:
+  enabled: true
+
+# Land Claims configuration
+land-claims:
+  enabled: true
+  admin-bypass-claims: true

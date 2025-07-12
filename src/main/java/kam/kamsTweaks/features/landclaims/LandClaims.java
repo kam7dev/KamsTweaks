@@ -135,7 +135,6 @@ public class LandClaims {
                 return claim;
             }
         }
-        // TRUE
         return null;
     }
 
