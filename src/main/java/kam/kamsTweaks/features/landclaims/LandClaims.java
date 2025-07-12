@@ -14,7 +14,6 @@ import kam.kamsTweaks.features.ItemManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -29,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static kam.kamsTweaks.features.landclaims.LandClaimGui.createGuiItem;
 import static org.bukkit.Bukkit.getServer;
 
 public class LandClaims {
@@ -106,24 +104,22 @@ public class LandClaims {
 
     boolean inBounds(Location target, Location bound1, Location bound2) {
         if (bound1.getWorld() != target.getWorld()) return false;
+
         int minX = Math.min(bound1.getBlockX(), bound2.getBlockX());
         int maxX = Math.max(bound1.getBlockX(), bound2.getBlockX());
         int minY = Math.min(bound1.getBlockY(), bound2.getBlockY());
         int maxY = Math.max(bound1.getBlockY(), bound2.getBlockY());
         int minZ = Math.min(bound1.getBlockZ(), bound2.getBlockZ());
         int maxZ = Math.max(bound1.getBlockZ(), bound2.getBlockZ());
-        if (target.getBlockX() >= minX && target.getBlockX() <= maxX) {
-            if (target.getBlockY() >= minY && target.getBlockY() <= maxY) {
-                if (target.getBlockZ() >= minZ && target.getBlockZ() <= maxZ) {
-                    return true;
-                }
-            }
-        }
-        return false;
+
+        return target.getBlockX() >= minX && target.getBlockX() <= maxX
+            && target.getBlockY() >= minY && target.getBlockY() <= maxY
+            && target.getBlockZ() >= minZ && target.getBlockZ() <= maxZ;
     }
 
     boolean hasPermission(Player player, Claim claim, ClaimPermission perm) {
-        if (player != null && claim != null && claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) return true;
+        if (claim == null) return true;
+        if (player != null && claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) return true;
         ClaimPermission claimPerm = claim.m_perms.getOrDefault(player != null ? getServer().getOfflinePlayer(player.getUniqueId()) : null, claim.m_default);
         return claimPerm.compareTo(perm) >= 0;
     }
@@ -146,7 +142,7 @@ public class LandClaims {
                     for (Claim other : claims) {
                         if (inBounds(loc, other.m_start, other.m_end)) {
                             if (other.m_owner != null && !other.m_owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
-                                e.getPlayer().sendMessage(Component.text("This land is already claimed by ").color(NamedTextColor.RED).append(Component.text(other.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                                e.getPlayer().sendMessage(Component.text("This land is already claimed by ").color(NamedTextColor.RED).append(Component.text(other.m_owner.getName() == null ? "Unknown player" : other.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                                 return;
                             } else if(other.m_owner == null) {
                                 e.getPlayer().sendMessage(Component.text("This land is already claimed by ").color(NamedTextColor.RED).append(Component.text("the server").color(NamedTextColor.GOLD)).append(Component.text(".")));
@@ -163,7 +159,7 @@ public class LandClaims {
                         for (Claim other : claims) {
                             if (inBounds(other.m_start, claim.m_start, claim.m_end) || inBounds(other.m_end, claim.m_start, claim.m_end)) {
                                 if (other.m_owner != null && !other.m_owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
-                                    e.getPlayer().sendMessage(Component.text("This land intersects a claim by ").color(NamedTextColor.RED).append(Component.text(other.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                                    e.getPlayer().sendMessage(Component.text("This land intersects a claim by ").color(NamedTextColor.RED).append(Component.text(other.m_owner.getName() == null ? "Unknown player" : other.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                                     return;
                                 } else if(other.m_owner == null) {
                                     e.getPlayer().sendMessage(Component.text("This land intersects a claim by ").color(NamedTextColor.RED).append(Component.text("the server").color(NamedTextColor.GOLD)).append(Component.text(".")));
@@ -206,29 +202,20 @@ public class LandClaims {
                         Entity exec = ctx.getSource().getExecutor();
                         final BlockPositionResolver blockPositionResolver = ctx.getArgument("pos", BlockPositionResolver.class);
                         final BlockPosition loc = blockPositionResolver.resolve(ctx.getSource());
-                        if (loc == null) {
-                            sender.sendMessage("Cannot check owner of claim without position.");
-                            return Command.SINGLE_SUCCESS;
-                        }
-                        Claim res = getClaim(loc.toLocation(exec == null ? getServer().getWorlds().get(0) : exec.getWorld()));
+                        Claim res = getClaim(loc.toLocation(exec == null ? getServer().getWorlds().getFirst() : exec.getWorld()));
                         if (res == null)
                             sender.sendMessage(Component.text("This land isn't claimed."));
                         else if (res.m_owner == null)
                             sender.sendMessage(Component.text("This claim is owned by the server."));
                         else
-                            sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName()).color(NamedTextColor.GOLD)));
+                            sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName() == null ? "Unknown player" : res.m_owner.getName()).color(NamedTextColor.GOLD)));
                         return Command.SINGLE_SUCCESS;
                     })
                     .then(Commands.argument("world", ArgumentTypes.world())
                         .executes(ctx -> {
                             CommandSender sender = ctx.getSource().getSender();
-                            Entity exec = ctx.getSource().getExecutor();
                             final BlockPosition loc = ctx.getArgument("pos", BlockPositionResolver.class).resolve(ctx.getSource());
                             final World world = ctx.getArgument("world", World.class);
-                            if (loc == null) {
-                                sender.sendMessage("Cannot check owner of claim without position.");
-                                return Command.SINGLE_SUCCESS;
-                            }
                             if (world == null) {
                                 sender.sendMessage("Cannot check owner of claim without world.");
                                 return Command.SINGLE_SUCCESS;
@@ -239,7 +226,7 @@ public class LandClaims {
                             else if (res.m_owner == null)
                                 sender.sendMessage(Component.text("This claim is owned by the server."));
                             else
-                                sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName()).color(NamedTextColor.GOLD)));
+                                sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName() == null ? "Unknown player" : res.m_owner.getName()).color(NamedTextColor.GOLD)));
                             return Command.SINGLE_SUCCESS;
                         }))
                     )
@@ -256,7 +243,7 @@ public class LandClaims {
                         else if (res.m_owner == null)
                             sender.sendMessage(Component.text("This claim is owned by the server."));
                         else
-                            sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName()).color(NamedTextColor.GOLD)));
+                            sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName() == null ? "Unknown player" : res.m_owner.getName()).color(NamedTextColor.GOLD)));
                         return Command.SINGLE_SUCCESS;
                     })
                 );
@@ -286,9 +273,7 @@ public class LandClaims {
             claimsConfig.set(path + ".corner1", serializeLocation(claim.m_start));
             claimsConfig.set(path + ".corner2", serializeLocation(claim.m_end));
             claimsConfig.set(path + ".default", claim.m_default.name());
-            claim.m_perms.forEach((player, perm) -> {
-                claimsConfig.set(path + ".perms." + player.getUniqueId(), perm.name());
-            });
+            claim.m_perms.forEach((player, perm) -> claimsConfig.set(path + ".perms." + player.getUniqueId(), perm.name()));
             i++;
         }
 
@@ -306,15 +291,20 @@ public class LandClaims {
             loadSuccess = true;
             return;
         }
-        for (String key : claimsConfig.getConfigurationSection("claims").getKeys(false)) {
+        for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims")).getKeys(false)) {
             try {
-                UUID owner = claimsConfig.getString("claims." + key + ".owner") == null ? null : UUID.fromString(claimsConfig.getString("claims." + key + ".owner"));
-                Location corner1 = deserializeLocation(claimsConfig.getString("claims." + key + ".corner1"));
-                Location corner2 = deserializeLocation(claimsConfig.getString("claims." + key + ".corner2"));
+                String ownerStr = claimsConfig.getString("claims." + key + ".owner");
+                UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
+                String corner1Str = claimsConfig.getString("claims." + key + ".corner1");
+                assert corner1Str != null;
+                Location corner1 = deserializeLocation(corner1Str);
+                String corner2Str = claimsConfig.getString("claims." + key + ".corner2");
+                assert corner2Str != null;
+                Location corner2 = deserializeLocation(corner2Str);
                 Claim claim = new Claim(owner == null ? null : getServer().getOfflinePlayer(owner), corner1, corner2);
                 claim.m_default = ClaimPermission.valueOf(claimsConfig.getString("claims." + key + ".default"));
                 if (claimsConfig.contains("claims." + key + ".perms")) {
-                    for (String uuid : claimsConfig.getConfigurationSection("claims." + key + ".perms").getKeys(false)) {
+                    for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".perms")).getKeys(false)) {
                         claim.m_perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), ClaimPermission.valueOf(claimsConfig.getString("claims." + key + ".perms." + uuid)));
                     }
                 }
@@ -328,13 +318,14 @@ public class LandClaims {
     }
 
     private String serializeLocation(Location loc) {
-        return loc.getWorld().getName() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ();
+        return loc.getWorld().getUID() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ();
     }
 
     private Location deserializeLocation(String s) {
         String[] parts = s.split(",");
+        UUID worldUuid = UUID.fromString(parts[0]);
         return new Location(
-                getServer().getWorld(parts[0]),
+                getServer().getWorld(worldUuid),
                 Double.parseDouble(parts[1]),
                 Double.parseDouble(parts[2]),
                 Double.parseDouble(parts[3])

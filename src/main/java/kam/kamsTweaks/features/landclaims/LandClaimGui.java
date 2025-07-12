@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features.landclaims;
 
+import com.destroystokyo.paper.profile.ProfileProperty;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Pair;
 import net.kyori.adventure.text.Component;
@@ -8,13 +9,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.entity.Display;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
@@ -24,8 +23,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.*;
 
-import static org.bukkit.Bukkit.getOfflinePlayers;
-import static org.bukkit.Bukkit.getServer;
+import static org.bukkit.Bukkit.*;
 
 public class LandClaimGui implements Listener {
 
@@ -279,11 +277,6 @@ public class LandClaimGui implements Listener {
                     lc.showArea(player, claim.m_start, claim.m_end, 1, 20 * 10, c);
                     Location l = new Location(claim.m_start.getWorld(), (claim.m_start.x() + claim.m_end.x())/2, (claim.m_start.y() + claim.m_end.y())/2, (claim.m_start.z() + claim.m_end.z())/2);
                     TextDisplay display = player.getWorld().spawn(l, TextDisplay.class, entity -> {
-                        if (claim == null) {
-                            entity.text(Component.text("This land isn't claimed'").appendNewline());
-                            entity.setBillboard(Display.Billboard.CENTER);
-                            lc.cleanupList.add(entity);
-                        }
                         String s;
                         if (claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
                             s = "You own this claim.";
@@ -295,7 +288,7 @@ public class LandClaimGui implements Listener {
                                 case BLOCKS -> "You can interact and manage blocks.";
                             };
                         }
-                        entity.text(Component.text("Owned by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName(), NamedTextColor.GOLD).appendNewline().append(Component.text(s))));
+                        entity.text(Component.text("Owned by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), NamedTextColor.GOLD).appendNewline().append(Component.text(s))));
                         entity.setBillboard(Display.Billboard.CENTER);
                         lc.cleanupList.add(entity);
                     });
@@ -303,8 +296,8 @@ public class LandClaimGui implements Listener {
                         display.remove();
                         lc.cleanupList.remove(display);
                     }, 20 * 10);
-                    ui.close(false);
                 }
+                ui.close(false);
             }, 5);
 
             editScreen.addItem(createGuiItem(Material.LEVER, Component.text("Change Default Permission").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Change what all players can do by default.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
@@ -319,7 +312,7 @@ public class LandClaimGui implements Listener {
                     SkullMeta meta = (SkullMeta) head.getItemMeta();
                     meta.setOwningPlayer(oplr);
                     head.setItemMeta(meta);
-                    meta.displayName(Component.text(oplr.getName()).color(NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
+                    meta.displayName(Component.text(oplr.getName() == null ? "Unknown" : oplr.getName()).color(NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
                     playerScreen.addItem(head, (player_, inv_, item_) -> {
                         ui.editing = player_;
                         ui.changeToScreen(permScreen);

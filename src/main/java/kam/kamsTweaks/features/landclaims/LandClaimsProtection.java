@@ -25,7 +25,7 @@ public class LandClaimsProtection implements Listener {
         Player player = e.getPlayer();
         LandClaims.Claim claim = lc.getClaim(e.getBlock().getLocation());
         if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-            player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+            player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
             e.setCancelled(true);
         }
     }
@@ -35,7 +35,7 @@ public class LandClaimsProtection implements Listener {
         Player player = e.getPlayer();
         LandClaims.Claim claim = lc.getClaim(e.getBlock().getLocation());
         if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-            player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+            player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
             e.setCancelled(true);
         }
     }
@@ -54,13 +54,13 @@ public class LandClaimsProtection implements Listener {
             if (e.getClickedBlock().getType().toString().contains("DOOR")) {
                 LandClaims.Claim claim = lc.getClaim(e.getClickedBlock().getLocation());
                 if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.DOORS)) {
-                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                     e.setCancelled(true);
                 }
             } else {
                 LandClaims.Claim claim = lc.getClaim(e.getClickedBlock().getLocation());
                 if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.INTERACT)) {
-                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                     e.setCancelled(true);
                 }
             }
@@ -73,7 +73,7 @@ public class LandClaimsProtection implements Listener {
             if (tnt.getSource() instanceof Player player) {
                 LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
                 if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                     e.setCancelled(true);
                     tnt.remove();
                 }
