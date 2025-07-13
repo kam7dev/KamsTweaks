@@ -125,31 +125,66 @@ public class LandClaimGui implements Listener {
             public Map<Integer, Pair<ItemStack, GuiRunnable>> items = new HashMap<>();
             public Inventory inv;
             private int limit;
+            private int size;
             public final Component title;
             int page = 0;
+            int highest = 0;
+            ItemStack leftArrow;
+            ItemStack paper;
+            ItemStack rightArrow;
             public Screen(int size, Component title) {
                 this.title = title;
-                size = Math.max(9, (size / 9) * 9);
-                limit = size > 54 ? 45 : size;
-                inv = Bukkit.createInventory(null, Math.min(size, 54), title);
+                this.size = Math.min(54, Math.max(9, (size / 9) * 9));
+
+                leftArrow = new ItemStack(Material.ARROW);
+                ItemMeta meta = leftArrow.getItemMeta();
+                meta.displayName(Component.text("Previous Page").decoration(TextDecoration.ITALIC, false));
+                leftArrow.setItemMeta(meta);
+
+                paper = new ItemStack(Material.PAPER);
+                meta = paper.getItemMeta();
+                meta.displayName(Component.text("Page 0").decoration(TextDecoration.ITALIC, false));
+                paper.setItemMeta(meta);
+
+                rightArrow = new ItemStack(Material.ARROW);
+                meta = rightArrow.getItemMeta();
+                meta.displayName(Component.text("Next Page").decoration(TextDecoration.ITALIC, false));
+                rightArrow.setItemMeta(meta);
+
+                changeSize(size);
+            }
+            void updateItems() {
+                inv.clear();
+                limit = highest > size ? size - 9 : size;
+                items.forEach((pos, item) -> {
+                    if (pos > page * limit && pos < (page + 1) * limit) {
+                        inv.setItem(pos - page * limit, item.first);
+                    }
+                });
+                if (limit > size) {
+
+                }
             }
             public void addItem(ItemStack item, GuiRunnable callback, int position) {
                 items.put(position, new Pair<>(item, callback));
-                if (page * limit <= position && (page + 1) * limit > position) {
-                    inv.setItem(position - (page * limit), item);
-                }
+                highest = Math.max(highest, position);
+                updateItems();
             }
             public void removeItem(int position) {
-                if (page * limit <= position && (page + 1) * limit > position) {
-                    inv.setItem(position - (page * limit), null);
-                }
                 items.remove(position);
+                if (highest == position) {
+                    highest = 0;
+                    for (Integer key : items.keySet()) {
+                        if (key.compareTo(highest) > 0) {
+                            highest = key;
+                        }
+                    }
+                }
+                updateItems();
             }
             public void clearItems() {
-                for (int i = 0; i < limit; i++) {
-                    inv.setItem(i, null);
-                }
                 items.clear();
+                updateItems();
             }
             void goToPage(int page) {
                 this.page = page;
@@ -161,9 +196,13 @@ public class LandClaimGui implements Listener {
                 });
             }
             void changeSize(int size) {
-                size = Math.max(9, (size / 9) * 9);
-                limit = size > 54 ? 45 : size;
+                this.size = Math.min(54, Math.max(9, (size / 9) * 9));
+                updateItems();
+                limit = highest > 54 ? 45 : this.size;
                 inv = Bukkit.createInventory(null, Math.min(size, 54), title);
+            }
+            void changeTitle(String title) {
+
             }
         }
 
@@ -310,7 +349,11 @@ public class LandClaimGui implements Listener {
                 for (OfflinePlayer oplr : Bukkit.getOfflinePlayers()) {
                     ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                     SkullMeta meta = (SkullMeta) head.getItemMeta();
-                    meta.setOwningPlayer(oplr);
+                    try {
+                        meta.setOwningPlayer(oplr);
+                    } catch (Exception e) {
+                        KamsTweaks.getInstance().getLogger().info(e.getMessage());
+                    }
                     head.setItemMeta(meta);
                     meta.displayName(Component.text(oplr.getName() == null ? "Unknown" : oplr.getName()).color(NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
                     playerScreen.addItem(head, (player_, inv_, item_) -> {

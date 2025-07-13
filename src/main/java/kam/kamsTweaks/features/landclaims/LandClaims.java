@@ -318,7 +318,7 @@ public class LandClaims {
     }
 
     private String serializeLocation(Location loc) {
-        return loc.getWorld().getUID() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ();
+        return loc.getWorld() == null ? "" : loc.getWorld().getUID() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ();
     }
 
     private Location deserializeLocation(String s) {
