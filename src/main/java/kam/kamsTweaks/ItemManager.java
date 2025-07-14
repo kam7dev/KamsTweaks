@@ -1,4 +1,4 @@
-package kam.kamsTweaks.features;
+package kam.kamsTweaks;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

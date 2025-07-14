@@ -5,4 +5,12 @@ seed-dispenser:
 # Land Claims configuration
 land-claims:
   enabled: true
+  # If admins can bypass claims.
   admin-bypass-claims: true
+  # How many claims each player can have.
+  # More than 1 is recommended in case a player wants to claim a shape that isn't rectangular
+  max-claims: 10
+  # How large a single claim can be.
+  # Make sure to consider vertical and horizontal sizes.
+  # 27000 is enough for a 30x30x30 area, for example.
+  max-claim-size: 27000

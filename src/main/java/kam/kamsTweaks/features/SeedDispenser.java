@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features;
 
+import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -8,8 +9,6 @@ import org.bukkit.block.data.Directional;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class SeedDispenser implements Listener {
@@ -33,6 +32,7 @@ public class SeedDispenser implements Listener {
 
     @EventHandler
     public void onDispense(BlockDispenseEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
         Block block = e.getBlock();
         if (block.getType() == Material.DISPENSER) {
             Directional directional = (Directional) block.getBlockData();
@@ -65,20 +65,6 @@ public class SeedDispenser implements Listener {
 
                 }
             }
-        }
-    }
-
-    @EventHandler
-    public void onPlace(BlockPlaceEvent e) {
-        if (e.getItemInHand().isSimilar(ItemManager.createItem(ItemManager.ItemType.CLAIMER))) {
-            e.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onJoin(PlayerJoinEvent e) {
-        if (!e.getPlayer().hasPlayedBefore()) {
-            e.getPlayer().getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
         }
     }
 }
