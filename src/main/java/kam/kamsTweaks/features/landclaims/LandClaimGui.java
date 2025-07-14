@@ -1,6 +1,5 @@
 package kam.kamsTweaks.features.landclaims;
 
-import com.destroystokyo.paper.profile.ProfileProperty;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Pair;
 import net.kyori.adventure.text.Component;
@@ -30,38 +29,10 @@ public class LandClaimGui implements Listener {
 
     Map<Player, GuiInventory> guis = new HashMap<>();
 
-//    public final Inventory claimsInv = Bukkit.createInventory(null, 9, Component.text("Land Claims"));
-//    public final ItemStack claimGuiItem = createGuiItem(Material.SHIELD, Component.text("Claim").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Claim land.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-//    public final ItemStack showClaimsItem = createGuiItem(Material.GLASS, Component.text("View Claims").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Show claims with particles.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-//    public final ItemStack editPermissionItem = createGuiItem(Material.IRON_DOOR, Component.text("Edit Permissions").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Edit permissions for the claim you're currently in.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Only works if you own the claim you're in").color(NamedTextColor.LIGHT_PURPLE).decoration(TextDecoration.ITALIC, false));
-
-//    public final Inventory editInv = Bukkit.createInventory(null, 9, Component.text("Land Claims"));
-//    public final ItemStack defaultPermissionItem = createGuiItem(Material.LEVER, Component.text("Change Default Permission").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Change what all players can do by default.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-//    public final ItemStack managePlayersItem = createGuiItem(Material.PLAYER_HEAD, Component.text("Manage Player Permissions").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Give different players specific permissions.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-//    public final ItemStack deleteClaimItem = createGuiItem(Material.BARRIER, Component.text("Delete Claim").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Delete this claim.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-//
-//    public final Inventory permInv = Bukkit.createInventory(null, 9, Component.text("Land Claims"));
-//    public final ItemStack nonePermItem = createGuiItem(Material.RED_CONCRETE, Component.text("No block interaction").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-//    public final ItemStack doorPermItem = createGuiItem(Material.ORANGE_CONCRETE, Component.text("Doors only").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-//    public final ItemStack interactPermItem = createGuiItem(Material.PURPLE_CONCRETE, Component.text("Interact with blocks").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-//    public final ItemStack blockPermItem = createGuiItem(Material.CYAN_CONCRETE, Component.text("Break/place any blocks").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-
     LandClaims lc;
 
     public LandClaimGui(LandClaims lc) {
         this.lc = lc;
-//        claimsInv.setItem(3, editPermissionItem);
-//        claimsInv.setItem(4, claimGuiItem);
-//        claimsInv.setItem(5, showClaimsItem);
-//
-//        editInv.setItem(3, defaultPermissionItem);
-//        editInv.setItem(4, managePlayersItem);
-//        editInv.setItem(5, deleteClaimItem);
-//
-//        permInv.setItem(1, nonePermItem);
-//        permInv.setItem(3, doorPermItem);
-//        permInv.setItem(5, interactPermItem);
-//        permInv.setItem(7, blockPermItem);
     }
 
     protected static ItemStack createGuiItem(final Material material, final Component name, final Component... lore) {
@@ -432,9 +403,7 @@ public class LandClaimGui implements Listener {
                 }
             }, 3);
 
-            confirmScreen.addItem(createGuiItem(Material.RED_CONCRETE, Component.text("No").color(NamedTextColor.RED).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
-                ui.close(false);
-            }, 5);
+            confirmScreen.addItem(createGuiItem(Material.RED_CONCRETE, Component.text("No").color(NamedTextColor.RED).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> ui.close(false), 5);
 
             ui.show(target);
             guis.put(plr, ui);
