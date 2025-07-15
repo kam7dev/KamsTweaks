@@ -1,6 +1,8 @@
 package kam.kamsTweaks.features.landclaims;
 
+import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.ItemManager.ItemType;
 import kam.kamsTweaks.utils.Pair;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -15,6 +17,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -65,6 +68,14 @@ public class LandClaimGui implements Listener {
 
     @EventHandler
     public void onInventoryClick(final InventoryClickEvent e) {
+        if (e.getInventory().getType() == InventoryType.GRINDSTONE) {
+		ItemStack result = e.getInventory().getItem(2);
+        	if (result != null && ItemManager.getType(result) == ItemType.CLAIMER) {
+        		e.setCancelled(true);
+            		e.getWhoClicked().sendMessage(Component.text("You cannot disenchant this item.").color(NamedTextColor.RED));
+			return;
+        	}
+    	}
         if (guis.containsKey((Player) e.getWhoClicked())) {
             for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
                 if (e.getInventory().equals(screen.inv)) {
