@@ -52,6 +52,7 @@ public class LandClaims implements Listener {
     public void setup() {
         getServer().getPluginManager().registerEvents(prot, KamsTweaks.getInstance());
         getServer().getPluginManager().registerEvents(gui, KamsTweaks.getInstance());
+        getServer().getPluginManager().registerEvents(this, KamsTweaks.getInstance());
     }
 
     public LandClaims() {
@@ -373,6 +374,7 @@ public class LandClaims implements Listener {
                 String corner1Str = claimsConfig.getString("claims." + key + ".corner1");
                 assert corner1Str != null;
                 Location corner1 = deserializeLocation(corner1Str);
+                if (corner1.getWorld() == null) continue;
                 String corner2Str = claimsConfig.getString("claims." + key + ".corner2");
                 assert corner2Str != null;
                 Location corner2 = deserializeLocation(corner2Str);

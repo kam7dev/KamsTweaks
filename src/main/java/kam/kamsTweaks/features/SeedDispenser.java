@@ -11,6 +11,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.inventory.ItemStack;
 
+import static org.bukkit.Bukkit.getServer;
+
 public class SeedDispenser implements Listener {
 
     public Material matForSeed(ItemStack item) {
@@ -59,10 +61,27 @@ public class SeedDispenser implements Listener {
                                 container.getInventory().setItem(i, null);
                             }
                             toPlace.setType(mat);
-                            break;
+                            return;
                         }
                     }
-
+                    getServer().getScheduler().runTask(KamsTweaks.getInstance(), () -> {
+                        ItemStack[] contents2 = container.getInventory().getContents();
+                        for (int i = 0; i < contents2.length; i++) {
+                            ItemStack slot = contents2[i];
+                            if (slot == null) continue;
+                            if (slot.isSimilar(e.getItem())) {
+                                int amount = slot.getAmount();
+                                if (amount > 1) {
+                                    slot.setAmount(amount - 1);
+                                    container.getInventory().setItem(i, slot);
+                                } else {
+                                    container.getInventory().setItem(i, null);
+                                }
+                                toPlace.setType(mat);
+                                return;
+                            }
+                        }
+                    });
                 }
             }
         }

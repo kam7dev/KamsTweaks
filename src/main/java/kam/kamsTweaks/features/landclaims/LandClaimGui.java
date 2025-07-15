@@ -163,7 +163,7 @@ public class LandClaimGui implements Listener {
             void changeSize(int size) {
                 this.size = Math.min(54, Math.max(9, (size / 9) * 9));
                 limit = highest > this.size ? this.size - 9 : this.size;
-                inv = createInventory(null, Math.min(size, 54), title);
+                inv = createInventory(null, this.size, title);
                 updateItems();
             }
             void changeTitle(Component title) {
@@ -277,7 +277,7 @@ public class LandClaimGui implements Listener {
                     if (claim.m_owner.getUniqueId().equals(player.getUniqueId())) count++;
                 }
                 var max = KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 10);
-                if (count > max) {
+                if (count >= max) {
                     player.sendMessage(Component.text("You already have the max number of claims! (" + count + "/" + max + ")").color(NamedTextColor.RED));
                     return;
                 }
