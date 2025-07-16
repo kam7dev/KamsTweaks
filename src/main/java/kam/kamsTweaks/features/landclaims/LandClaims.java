@@ -44,8 +44,6 @@ public class LandClaims implements Listener {
     FileConfiguration claimsConfig;
     boolean loadSuccess = false;
 
-    public List<Entity> cleanupList = new ArrayList<>();
-
     LandClaimsProtection prot;
     LandClaimGui gui;
 
@@ -90,17 +88,24 @@ public class LandClaims implements Listener {
                 }
                 ticks++;
 
-                for (double x = minX; x <= maxX; x += step) {
-                    for (double y = minY; y <= maxY; y += step) {
-                        for (double z = minZ; z <= maxZ; z += step) {
-                            int faces = 0;
-                            if (x == minX || x == maxX) faces++;
-                            if (y == minY || y == maxY) faces++;
-                            if (z == minZ || z == maxZ) faces++;
+                var ploc = player.getLocation();
+                if (!world.equals(ploc.getWorld())) return;
 
-                            // Only edges and corners
-                            if (faces >= 2) {
-                                player.spawnParticle(Particle.DUST, new Location(world, x, y, z), 0, 0, 0, 0, 0, new DustOptions(color, 1.0F));
+                if (ticks % 7 == 1) {
+                    for (double x = minX; x <= maxX; x += step) {
+                        for (double y = minY; y <= maxY; y += step) {
+                            for (double z = minZ; z <= maxZ; z += step) {
+                                int faces = 0;
+                                if (x == minX || x == maxX) faces++;
+                                if (y == minY || y == maxY) faces++;
+                                if (z == minZ || z == maxZ) faces++;
+
+                                // Only edges and corners
+                                if (faces >= 2) {
+                                    Location loc = new Location(world, x, y, z);
+                                    if (ploc.distance(loc) > 100) continue;
+                                    player.spawnParticle(Particle.DUST, loc, 0, 0, 0, 0, 0, new DustOptions(color, 1.0F));
+                                }
                             }
                         }
                     }
@@ -124,7 +129,7 @@ public class LandClaims implements Listener {
             && target.getBlockZ() >= minZ && target.getBlockZ() <= maxZ;
     }
 
-    boolean hasPermission(Player player, Claim claim, ClaimPermission perm) {
+    boolean hasPermission(OfflinePlayer player, Claim claim, ClaimPermission perm) {
         if (claim == null) return true;
         if (player != null && claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) return true;
         ClaimPermission claimPerm = claim.m_perms.getOrDefault(player != null ? getServer().getOfflinePlayer(player.getUniqueId()) : null, claim.m_default);
@@ -407,12 +412,6 @@ public class LandClaims implements Listener {
                 Double.parseDouble(parts[2]),
                 Double.parseDouble(parts[3])
         );
-    }
-
-    public void onExit() {
-        for (Entity e : cleanupList) {
-            e.remove();
-        }
     }
 
     public static class Claim {

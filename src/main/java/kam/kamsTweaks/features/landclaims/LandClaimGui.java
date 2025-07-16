@@ -14,9 +14,11 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
@@ -326,11 +328,26 @@ public class LandClaimGui implements Listener {
                         }
                         entity.text(Component.text("Owned by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), NamedTextColor.GOLD).appendNewline().append(Component.text(s))));
                         entity.setBillboard(Display.Billboard.CENTER);
-                        lc.cleanupList.add(entity);
+                        entity.setPersistent(false);
+                        for (Player h : getOnlinePlayers()) {
+                            if (!h.equals(player)) {
+                                h.hideEntity(KamsTweaks.getInstance(), entity);
+                            }
+                        }
                     });
+                    Listener joinListener = new Listener() {
+                        @EventHandler
+                        public void onPlayerJoin(PlayerJoinEvent event) {
+                            Player joining = event.getPlayer();
+                            if (!joining.equals(target)) {
+                                Bukkit.getScheduler().runTask(KamsTweaks.getInstance(), () -> joining.hideEntity(KamsTweaks.getInstance(), display));
+                            }
+                        }
+                    };
+                    Bukkit.getPluginManager().registerEvents(joinListener, KamsTweaks.getInstance());
                     getServer().getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
                         display.remove();
-                        lc.cleanupList.remove(display);
+                        HandlerList.unregisterAll(joinListener);
                     }, 20 * 10);
                 }
                 ui.close(false);

@@ -41,6 +41,5 @@ public final class KamsTweaks extends JavaPlugin {
     @Override
     public void onDisable() {
         m_landClaims.saveClaims();
-        m_landClaims.onExit();
     }
 }
