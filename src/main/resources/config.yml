@@ -14,3 +14,9 @@ land-claims:
   # Make sure to consider vertical and horizontal sizes.
   # 27000 is enough for a 30x30x30 area, for example.
   max-claim-size: 27000
+
+# Entity Claiming configuration
+entity-claims:
+  enabled: true
+  # How many entities a player can claim.
+  max-claims: 1000

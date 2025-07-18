@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import static org.bukkit.Bukkit.getLogger;
 import static org.bukkit.Bukkit.getServer;
 
 public class LandClaims implements Listener {
@@ -42,7 +43,6 @@ public class LandClaims implements Listener {
 
     private File claimsFile;
     FileConfiguration claimsConfig;
-    boolean loadSuccess = false;
 
     LandClaimsProtection prot;
     LandClaimGui gui;
@@ -343,7 +343,6 @@ public class LandClaims implements Listener {
     }
 
     public void saveClaims() {
-        if (!loadSuccess) return;
         setupFile();
         claimsConfig.set("claims", null); // clear previous entries
 
@@ -358,6 +357,15 @@ public class LandClaims implements Listener {
             i++;
         }
 
+        claimsConfig.set("entities", null); // clear previous entries
+
+        KamsTweaks.getInstance().m_entityClaims.claims.forEach((uuid, claim) -> {
+            String path = "entities." + uuid;
+            if (claim.m_owner != null) claimsConfig.set(path + ".owner", claim.m_owner.getUniqueId().toString());
+            claimsConfig.set(path + ".default", claim.m_default.name());
+            claim.m_perms.forEach((player, perm) -> claimsConfig.set(path + ".perms." + player.getUniqueId(), perm.name()));
+        });
+
         try {
             claimsConfig.save(claimsFile);
         } catch (IOException e) {
@@ -368,35 +376,52 @@ public class LandClaims implements Listener {
     public void loadClaims() {
         setupFile();
         claims.clear();
-        if (!claimsConfig.contains("claims")) {
-            loadSuccess = true;
-            return;
-        }
-        for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims")).getKeys(false)) {
-            try {
-                String ownerStr = claimsConfig.getString("claims." + key + ".owner");
-                UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
-                String corner1Str = claimsConfig.getString("claims." + key + ".corner1");
-                assert corner1Str != null;
-                Location corner1 = deserializeLocation(corner1Str);
-                if (corner1.getWorld() == null) continue;
-                String corner2Str = claimsConfig.getString("claims." + key + ".corner2");
-                assert corner2Str != null;
-                Location corner2 = deserializeLocation(corner2Str);
-                Claim claim = new Claim(owner == null ? null : getServer().getOfflinePlayer(owner), corner1, corner2);
-                claim.m_default = ClaimPermission.valueOf(claimsConfig.getString("claims." + key + ".default"));
-                if (claimsConfig.contains("claims." + key + ".perms")) {
-                    for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".perms")).getKeys(false)) {
-                        claim.m_perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), ClaimPermission.valueOf(claimsConfig.getString("claims." + key + ".perms." + uuid)));
+        if (claimsConfig.contains("claims")) {
+            for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims")).getKeys(false)) {
+                try {
+                    String ownerStr = claimsConfig.getString("claims." + key + ".owner");
+                    UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
+                    String corner1Str = claimsConfig.getString("claims." + key + ".corner1");
+                    assert corner1Str != null;
+                    Location corner1 = deserializeLocation(corner1Str);
+                    if (corner1.getWorld() == null) continue;
+                    String corner2Str = claimsConfig.getString("claims." + key + ".corner2");
+                    assert corner2Str != null;
+                    Location corner2 = deserializeLocation(corner2Str);
+                    Claim claim = new Claim(owner == null ? null : getServer().getOfflinePlayer(owner), corner1, corner2);
+                    claim.m_default = ClaimPermission.valueOf(claimsConfig.getString("claims." + key + ".default"));
+                    if (claimsConfig.contains("claims." + key + ".perms")) {
+                        for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".perms")).getKeys(false)) {
+                            claim.m_perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), ClaimPermission.valueOf(claimsConfig.getString("claims." + key + ".perms." + uuid)));
+                        }
                     }
-                }
 
-                claims.add(claim);
-            } catch (Exception e) {
-                KamsTweaks.getInstance().getLogger().warning(e.getMessage());
+                    claims.add(claim);
+                } catch (Exception e) {
+                    KamsTweaks.getInstance().getLogger().warning(e.getMessage());
+                }
             }
         }
-        loadSuccess = true;
+
+        KamsTweaks.getInstance().m_entityClaims.claims.clear();
+        if (claimsConfig.contains("entities")) {
+            for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities")).getKeys(false)) {
+                try {
+                    String ownerStr = claimsConfig.getString("entities." + key + ".owner");
+                    UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
+                    EntityClaims.EntityClaim claim = new EntityClaims.EntityClaim(owner == null ? null : getServer().getOfflinePlayer(owner));
+                    claim.m_default = EntityClaims.EntityPermission.valueOf(claimsConfig.getString("entities." + key + ".default"));
+                    if (claimsConfig.contains("entities." + key + ".perms")) {
+                        for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
+                            claim.m_perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), EntityClaims.EntityPermission.valueOf(claimsConfig.getString("entities." + key + ".perms." + uuid)));
+                        }
+                    }
+                    KamsTweaks.getInstance().m_entityClaims.claims.put(UUID.fromString(key), claim);
+                } catch (Exception e) {
+                    KamsTweaks.getInstance().getLogger().warning(e.getMessage());
+                }
+            }
+        }
     }
 
     private String serializeLocation(Location loc) {
@@ -437,7 +462,7 @@ public class LandClaims implements Listener {
     @EventHandler
     public void onPlace(BlockPlaceEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
-        if (e.getItemInHand().isSimilar(ItemManager.createItem(ItemManager.ItemType.CLAIMER))) {
+        if (ItemManager.getType(e.getItemInHand()) == ItemManager.ItemType.CLAIMER) {
             e.setCancelled(true);
         }
     }

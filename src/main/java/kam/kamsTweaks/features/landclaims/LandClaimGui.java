@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
@@ -187,6 +188,7 @@ public class LandClaimGui implements Listener {
         }
 
         public LandClaims.Claim claim;
+        Entity targetEntity;
         public OfflinePlayer editing;
 
         List<Screen> screens = new ArrayList<>();
@@ -231,7 +233,7 @@ public class LandClaimGui implements Listener {
             if (screens.size() <= currentScreen) return;
             Screen current = screens.get(currentScreen);
             if (current == null) return;
-            claim = KamsTweaks.getInstance().m_landClaims.getClaim(target);
+            if (target != null) claim = KamsTweaks.getInstance().m_landClaims.getClaim(target);
             current.updateItems();
             player.openInventory(current.inv);
         }
@@ -262,6 +264,8 @@ public class LandClaimGui implements Listener {
             GuiInventory.Screen permScreen = ui.addScreen(9, Component.text("Edit Permissions"));
             GuiInventory.Screen playerScreen = ui.addScreen(54, Component.text("Edit Player Permissions"));
             GuiInventory.Screen confirmScreen = ui.addScreen(9, Component.text("Are you sure?"));
+            GuiInventory.Screen entityEditScreen = ui.addScreen(9, Component.text("Edit Entity Permissions"));
+            GuiInventory.Screen entityPermScreen = ui.addScreen(9, Component.text("Edit Permissions"));
 
             homeScreen.addItem(createGuiItem(Material.IRON_DOOR, Component.text("Edit Permissions").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Edit permissions for the claim you're currently in.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Only works if you own the claim you're in").color(NamedTextColor.LIGHT_PURPLE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 if (ui.claim == null) {
@@ -314,6 +318,7 @@ public class LandClaimGui implements Listener {
                     }
                     lc.showArea(player, claim.m_start, claim.m_end, 1, 20 * 10, c);
                     Location l = new Location(claim.m_start.getWorld(), (claim.m_start.x() + claim.m_end.x())/2, (claim.m_start.y() + claim.m_end.y())/2, (claim.m_start.z() + claim.m_end.z())/2);
+                    if (l.distance(player.getLocation()) > 100) continue;
                     TextDisplay display = player.getWorld().spawn(l, TextDisplay.class, entity -> {
                         String s;
                         if (claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
@@ -384,7 +389,11 @@ public class LandClaimGui implements Listener {
                     playerScreen.addItem(head, (player_, inv_, item_) -> {
                         ui.editing = oplr;
                         permScreen.changeTitle(Component.text("Edit Permissions For " + (oplr.getName() == null ? "Unknown" : oplr.getName())));
-                        ui.changeToScreen(permScreen);
+                        if (ui.claim != null) {
+                            ui.changeToScreen(permScreen);
+                        } else if (ui.targetEntity != null) {
+                            ui.changeToScreen(entityPermScreen);
+                        }
                     }, i);
                     i++;
                 }
@@ -423,15 +432,99 @@ public class LandClaimGui implements Listener {
             }, 7);
 
             confirmScreen.addItem(createGuiItem(Material.GREEN_CONCRETE, Component.text("Yes").color(NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
-                if (ui.confirmType.equals("delete")) {
-                    lc.claims.remove(ui.claim);
-                    ui.close(false);
-                } else if (ui.confirmType.equals("admin-bypass")) {
-                    ui.changeToScreen(editScreen);
+                switch (ui.confirmType) {
+                    case "delete" -> {
+                        lc.claims.remove(ui.claim);
+                        ui.close(false);
+                    }
+                    case "admin-bypass" -> ui.changeToScreen(editScreen);
+                    case "entity-claim" -> {
+                        KamsTweaks.getInstance().m_entityClaims.claims.put(ui.targetEntity.getUniqueId(), new EntityClaims.EntityClaim(player));
+                        ui.close(false);
+                    }
+                    case "unclaim" -> {
+                        KamsTweaks.getInstance().m_entityClaims.claims.remove(ui.targetEntity.getUniqueId());
+                        ui.close(false);
+                    }
                 }
             }, 3);
 
             confirmScreen.addItem(createGuiItem(Material.RED_CONCRETE, Component.text("No").color(NamedTextColor.RED).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> ui.close(false), 5);
+
+            entityEditScreen.addItem(createGuiItem(Material.LEVER, Component.text("Change Default Permission").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Change what all players can do by default.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                permScreen.changeTitle(Component.text("Edit Default Permissions"));
+                ui.editing = null;
+                if (ui.claim != null) {
+                    ui.changeToScreen(permScreen);
+                } else if (ui.targetEntity != null) {
+                    ui.changeToScreen(entityPermScreen);
+                }
+            }, 3);
+            entityEditScreen.addItem(createGuiItem(Material.PLAYER_HEAD, Component.text("Manage Player Permissions").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Give different players specific permissions.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                playerScreen.clearItems();
+                playerScreen.changeSize(getOfflinePlayers().length);
+                int i = 0;
+                var ecs = KamsTweaks.getInstance().m_entityClaims;
+                if (!ecs.claims.containsKey(ui.targetEntity.getUniqueId())) return;
+                var claim = ecs.claims.get(ui.targetEntity.getUniqueId());
+                for (OfflinePlayer oplr : getOfflinePlayers()) {
+                    if (claim.m_owner != null && oplr.getUniqueId().equals(claim.m_owner.getUniqueId())) continue;
+                    ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+                    SkullMeta meta = (SkullMeta) head.getItemMeta();
+                    try {
+                        meta.setOwningPlayer(oplr);
+                    } catch (Exception e) {
+                        KamsTweaks.getInstance().getLogger().warning(e.getMessage());
+                    }
+                    meta.lore(List.of(new TextComponent[]{
+                            switch (claim.m_perms.getOrDefault(oplr, claim.m_default)) {
+                                case NONE -> Component.text("None").color(NamedTextColor.RED);
+                                case INTERACT -> Component.text("Interactions").color(NamedTextColor.GOLD);
+                                case KILL -> Component.text("Damage").color(NamedTextColor.AQUA);
+                            }
+                    }));
+                    head.setItemMeta(meta);
+                    meta.displayName(Component.text(oplr.getName() == null ? "Unknown" : oplr.getName()).color(NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false));
+                    playerScreen.addItem(head, (player_, inv_, item_) -> {
+                        ui.editing = oplr;
+                        permScreen.changeTitle(Component.text("Edit Permissions For " + (oplr.getName() == null ? "Unknown" : oplr.getName())));
+                        ui.changeToScreen(entityPermScreen);
+                    }, i);
+                    i++;
+                }
+                playerScreen.page = 0;
+                ui.changeToScreen(playerScreen);
+            }, 4);
+
+            entityEditScreen.addItem(createGuiItem(Material.BARRIER, Component.text("Unclaim Entity").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Unclaim this entity.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                ui.confirmType = "unclaim";
+                confirmScreen.changeTitle(Component.text("Unclaim this entity?"));
+                ui.changeToScreen(confirmScreen);
+            }, 5);
+
+            entityPermScreen.addItem(createGuiItem(Material.RED_CONCRETE, Component.text("No interaction").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) return;
+                EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
+                if (ui.editing == null) claim.m_default = EntityClaims.EntityPermission.NONE;
+                else claim.m_perms.put(ui.editing, EntityClaims.EntityPermission.NONE);
+                ui.close(false);
+            }, 2);
+
+            entityPermScreen.addItem(createGuiItem(Material.ORANGE_CONCRETE, Component.text("Interactions only").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) return;
+                EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
+                if (ui.editing == null) claim.m_default = EntityClaims.EntityPermission.INTERACT;
+                else claim.m_perms.put(ui.editing, EntityClaims.EntityPermission.INTERACT);
+                ui.close(false);
+            }, 4);
+
+            entityPermScreen.addItem(createGuiItem(Material.CYAN_CONCRETE, Component.text("Damage entities").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) return;
+                EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
+                if (ui.editing == null) claim.m_default = EntityClaims.EntityPermission.KILL;
+                else claim.m_perms.put(ui.editing, EntityClaims.EntityPermission.KILL);
+                ui.close(false);
+            }, 6);
 
             ui.show(target);
             guis.put(plr, ui);

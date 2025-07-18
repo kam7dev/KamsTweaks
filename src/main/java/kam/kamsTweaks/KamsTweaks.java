@@ -1,21 +1,16 @@
 package kam.kamsTweaks;
 
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.tree.LiteralCommandNode;
-import io.papermc.paper.command.brigadier.CommandSourceStack;
-import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.features.SeedDispenser;
+import kam.kamsTweaks.features.landclaims.EntityClaims;
 import kam.kamsTweaks.features.landclaims.LandClaims;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.io.File;
 
 public final class KamsTweaks extends JavaPlugin {
     private static KamsTweaks m_instance = null;
     SeedDispenser m_seedDispenser = new SeedDispenser();
     public LandClaims m_landClaims = new LandClaims();
+    public EntityClaims m_entityClaims = new EntityClaims();
 
     public static KamsTweaks getInstance() {
         return m_instance;
@@ -31,6 +26,7 @@ public final class KamsTweaks extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(m_seedDispenser, this);
         m_landClaims.setup();
+        getServer().getPluginManager().registerEvents(m_entityClaims, this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             m_landClaims.registerCommands(commands);

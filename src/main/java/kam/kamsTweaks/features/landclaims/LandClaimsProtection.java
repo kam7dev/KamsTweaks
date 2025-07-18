@@ -5,9 +5,11 @@ import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.type.Piston;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
@@ -18,11 +20,14 @@ import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.InventoryHolder;
 
 public class LandClaimsProtection implements Listener {
@@ -63,6 +68,7 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
+        if (e.getPlayer().getTargetEntity(5) instanceof Creature) return;
         if (e.getItem() != null && e.getItem().isSimilar(ItemManager.createItem(ItemManager.ItemType.CLAIMER)) && (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
             if (KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) lc.handleItem(e);
             e.setCancelled(true);
@@ -97,6 +103,7 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onInvOpen(InventoryOpenEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         InventoryHolder entity = e.getInventory().getHolder();
         if (entity instanceof AbstractHorse || entity instanceof ChestBoat || entity instanceof StorageMinecart) {
             Player player = (Player) e.getPlayer();
@@ -114,6 +121,7 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onEntityInteract(PlayerInteractEntityEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         Entity entity = e.getRightClicked();
         if (entity instanceof ItemFrame || entity instanceof ArmorStand) {
             Player player = e.getPlayer();
@@ -131,6 +139,7 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onHangDestroy(HangingBreakByEntityEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         if (e.getRemover() instanceof Player player) {
             LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
             if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
@@ -146,6 +155,7 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onVehicleDestroy(VehicleDestroyEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         Entity entity = e.getVehicle();
         if (!(entity instanceof AbstractHorse || entity instanceof ChestBoat || entity instanceof StorageMinecart)) return;
         if (e.getAttacker() instanceof Player player) {
@@ -163,6 +173,7 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onEntityHit(EntityDamageByEntityEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         Entity entity = e.getEntity();
         if (!(entity instanceof ItemFrame || entity instanceof ArmorStand || entity instanceof AbstractHorse || entity instanceof ChestBoat || entity instanceof StorageMinecart)) return;
         if (e.getDamager() instanceof Player player) {
@@ -186,53 +197,97 @@ public class LandClaimsProtection implements Listener {
     @EventHandler
     public void onKaboom(EntityExplodeEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
-        if (e.getEntity() instanceof TNTPrimed tnt) {
-            if (tnt.getSource() instanceof Player player) {
-                LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
-                if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                    if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                        player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(", but you are bypassing the claim.")));
-                        return;
+        boolean saidThingy = false;
+        switch (e.getEntity()) {
+            case TNTPrimed tnt -> {
+                if (tnt.getSource() instanceof Player player) {
+                    for (Block block : e.blockList()) {
+                        LandClaims.Claim claim = lc.getClaim(block.getLocation());
+                        if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                            if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                                if (!saidThingy) {
+                                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(", but you are bypassing the claim.")));
+                                    saidThingy = true;
+                                }
+                            }
+                            if (!saidThingy) {
+                                player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                                saidThingy = true;
+                            }
+                            e.blockList().remove(block);
+                        }
                     }
-                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
-                    e.setCancelled(true);
-                    tnt.remove();
+                } else {
+                    for (Block block : e.blockList()) {
+                        LandClaims.Claim claim = lc.getClaim(block.getLocation());
+                        if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                            e.setCancelled(true);
+                            tnt.remove();
+                        }
+                    }
                 }
-            } else {
-                LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
-                if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                    e.setCancelled(true);
-                    tnt.remove();
+            }
+            case EnderCrystal ec -> {
+                for (Block block : e.blockList()) {
+                    LandClaims.Claim claim = lc.getClaim(block.getLocation());
+                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        e.setCancelled(true);
+                        ec.remove();
+                    }
                 }
+
             }
-        } else if (e.getEntity() instanceof EnderCrystal ec) {
-            LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
-            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                e.setCancelled(true);
-                ec.remove();
+            case ExplosiveMinecart mc -> {
+                for (Block block : e.blockList()) {
+                    LandClaims.Claim claim = lc.getClaim(block.getLocation());
+                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        e.setCancelled(true);
+                        mc.remove();
+                    }
+                }
+
             }
-        } else if (e.getEntity() instanceof ExplosiveMinecart mc) {
-            LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
-            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                e.setCancelled(true);
-                mc.remove();
+            case Creeper cr -> {
+                for (Block block : e.blockList()) {
+                    LandClaims.Claim claim = lc.getClaim(block.getLocation());
+                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        e.setCancelled(true);
+                        cr.remove();
+                    }
+                }
+
             }
-        } else if (e.getEntity() instanceof Creeper cr) {
-            LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
-            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                e.setCancelled(true);
-                cr.remove();
+            default -> {
             }
         }
     }
 
     @EventHandler
     public void onPistonExtend(BlockPistonExtendEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         Block piston = event.getBlock();
         LandClaims.Claim claim = lc.getClaim(piston.getLocation());
 
+        {
+            LandClaims.Claim to = lc.getClaim(piston.getRelative(((Directional) piston.getBlockData()).getFacing()).getLocation());
+            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to, LandClaims.ClaimPermission.BLOCKS)) {
+                event.setCancelled(true);
+                return;
+            }
+            LandClaims.Claim in = lc.getClaim(piston.getRelative(((Directional) piston.getBlockData()).getFacing()).getLocation());
+            if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in, LandClaims.ClaimPermission.BLOCKS)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+
         for (Block block : event.getBlocks()) {
-            LandClaims.Claim in = lc.getClaim(block.getLocation());
+            LandClaims.Claim to = lc.getClaim(block.getRelative(((Directional) piston.getBlockData()).getFacing()).getLocation());
+            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to, LandClaims.ClaimPermission.BLOCKS)) {
+                event.setCancelled(true);
+                return;
+            }
+            LandClaims.Claim in = lc.getClaim(block.getRelative(((Directional) piston.getBlockData()).getFacing()).getLocation());
             if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in, LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
                 return;
@@ -242,11 +297,30 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onPistonRetract(BlockPistonRetractEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         Block piston = event.getBlock();
         LandClaims.Claim claim = lc.getClaim(piston.getLocation());
 
+        {
+            LandClaims.Claim to = lc.getClaim(piston.getRelative(((Directional) piston.getBlockData()).getFacing().getOppositeFace()).getLocation());
+            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to, LandClaims.ClaimPermission.BLOCKS)) {
+                event.setCancelled(true);
+                return;
+            }
+            LandClaims.Claim in = lc.getClaim(piston.getRelative(((Directional) piston.getBlockData()).getFacing().getOppositeFace()).getLocation());
+            if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in, LandClaims.ClaimPermission.BLOCKS)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+
         for (Block block : event.getBlocks()) {
-            LandClaims.Claim in = lc.getClaim(block.getLocation());
+            LandClaims.Claim to = lc.getClaim(block.getRelative(((Directional) piston.getBlockData()).getFacing().getOppositeFace()).getLocation());
+            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to, LandClaims.ClaimPermission.BLOCKS)) {
+                event.setCancelled(true);
+                return;
+            }
+            LandClaims.Claim in = lc.getClaim(block.getRelative(((Directional) piston.getBlockData()).getFacing().getOppositeFace()).getLocation());
             if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in, LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
                 return;
@@ -257,33 +331,49 @@ public class LandClaimsProtection implements Listener {
     @EventHandler
     public void onItemDamage(EntityDamageByEntityEvent event) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
-        if (event.getDamager() instanceof TNTPrimed tnt) {
-            if (tnt.getSource() instanceof Player player) {
-                LandClaims.Claim claim = lc.getClaim(tnt.getLocation());
-                if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                    event.setCancelled(true);
+        switch (event.getDamager()) {
+            case TNTPrimed tnt -> {
+                if (tnt.getSource() instanceof Player player) {
+                    LandClaims.Claim claim = lc.getClaim(event.getEntity().getLocation());
+                    if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        event.setCancelled(true);
+                    }
+                } else {
+                    LandClaims.Claim claim = lc.getClaim(event.getEntity().getLocation());
+                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        event.setCancelled(true);
+                    }
                 }
-            } else {
-                LandClaims.Claim claim = lc.getClaim(tnt.getLocation());
+            }
+            case EnderCrystal ec -> {
+                LandClaims.Claim claim = lc.getClaim(event.getEntity().getLocation());
                 if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
                     event.setCancelled(true);
                 }
             }
-        } else if (event.getDamager() instanceof EnderCrystal ec) {
-            LandClaims.Claim claim = lc.getClaim(ec.getLocation());
-            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                event.setCancelled(true);
+            case Creeper cr -> {
+                LandClaims.Claim claim = lc.getClaim(event.getEntity().getLocation());
+                if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                    event.setCancelled(true);
+                }
             }
-        } else if (event.getDamager() instanceof Creeper cr) {
-            LandClaims.Claim claim = lc.getClaim(cr.getLocation());
-            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                event.setCancelled(true);
+            case ExplosiveMinecart em -> {
+                LandClaims.Claim claim = lc.getClaim(event.getEntity().getLocation());
+                if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                    event.setCancelled(true);
+                }
             }
-        } else if (event.getDamager() instanceof ExplosiveMinecart em) {
-            LandClaims.Claim claim = lc.getClaim(em.getLocation());
-            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                event.setCancelled(true);
+            default -> {
             }
+        }
+    }
+
+    @EventHandler
+    public void onHopperPull(InventoryMoveItemEvent event) {
+        if (event.getDestination().getType() == InventoryType.HOPPER) {
+            Location destLoc = ((BlockInventoryHolder) event.getDestination().getHolder()).getBlock().getLocation();
+            Location sourceLoc = ((BlockInventoryHolder) event.getSource().getHolder()).getBlock().getLocation();
+            event.setCancelled(true);
         }
     }
 }
