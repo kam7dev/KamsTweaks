@@ -214,7 +214,8 @@ public class LandClaimsProtection implements Listener {
                                 player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                                 saidThingy = true;
                             }
-                            e.blockList().remove(block);
+                            e.setCancelled(true);
+                            tnt.remove();
                         }
                     }
                 } else {
@@ -371,9 +372,12 @@ public class LandClaimsProtection implements Listener {
     @EventHandler
     public void onHopperPull(InventoryMoveItemEvent event) {
         if (event.getDestination().getType() == InventoryType.HOPPER) {
-            Location destLoc = ((BlockInventoryHolder) event.getDestination().getHolder()).getBlock().getLocation();
-            Location sourceLoc = ((BlockInventoryHolder) event.getSource().getHolder()).getBlock().getLocation();
-            event.setCancelled(true);
+            if (event.getSource().getHolder() == null || event.getDestination().getHolder() == null) return;
+            LandClaims.Claim in = lc.getClaim(((BlockInventoryHolder) event.getSource().getHolder()).getBlock().getLocation());
+            LandClaims.Claim to = lc.getClaim(((BlockInventoryHolder) event.getDestination().getHolder()).getBlock().getLocation());
+            if (in != null && !lc.hasPermission(to == null ? null : to.m_owner, in, LandClaims.ClaimPermission.INTERACT)) {
+                event.setCancelled(true);
+            }
         }
     }
 }
