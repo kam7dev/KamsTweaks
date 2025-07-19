@@ -48,6 +48,7 @@ public class LandClaims implements Listener {
     LandClaimGui gui;
 
     public void setup() {
+        prot.init();
         getServer().getPluginManager().registerEvents(prot, KamsTweaks.getInstance());
         getServer().getPluginManager().registerEvents(gui, KamsTweaks.getInstance());
         getServer().getPluginManager().registerEvents(this, KamsTweaks.getInstance());
