@@ -30,6 +30,9 @@ import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.InventoryHolder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LandClaimsProtection implements Listener {
     LandClaims lc;
     public LandClaimsProtection(LandClaims lc) {
@@ -197,68 +200,63 @@ public class LandClaimsProtection implements Listener {
     @EventHandler
     public void onKaboom(EntityExplodeEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
-        boolean saidThingy = false;
         switch (e.getEntity()) {
             case TNTPrimed tnt -> {
                 if (tnt.getSource() instanceof Player player) {
+                    List<String> who = new ArrayList<>();
+                    boolean bypass = player.hasPermission("kamstweaks.landclaims.bypass");
+                    List<Block> toProtect = new ArrayList<>();
                     for (Block block : e.blockList()) {
                         LandClaims.Claim claim = lc.getClaim(block.getLocation());
+                        if (claim == null) continue;
                         if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                            if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                                if (!saidThingy) {
-                                    player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(", but you are bypassing the claim.")));
-                                    saidThingy = true;
-                                }
-                            }
-                            if (!saidThingy) {
-                                player.sendMessage(Component.text("This land is claimed by ").append(Component.text(claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
-                                saidThingy = true;
-                            }
-                            e.setCancelled(true);
-                            tnt.remove();
+                            var a = claim.m_owner == null ? "the server" : (claim.m_owner.getName() == null || claim.m_owner.getName().isEmpty()) ? "Unknown player" : claim.m_owner.getName();
+                            if (!who.contains(a)) who.add(a);
+                            if (!bypass) toProtect.add(block);
                         }
+                    }
+                    StringBuilder plrs = new StringBuilder();
+                    for (var plr : who) {
+                        if (plr.isEmpty()) continue;
+                        if (!plrs.isEmpty()) plrs.append(", ");
+                        plrs.append(plr);
+                    }
+                    if (bypass && !plrs.isEmpty()) {
+                        player.sendMessage(Component.text("This land is claimed by ").append(Component.text(plrs.toString()).color(NamedTextColor.GOLD)).append(Component.text(", but you are bypassing the claim.")));
+                        return;
+                    }
+                    if (!toProtect.isEmpty()) player.sendMessage(Component.text("This land is claimed by ").append(Component.text(plrs.toString()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                    e.blockList().removeAll(toProtect);
+                    for (Block block : toProtect) {
+                        block.getState().update(true, false);
                     }
                 } else {
+                    List<Block> toProtect = new ArrayList<>();
                     for (Block block : e.blockList()) {
                         LandClaims.Claim claim = lc.getClaim(block.getLocation());
+                        if (claim == null) continue;
                         if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                            e.setCancelled(true);
-                            tnt.remove();
+                            toProtect.add(block);
                         }
                     }
-                }
-            }
-            case EnderCrystal ec -> {
-                for (Block block : e.blockList()) {
-                    LandClaims.Claim claim = lc.getClaim(block.getLocation());
-                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                        e.setCancelled(true);
-                        ec.remove();
+                    e.blockList().removeAll(toProtect);
+                    for (Block block : toProtect) {
+                        block.getState().update(true, false);
                     }
                 }
-
-            }
-            case ExplosiveMinecart mc -> {
-                for (Block block : e.blockList()) {
-                    LandClaims.Claim claim = lc.getClaim(block.getLocation());
-                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                        e.setCancelled(true);
-                        mc.remove();
-                    }
-                }
-
-            }
-            case Creeper cr -> {
-                for (Block block : e.blockList()) {
-                    LandClaims.Claim claim = lc.getClaim(block.getLocation());
-                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                        e.setCancelled(true);
-                        cr.remove();
-                    }
-                }
-
             }
             default -> {
+                List<Block> toProtect = new ArrayList<>();
+                for (Block block : e.blockList()) {
+                    LandClaims.Claim claim = lc.getClaim(block.getLocation());
+                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        toProtect.add(block);
+                    }
+                }
+                e.blockList().removeAll(toProtect);
+                for (Block block : toProtect) {
+                    block.getState().update(true, false);
+                }
             }
         }
     }
