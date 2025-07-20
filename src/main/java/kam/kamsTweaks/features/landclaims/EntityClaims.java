@@ -14,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 
 import java.util.HashMap;
@@ -94,7 +95,6 @@ public class EntityClaims implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (e.getEntity() instanceof Creature c) {
             if (c instanceof Monster) return;
-            if (!(e.getDamager() instanceof Player)) return;
             if (!hasPermission((Player) e.getDamager(), c, EntityPermission.KILL)) {
                 OfflinePlayer owner = claims.get(c.getUniqueId()).m_owner;
                 if (e.getDamager().hasPermission("kamstweaks.landclaims.bypass")) {
@@ -105,5 +105,10 @@ public class EntityClaims implements Listener {
                 e.setCancelled(true);
             }
         }
+    }
+
+    @EventHandler
+    public void entityDie(EntityDeathEvent e) {
+        claims.remove(e.getEntity().getUniqueId());
     }
 }

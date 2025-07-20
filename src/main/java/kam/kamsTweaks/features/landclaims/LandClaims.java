@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static org.bukkit.Bukkit.getLogger;
 import static org.bukkit.Bukkit.getServer;
 
 public class LandClaims implements Listener {
@@ -308,6 +307,48 @@ public class LandClaims implements Listener {
                                         })
                         )
                 )
+                .then(Commands.literal("delete-all-entity")
+                        .executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) {
+                                sender.sendPlainMessage("Entity claims are disabled.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            Entity executor = ctx.getSource().getExecutor();
+                            if (!(executor instanceof Player)) {
+                                sender.sendPlainMessage("Only players can run this.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            sender.sendPlainMessage("Are you sure you want to delete all of your entity claims? Type /claims delete-all-entity confirm to confirm.");
+                            return Command.SINGLE_SUCCESS;
+                        })
+                        .then(
+                                Commands.literal("confirm")
+                                        .executes(ctx -> {
+                                            CommandSender sender = ctx.getSource().getSender();
+                                            if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) {
+                                                sender.sendPlainMessage("Entity claims are disabled.");
+                                                return Command.SINGLE_SUCCESS;
+                                            }
+                                            Entity executor = ctx.getSource().getExecutor();
+                                            if (!(executor instanceof Player player)) {
+                                                sender.sendPlainMessage("Only players can run this.");
+                                                return Command.SINGLE_SUCCESS;
+                                            }
+                                            int i = 0;
+                                            Iterator<Map.Entry<UUID, EntityClaims.EntityClaim>> it = KamsTweaks.getInstance().m_entityClaims.claims.entrySet().iterator();
+                                            while (it.hasNext()){
+                                                Map.Entry<UUID, EntityClaims.EntityClaim> claim = it.next();
+                                                if (claim.getValue().m_owner.equals(player)) {
+                                                    i++;
+                                                    it.remove();
+                                                }
+                                            }
+                                            sender.sendPlainMessage("Successfully deleted " + i + " claims.");
+                                            return Command.SINGLE_SUCCESS;
+                                        })
+                        )
+                )
                 .then(Commands.literal("at")
                     .then(Commands.argument("pos", ArgumentTypes.blockPosition()).executes(ctx -> {
                         CommandSender sender = ctx.getSource().getSender();
@@ -450,8 +491,10 @@ public class LandClaims implements Listener {
         if (claimsConfig.contains("entities")) {
             for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities")).getKeys(false)) {
                 try {
+                    UUID entity = UUID.fromString(key);
                     String ownerStr = claimsConfig.getString("entities." + key + ".owner");
                     UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
+                    if (Bukkit.getEntity(entity) == null) continue;
                     EntityClaims.EntityClaim claim = new EntityClaims.EntityClaim(owner == null ? null : getServer().getOfflinePlayer(owner));
                     claim.m_default = EntityClaims.EntityPermission.valueOf(claimsConfig.getString("entities." + key + ".default"));
                     if (claimsConfig.contains("entities." + key + ".perms")) {

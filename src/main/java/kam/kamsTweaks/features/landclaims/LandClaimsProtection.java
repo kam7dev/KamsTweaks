@@ -9,6 +9,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
+import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -373,8 +374,22 @@ public class LandClaimsProtection implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         if (event.getDestination().getType() == InventoryType.HOPPER) {
             if (event.getSource().getHolder() == null || event.getDestination().getHolder() == null) return;
-            LandClaims.Claim in = lc.getClaim(((BlockInventoryHolder) event.getSource().getHolder()).getBlock().getLocation());
-            LandClaims.Claim to = lc.getClaim(((BlockInventoryHolder) event.getDestination().getHolder()).getBlock().getLocation());
+            LandClaims.Claim in;
+            LandClaims.Claim to;
+            if (event.getSource().getHolder() instanceof BlockInventoryHolder) {
+                in = lc.getClaim(((BlockInventoryHolder) event.getSource().getHolder()).getBlock().getLocation());
+            } else if (event.getSource().getHolder() instanceof HopperMinecart) {
+                in = lc.getClaim(((HopperMinecart) event.getSource().getHolder()).getLocation());
+            } else {
+                return;
+            }
+            if (event.getDestination().getHolder() instanceof BlockInventoryHolder) {
+                to = lc.getClaim(((BlockInventoryHolder) event.getDestination().getHolder()).getBlock().getLocation());
+            } else if (event.getDestination().getHolder() instanceof HopperMinecart) {
+                to = lc.getClaim(((HopperMinecart) event.getDestination().getHolder()).getLocation());
+            } else {
+                return;
+            }
             if (in != null && !lc.hasPermission(to == null ? null : to.m_owner, in, LandClaims.ClaimPermission.INTERACT)) {
                 event.setCancelled(true);
             }
