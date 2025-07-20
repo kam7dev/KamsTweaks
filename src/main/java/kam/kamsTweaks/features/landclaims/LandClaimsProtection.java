@@ -81,7 +81,7 @@ public class LandClaimsProtection implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         if (e.getPlayer().getTargetEntity(5) instanceof Creature) return;
-        if (e.getItem() != null && e.getItem().isSimilar(ItemManager.createItem(ItemManager.ItemType.CLAIMER)) && (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
+        if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIMER && (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
             if (KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) lc.handleItem(e);
             e.setCancelled(true);
             return;

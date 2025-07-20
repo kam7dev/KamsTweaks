@@ -305,6 +305,7 @@ public class LandClaimGui implements Listener {
             }, 4);
             homeScreen.addItem(createGuiItem(Material.GLASS, Component.text("View Claims").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Show claims with particles.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 for (LandClaims.Claim claim : lc.claims) {
+                    if (claim.m_start.getWorld() != player.getWorld()) continue;
                     Color c;
                     if (claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
                         c = Color.GREEN;

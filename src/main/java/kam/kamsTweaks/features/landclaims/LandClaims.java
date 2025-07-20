@@ -251,20 +251,62 @@ public class LandClaims implements Listener {
                     )
                 )
                 .then(Commands.literal("get-tool")
-                    .executes(ctx -> {
-                        CommandSender sender = ctx.getSource().getSender();
-                        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
-                            sender.sendPlainMessage("Land claims are disabled.");
+                        .executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
+                                sender.sendPlainMessage("Land claims are disabled.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            Entity executor = ctx.getSource().getExecutor();
+                            if (!(executor instanceof Player player)) {
+                                sender.sendPlainMessage("Only players get the claim tool.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
                             return Command.SINGLE_SUCCESS;
-                        }
-                        Entity executor = ctx.getSource().getExecutor();
-                        if (!(executor instanceof Player player)) {
-                            sender.sendPlainMessage("Only players get the claim tool.");
+                        })
+                )
+                .then(Commands.literal("delete-all")
+                        .executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
+                                sender.sendPlainMessage("Land claims are disabled.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            Entity executor = ctx.getSource().getExecutor();
+                            if (!(executor instanceof Player)) {
+                                sender.sendPlainMessage("Only players can run this.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            sender.sendPlainMessage("Are you sure you want to delete all of your claims? Type /claims delete-all confirm to confirm.");
                             return Command.SINGLE_SUCCESS;
-                        }
-                        player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
-                        return Command.SINGLE_SUCCESS;
-                    })
+                        })
+                        .then(
+                                Commands.literal("confirm")
+                                        .executes(ctx -> {
+                                            CommandSender sender = ctx.getSource().getSender();
+                                            if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
+                                                sender.sendPlainMessage("Land claims are disabled.");
+                                                return Command.SINGLE_SUCCESS;
+                                            }
+                                            Entity executor = ctx.getSource().getExecutor();
+                                            if (!(executor instanceof Player player)) {
+                                                sender.sendPlainMessage("Only players can run this.");
+                                                return Command.SINGLE_SUCCESS;
+                                            }
+                                            int i = 0;
+                                            Iterator<Claim> it = claims.iterator();
+                                            while (it.hasNext()){
+                                                Claim claim = it.next();
+                                                if (claim.m_owner.equals(player)) {
+                                                    i++;
+                                                    it.remove();
+                                                }
+                                            }
+                                            sender.sendPlainMessage("Successfully deleted " + i + " claims.");
+                                            return Command.SINGLE_SUCCESS;
+                                        })
+                        )
                 )
                 .then(Commands.literal("at")
                     .then(Commands.argument("pos", ArgumentTypes.blockPosition()).executes(ctx -> {
