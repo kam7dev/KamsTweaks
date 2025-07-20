@@ -358,6 +358,33 @@ public class LandClaimGui implements Listener {
                 }
                 ui.close(false);
             }, 5);
+            homeScreen.addItem(createGuiItem(Material.SPYGLASS, Component.text("View Your Claims").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Tells you where your claims are in chat.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                StringBuilder claimsMsg = new StringBuilder();
+                int i = 0;
+                for (LandClaims.Claim claim : lc.claims) {
+                    if (claim.m_owner.equals(player)) {
+                        i++;
+                        claimsMsg
+                                .append("\nClaim ").append(i).append(": ")
+                                .append(claim.m_start.getBlockX())
+                                .append(", ")
+                                .append(claim.m_start.getBlockY())
+                                .append(", ")
+                                .append(claim.m_start.getBlockZ())
+                                .append(" to ")
+                                .append(claim.m_end.getBlockX())
+                                .append(", ")
+                                .append(claim.m_end.getBlockY())
+                                .append(", ")
+                                .append(claim.m_end.getBlockZ())
+                                .append(" in ")
+                                .append(claim.m_start.getWorld().getName());
+                    }
+                }
+                claimsMsg.insert(0, "You have " + i + " claims.");
+                player.sendMessage(claimsMsg.toString());
+                ui.close(false);
+            }, 6);
 
             editScreen.addItem(createGuiItem(Material.LEVER, Component.text("Change Default Permission").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Change what all players can do by default.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 permScreen.changeTitle(Component.text("Edit Default Permissions"));

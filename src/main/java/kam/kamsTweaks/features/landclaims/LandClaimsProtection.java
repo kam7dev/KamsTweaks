@@ -5,6 +5,7 @@ import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.block.data.Directional;
@@ -17,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
@@ -403,6 +405,32 @@ public class LandClaimsProtection implements Listener {
             if (in != null && !lc.hasPermission(to == null ? null : to.m_owner, in, LandClaims.ClaimPermission.INTERACT)) {
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler
+    public void onMobTrample(EntityInteractEvent event) {
+        if (event.getEntity() instanceof Player) return;
+        if (event.getBlock().getType() != Material.FARMLAND) return;
+        LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
+        if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerTrample(PlayerInteractEvent event) {
+        if (event.getAction() != Action.PHYSICAL) return;
+        if (event.getClickedBlock() == null || event.getClickedBlock().getType() != Material.FARMLAND) return;
+        Player player = event.getPlayer();
+        LandClaims.Claim claim = lc.getClaim(event.getClickedBlock().getLocation());
+        if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+            if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                message(player, claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), true);
+                return;
+            }
+            message(player, claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
+            event.setCancelled(true);
         }
     }
 }

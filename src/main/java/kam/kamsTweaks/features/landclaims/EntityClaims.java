@@ -95,13 +95,21 @@ public class EntityClaims implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (e.getEntity() instanceof Creature c) {
             if (c instanceof Monster) return;
-            if (!hasPermission((Player) e.getDamager(), c, EntityPermission.KILL)) {
-                OfflinePlayer owner = claims.get(c.getUniqueId()).m_owner;
-                if (e.getDamager().hasPermission("kamstweaks.landclaims.bypass")) {
-                    e.getDamager().sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(", but you are bypassing the claim.")));
+            if (e.getDamager() instanceof Player player) {
+                if (hasPermission(player, c, EntityPermission.KILL)) return;
+                EntityClaim claim = claims.get(c.getUniqueId());
+                if (claim == null) return;
+                OfflinePlayer owner = claim.m_owner;
+                if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                    player.sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(", but you are bypassing the claim.")));
                     return;
                 }
-                e.getDamager().sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                player.sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                e.setCancelled(true);
+            } else {
+                if (hasPermission(null, c, EntityPermission.KILL)) return;
+                EntityClaim claim = claims.get(c.getUniqueId());
+                if (claim == null) return;
                 e.setCancelled(true);
             }
         }
