@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
@@ -376,17 +377,26 @@ public class LandClaimsProtection implements Listener {
             if (event.getSource().getHolder() == null || event.getDestination().getHolder() == null) return;
             LandClaims.Claim in;
             LandClaims.Claim to;
+            KamsTweaks.getInstance().getLogger().info(event.getSource().getHolder().getClass().getName());
             if (event.getSource().getHolder() instanceof BlockInventoryHolder) {
                 in = lc.getClaim(((BlockInventoryHolder) event.getSource().getHolder()).getBlock().getLocation());
+            } else if (event.getSource().getHolder() instanceof DoubleChest) {
+                in = lc.getClaim(((DoubleChest) event.getSource().getHolder()).getLocation());
             } else if (event.getSource().getHolder() instanceof HopperMinecart) {
                 in = lc.getClaim(((HopperMinecart) event.getSource().getHolder()).getLocation());
+            } else if (event.getSource().getHolder() instanceof StorageMinecart) {
+                in = lc.getClaim(((StorageMinecart) event.getSource().getHolder()).getLocation());
             } else {
                 return;
             }
             if (event.getDestination().getHolder() instanceof BlockInventoryHolder) {
                 to = lc.getClaim(((BlockInventoryHolder) event.getDestination().getHolder()).getBlock().getLocation());
+            } else if (event.getSource().getHolder() instanceof DoubleChest) {
+                to= lc.getClaim(((DoubleChest) event.getDestination().getHolder()).getLocation());
             } else if (event.getDestination().getHolder() instanceof HopperMinecart) {
                 to = lc.getClaim(((HopperMinecart) event.getDestination().getHolder()).getLocation());
+            } else if (event.getDestination().getHolder() instanceof StorageMinecart) {
+                to = lc.getClaim(((StorageMinecart) event.getDestination().getHolder()).getLocation());
             } else {
                 return;
             }
