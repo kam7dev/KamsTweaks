@@ -20,3 +20,7 @@ entity-claims:
   enabled: true
   # How many entities a player can claim.
   max-claims: 1000
+
+# Silk Touch Spawners configuration
+silk-spawners:
+  enabled: true
