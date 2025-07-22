@@ -380,7 +380,6 @@ public class LandClaimsProtection implements Listener {
             if (event.getSource().getHolder() == null || event.getDestination().getHolder() == null) return;
             LandClaims.Claim in;
             LandClaims.Claim to;
-            KamsTweaks.getInstance().getLogger().info(event.getSource().getHolder().getClass().getName());
             if (event.getSource().getHolder() instanceof BlockInventoryHolder) {
                 in = lc.getClaim(((BlockInventoryHolder) event.getSource().getHolder()).getBlock().getLocation());
             } else if (event.getSource().getHolder() instanceof DoubleChest) {
