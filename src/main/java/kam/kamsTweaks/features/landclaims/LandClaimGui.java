@@ -283,9 +283,12 @@ public class LandClaimGui implements Listener {
                 }
             }, 3);
             homeScreen.addItem(createGuiItem(Material.SHIELD, Component.text("Claim").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Claim land.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
-                for (LandClaims.Claim claim : lc.claiming) {
+                Iterator<LandClaims.Claim> iterator = lc.claiming.iterator();
+                while (iterator.hasNext()) {
+                    LandClaims.Claim claim = iterator.next();
                     if (claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
-                        player.sendMessage(Component.text("You're already trying to claim other land!").color(NamedTextColor.RED));
+                        player.sendMessage(Component.text("Cancelled claiming land.").color(NamedTextColor.RED));
+                        iterator.remove();
                         return;
                     }
                 }

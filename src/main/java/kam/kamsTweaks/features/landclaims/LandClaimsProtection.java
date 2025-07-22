@@ -16,6 +16,7 @@ import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
@@ -430,6 +431,14 @@ public class LandClaimsProtection implements Listener {
                 return;
             }
             message(player, claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+        LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
+        if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
             event.setCancelled(true);
         }
     }
