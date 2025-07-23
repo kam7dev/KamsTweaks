@@ -410,6 +410,7 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onMobTrample(EntityInteractEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         if (event.getEntity() instanceof Player) return;
         if (event.getBlock().getType() != Material.FARMLAND) return;
         LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
@@ -420,6 +421,7 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onPlayerTrample(PlayerInteractEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         if (event.getAction() != Action.PHYSICAL) return;
         if (event.getClickedBlock() == null || event.getClickedBlock().getType() != Material.FARMLAND) return;
         Player player = event.getPlayer();
@@ -436,6 +438,8 @@ public class LandClaimsProtection implements Listener {
 
     @EventHandler
     public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+        if (event.getEntityType() == EntityType.SHEEP) return;
         LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
         if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
             event.setCancelled(true);
