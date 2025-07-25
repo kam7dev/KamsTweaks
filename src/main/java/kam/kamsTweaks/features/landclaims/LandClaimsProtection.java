@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.type.Fire;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.entity.minecart.HopperMinecart;
@@ -30,6 +31,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -185,6 +187,11 @@ public class LandClaimsProtection implements Listener {
                 message(player, claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
                 e.setCancelled(true);
             }
+        }  else {
+            LandClaims.Claim claim = lc.getClaim(e.getVehicle().getLocation());
+            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                e.setCancelled(true);
+            }
         }
     }
 
@@ -258,12 +265,99 @@ public class LandClaimsProtection implements Listener {
     }
 
     @EventHandler
+    public void onKaboom(BlockExplodeEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+        List<Block> toProtect = new ArrayList<>();
+        for (Block block : e.blockList()) {
+            LandClaims.Claim claim = lc.getClaim(block.getLocation());
+            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                toProtect.add(block);
+            }
+        }
+        e.blockList().removeAll(toProtect);
+        for (Block block : toProtect) {
+            block.getState().update(true, false);
+        }
+    }
+
+    @EventHandler
     public void onFlow(BlockFromToEvent event) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         LandClaims.Claim in = lc.getClaim(event.getToBlock().getLocation());
         LandClaims.Claim to = lc.getClaim(event.getBlock().getLocation());
         if (in != null && !lc.hasPermission(to == null ? null : to.m_owner, in, LandClaims.ClaimPermission.BLOCKS)) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBurn(BlockBurnEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+        LandClaims.Claim in = null;
+        if (event.getIgnitingBlock() != null) {
+            in = lc.getClaim(event.getIgnitingBlock().getLocation());
+        }
+        LandClaims.Claim to = lc.getClaim(event.getBlock().getLocation());
+        if (to != null && !lc.hasPermission(in == null ? null : in.m_owner, to, LandClaims.ClaimPermission.BLOCKS)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onIgnite(BlockIgniteEvent event) {
+        switch(event.getCause()) {
+            case LAVA, SPREAD -> {
+                if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+                assert event.getIgnitingBlock() != null;
+                LandClaims.Claim in = lc.getClaim(event.getBlock().getLocation());
+                LandClaims.Claim to = lc.getClaim(event.getIgnitingBlock().getLocation());
+                if (in != null && !lc.hasPermission(to == null ? null : to.m_owner, in, LandClaims.ClaimPermission.BLOCKS)) {
+                    event.setCancelled(true);
+                }
+            }
+            case LIGHTNING, ENDER_CRYSTAL,EXPLOSION -> {
+                LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
+                if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                    event.setCancelled(true);
+                }
+            }
+            case FIREBALL, ARROW -> {
+                var projectile = (Projectile) event.getIgnitingEntity();
+                assert projectile != null;
+                var shooter = projectile.getShooter();
+                LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
+                if (shooter instanceof Player player) {
+                    if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                            message(player, claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), true);
+                            return;
+                        }
+                        message(player, claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
+                        event.setCancelled(true);
+                    }
+                } else {
+                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        event.setCancelled(true);
+                    }
+                }
+            }
+            case FLINT_AND_STEEL -> {
+                LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
+                if (event.getIgnitingEntity() instanceof Player player) {
+                    if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                            message(player, claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), true);
+                            return;
+                        }
+                        message(player, claim.m_owner == null ? "the server" : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
+                        event.setCancelled(true);
+                    }
+                } else {
+                    if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                        event.setCancelled(true);
+                    }
+                }
+            }
         }
     }
 

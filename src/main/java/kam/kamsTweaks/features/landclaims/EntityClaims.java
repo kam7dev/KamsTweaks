@@ -13,14 +13,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static org.bukkit.Bukkit.getLogger;
 import static org.bukkit.Bukkit.getServer;
@@ -48,6 +47,19 @@ public class EntityClaims implements Listener {
         public EntityClaim(OfflinePlayer owner) {
             m_owner = owner;
         }
+    }
+
+    final List<UUID> hasMessaged = new ArrayList<>();
+
+    void message(Player player, String owner, boolean bypass) {
+        if (hasMessaged.contains(player.getUniqueId())) return;
+        hasMessaged.add(player.getUniqueId());
+        if (bypass) player.sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner).color(NamedTextColor.GOLD)).append(Component.text(", but you are bypassing the claim.")));
+        else player.sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner).color(NamedTextColor.GOLD)).append(Component.text(".")));
+    }
+
+    public void init() {
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), hasMessaged::clear, 1, 1);
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -81,17 +93,17 @@ public class EntityClaims implements Listener {
             if (!hasPermission(e.getPlayer(), c, EntityPermission.INTERACT)) {
                 OfflinePlayer owner = claims.get(e.getRightClicked().getUniqueId()).m_owner;
                 if (e.getPlayer().hasPermission("kamstweaks.landclaims.bypass")) {
-                    e.getPlayer().sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(", but you are bypassing the claim.")));
+                    message(e.getPlayer(), owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), true);
                     return;
                 }
-                e.getPlayer().sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                message(e.getPlayer(), owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), false);
                 e.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onEntityDamage(EntityDamageByEntityEvent e) {
+    public void onEntityEntityDamage(EntityDamageByEntityEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (e.getEntity() instanceof Creature c) {
             if (c instanceof Monster) return;
@@ -101,10 +113,10 @@ public class EntityClaims implements Listener {
                 if (claim == null) return;
                 OfflinePlayer owner = claim.m_owner;
                 if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                    player.sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(", but you are bypassing the claim.")));
+                    message(player, owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), true);
                     return;
                 }
-                player.sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                message(player, owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), false);
                 e.setCancelled(true);
             } else {
                 if (hasPermission(null, c, EntityPermission.KILL)) return;
@@ -112,6 +124,30 @@ public class EntityClaims implements Listener {
                 if (claim == null) return;
                 e.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler
+    public void onEntityBlockDamage(EntityDamageByBlockEvent e)  {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
+        KamsTweaks.getInstance().getLogger().info("A");
+        if (e.getEntity() instanceof Creature c) {
+            KamsTweaks.getInstance().getLogger().info("B");
+            if (c instanceof Monster) return;
+            KamsTweaks.getInstance().getLogger().info("C");
+            if (hasPermission(null, c, EntityPermission.KILL)) return;
+            KamsTweaks.getInstance().getLogger().info("D");
+            EntityClaim claim = claims.get(c.getUniqueId());
+            if (claim == null) return;
+            KamsTweaks.getInstance().getLogger().info("E");
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onDamage(EntityDamageEvent event) {
+        switch (event.getCause()) {
+            case FIRE, FIRE_TICK, FALL, DROWNING, CAMPFIRE, SUFFOCATION -> event.setCancelled(true);
         }
     }
 

@@ -27,6 +27,7 @@ public final class KamsTweaks extends JavaPlugin {
         m_landClaims.loadClaims();
 
         m_landClaims.setup();
+        m_entityClaims.init();
         getServer().getPluginManager().registerEvents(m_entityClaims, this);
         getServer().getPluginManager().registerEvents(m_seedDispenser, this);
         getServer().getPluginManager().registerEvents(m_silkSpawner, this);
