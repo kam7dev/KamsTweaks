@@ -15,7 +15,15 @@ import java.util.Map;
 
 public class ItemManager {
     public enum ItemType {
-        CLAIMER
+        CLAIMER,
+
+        // Troll items to be removed via TrollRemover
+        FLYING_BOOTS,
+        BLINDNESS_WAND,
+        LEVITATION_SWORD,
+        KNOCKBACK_STICK,
+        FAKE_TNT,
+        PORTAL_BOW
     }
     private static Map<ItemType, ItemStack> items;
     private static boolean initialized = false;
