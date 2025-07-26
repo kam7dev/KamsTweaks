@@ -142,7 +142,7 @@ public class EntityClaims implements Listener {
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
-        if (e.getEntity() instanceof Creature c) {
+        if (event.getEntity() instanceof Creature c) {
             if (c instanceof Monster) return;
             if (hasPermission(null, c, EntityPermission.KILL)) return;
             EntityClaim claim = claims.get(c.getUniqueId());
@@ -150,6 +150,7 @@ public class EntityClaims implements Listener {
             switch (event.getCause()) {
                 case FIRE, FIRE_TICK, FALL, DROWNING, CAMPFIRE, SUFFOCATION -> event.setCancelled(true);
             }
+        }
     }
 
     @EventHandler
