@@ -5,6 +5,7 @@ import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.features.SilkSpawner;
 import kam.kamsTweaks.features.landclaims.EntityClaims;
 import kam.kamsTweaks.features.landclaims.LandClaims;
+import kam.kamsTweaks.features.trolls.AshswagTrolls;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class KamsTweaks extends JavaPlugin {
@@ -13,6 +14,7 @@ public final class KamsTweaks extends JavaPlugin {
     public LandClaims m_landClaims = new LandClaims();
     public EntityClaims m_entityClaims = new EntityClaims();
     SilkSpawner m_silkSpawner = new SilkSpawner();
+    AshswagTrolls m_trolls = new AshswagTrolls();
 
     public static KamsTweaks getInstance() {
         return m_instance;
@@ -25,7 +27,6 @@ public final class KamsTweaks extends JavaPlugin {
 
         this.saveDefaultConfig();
         m_landClaims.loadClaims();
-
         m_landClaims.setup();
         m_entityClaims.init();
         getServer().getPluginManager().registerEvents(m_entityClaims, this);
@@ -35,6 +36,8 @@ public final class KamsTweaks extends JavaPlugin {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             m_landClaims.registerCommands(commands);
         });
+
+        m_trolls.onEnable();
 
     }
 
