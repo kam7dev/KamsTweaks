@@ -141,9 +141,15 @@ public class EntityClaims implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
-        switch (event.getCause()) {
-            case FIRE, FIRE_TICK, FALL, DROWNING, CAMPFIRE, SUFFOCATION -> event.setCancelled(true);
-        }
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
+        if (e.getEntity() instanceof Creature c) {
+            if (c instanceof Monster) return;
+            if (hasPermission(null, c, EntityPermission.KILL)) return;
+            EntityClaim claim = claims.get(c.getUniqueId());
+            if (claim == null) return;
+            switch (event.getCause()) {
+                case FIRE, FIRE_TICK, FALL, DROWNING, CAMPFIRE, SUFFOCATION -> event.setCancelled(true);
+            }
     }
 
     @EventHandler
