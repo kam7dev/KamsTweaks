@@ -1,4 +1,4 @@
 name: KamsTweaks
-version: '1.1.7'
+version: '1.1.8'
 main: kam.kamsTweaks.KamsTweaks
 api-version: '1.21'

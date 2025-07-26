@@ -130,16 +130,11 @@ public class EntityClaims implements Listener {
     @EventHandler
     public void onEntityBlockDamage(EntityDamageByBlockEvent e)  {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
-        KamsTweaks.getInstance().getLogger().info("A");
         if (e.getEntity() instanceof Creature c) {
-            KamsTweaks.getInstance().getLogger().info("B");
             if (c instanceof Monster) return;
-            KamsTweaks.getInstance().getLogger().info("C");
             if (hasPermission(null, c, EntityPermission.KILL)) return;
-            KamsTweaks.getInstance().getLogger().info("D");
             EntityClaim claim = claims.get(c.getUniqueId());
             if (claim == null) return;
-            KamsTweaks.getInstance().getLogger().info("E");
             e.setCancelled(true);
         }
     }
