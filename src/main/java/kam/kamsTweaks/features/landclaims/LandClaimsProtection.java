@@ -710,8 +710,23 @@ public class LandClaimsProtection implements Listener {
         if (event.getEntityType() == EntityType.SHEEP)
             return;
         LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
-        if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
-            event.setCancelled(true);
+        if (event.getEntity() instanceof Player player) {
+            if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                    message(player,
+                            claim.m_owner == null ? "the server"
+                                    : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                            true);
+                    return;
+                }
+                message(player, claim.m_owner == null ? "the server"
+                        : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
+                event.setCancelled(true);
+            }
+        } else {
+            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                event.setCancelled(true);
+            }
         }
     }
 }
