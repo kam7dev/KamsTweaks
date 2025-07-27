@@ -1,8 +1,8 @@
 package kam.kamsTweaks;
 
-import com.eduardomcb.discord.webhook.WebhookClient;
-import com.eduardomcb.discord.webhook.WebhookManager;
-import com.eduardomcb.discord.webhook.models.Message;
+//import com.eduardomcb.discord.webhook.WebhookClient;
+//import com.eduardomcb.discord.webhook.WebhookManager;
+//import com.eduardomcb.discord.webhook.models.Message;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -15,65 +15,65 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class Logger {
-    static WebhookManager webhook;
+    //static WebhookManager webhook;
     static boolean inited = false;
     public static void init() {
         if (inited) return;
         inited = true;
-        String url = KamsTweaks.getInstance().getConfig().getString("dev-webhook", "");
-        if (url.isEmpty()) return;
-        webhook = new WebhookManager().setChannelUrl(url);
-	webhook.setListener(new WebhookClient.Callback() {
-		@Override
-		public void onSuccess(String response) {
+        //String url = KamsTweaks.getInstance().getConfig().getString("dev-webhook", "");
+        //if (url.isEmpty()) return;
+        //webhook = new WebhookManager().setChannelUrl(url);
+	//webhook.setListener(new WebhookClient.Callback() {
+		//@Override
+		//public void onSuccess(String response) {
 		        
-  		}
+  		//}
 
-    		@Override
-    		public void onFailure(int statusCode, String errorMessage) {
-        		KamsTweaks.getInstance().getLogger().warning("Failed to send to dev webhook! Code: " + statusCode + ", error: " + errorMessage);
-    		}
-	});
-    }
+    		//@Override
+    		//public void onFailure(int statusCode, String errorMessage) {
+        	//	KamsTweaks.getInstance().getLogger().warning("Failed to send to dev webhook! Code: " + statusCode + ", error: " + errorMessage);
+    		//}
+	//});
+    //}
 
-    @SuppressWarnings("UnstableApiUsage")
-    public static void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("kamslogger")
-                .requires(sender -> sender.getSender().getName().equals("km7dev"))
-                .then(Commands.literal("set-url").then(Commands.argument("url", StringArgumentType.string()).executes(ctx -> {
-                    String url = ctx.getArgument("url", String.class);
-                    KamsTweaks.getInstance().getConfig().set("dev-webhook", url);
-                    KamsTweaks.getInstance().saveConfig();
-                    if (webhook == null) {
-                        webhook = new WebhookManager().setChannelUrl(url);
-			webhook.setListener(new WebhookClient.Callback() {
-				@Override                                                                       public void onSuccess(String response) {
+    //@SuppressWarnings("UnstableApiUsage")
+    //public static void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
+        //LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("kamslogger")
+                //.requires(sender -> sender.getSender().getName().equals("km7dev"))
+                //.then(Commands.literal("set-url").then(Commands.argument("url", StringArgumentType.string()).executes(ctx -> {
+                    //String url = ctx.getArgument("url", String.class);
+                    //KamsTweaks.getInstance().getConfig().set("dev-webhook", url);
+                    //KamsTweaks.getInstance().saveConfig();
+                    //if (webhook == null) {
+                        //webhook = new WebhookManager().setChannelUrl(url);
+			//webhook.setListener(new WebhookClient.Callback() {
+				//@Override                                                                       public void onSuccess(String response) {
 
-				}
+				//}
 
-				@Override
-				public void onFailure(int statusCode, String errorMessage) {
-					KamsTweaks.getInstance().getLogger().warning("Failed to send to dev webhook! Code: " + statusCode + ", error: " + errorMessage);
-				}
-			});
-                    } else {
-			webhook.setChannelUrl(url);
-                    }
-                    ctx.getSource().getSender().sendMessage("Successfully set webhook url.");
-                    return Command.SINGLE_SUCCESS;
-		}))).then(Commands.literal("Log").executes(ctx -> {
-                    Logger.info("Test log");
-                    return Command.SINGLE_SUCCESS;
-                })).then(Commands.literal("Warn").executes(ctx -> {
-                    Logger.warn("Test warn");
-                    return Command.SINGLE_SUCCESS;
-                })).then(Commands.literal("Error").executes(ctx -> {
-                    Logger.error("Test error");
-                    return Command.SINGLE_SUCCESS;
-                }));
-        LiteralCommandNode<CommandSourceStack> buildCommand = command.build();
-        commands.registrar().register(buildCommand);
-    }
+				//@Override
+				//public void onFailure(int statusCode, String errorMessage) {
+			        //	KamsTweaks.getInstance().getLogger().warning("Failed to send to dev webhook! Code: " + statusCode + ", error: " + errorMessage);
+				//}
+			//});
+                    //} else {
+			//webhook.setChannelUrl(url);
+                    //}
+	            //ctx.getSource().getSender().sendMessage("Successfully set webhook url.");
+                    //return Command.SINGLE_SUCCESS;
+		//}))).then(Commands.literal("Log").executes(ctx -> {
+               //     Logger.info("Test log");
+                //    return Command.SINGLE_SUCCESS;
+                //})).then(Commands.literal("Warn").executes(ctx -> {
+                //    Logger.warn("Test warn");
+                 //   return Command.SINGLE_SUCCESS;
+               // })).then(Commands.literal("Error").executes(ctx -> {
+               //     Logger.error("Test error");
+             //       return Command.SINGLE_SUCCESS;
+           //     }));
+       // LiteralCommandNode<CommandSourceStack> buildCommand = command.build();
+  //      commands.registrar().register(buildCommand);
+  //  }
 
 //    static void sendToHook(String message) {
 //        if (webhook != null) {
