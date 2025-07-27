@@ -9,7 +9,6 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.block.data.Directional;
-import org.bukkit.block.data.type.Fire;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.entity.minecart.HopperMinecart;
@@ -31,7 +30,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,10 +86,29 @@ public class LandClaimsProtection implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         if (e.getPlayer().getTargetEntity(5) instanceof Creature) return;
-        if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIMER && (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
-            if (KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) lc.handleItem(e);
-            e.setCancelled(true);
-            return;
+        if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIMER) {
+            if (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                if (KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) lc.handleItem(e);
+                e.setCancelled(true);
+                return;
+            } else if (e.getAction() == Action.LEFT_CLICK_BLOCK) {
+                if (KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
+                    if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+                    assert e.getClickedBlock() != null;
+                    LandClaims.Claim res = lc.getClaim(e.getClickedBlock().getLocation());
+                    if (res == null)
+                        e.getPlayer().sendMessage(Component.text("This land isn't claimed."));
+                    else if (res.m_owner == null)
+                        e.getPlayer().sendMessage(Component.text("This claim is owned by the server."));
+                    else
+                        e.getPlayer().sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName() == null ? "Unknown player" : res.m_owner.getName()).color(NamedTextColor.GOLD)));
+                }
+                e.setCancelled(true);
+                return;
+            } else if (e.getAction() == Action.LEFT_CLICK_AIR) {
+                e.setCancelled(true);
+                return;
+            }
         }
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
