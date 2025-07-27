@@ -6,7 +6,7 @@ import kam.kamsTweaks.features.SilkSpawner;
 import kam.kamsTweaks.features.TrollRemover;
 import kam.kamsTweaks.features.landclaims.EntityClaims;
 import kam.kamsTweaks.features.landclaims.LandClaims;
-import kam.kamsTweaks.utils.events.SafeEventManager;
+//import kam.kamsTweaks.utils.events.SafeEventManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 
@@ -26,32 +26,28 @@ public final class KamsTweaks extends JavaPlugin {
     public void onEnable() {
         m_instance = this;
         Logger.init();
-        try {
             this.saveDefaultConfig();
             m_landClaims.loadClaims();
 
             m_landClaims.setup();
             m_entityClaims.init();
-            SafeEventManager.register(m_entityClaims, this);
-            SafeEventManager.register(m_seedDispenser, this);
-            SafeEventManager.register(m_silkSpawner, this);
-            SafeEventManager.register(new TrollRemover(), this);
+            getServer().getPluginManager().registerEvents(m_entityClaims, this);
+            getServer().getPluginManager().registerEvents(m_seedDispenser, this);
+            getServer().getPluginManager().registerEvents(m_silkSpawner, this);
+            getServer().getPluginManager().registerEvents(new TrollRemover(), this);
 
             this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
                 m_landClaims.registerCommands(commands);
-                Logger.registerCommands(commands);
+               // Logger.registerCommands(commands);
             });
-        } catch (Exception e) {
-            Logger.error(e.getMessage());
-        }
     }
 
     @Override
     public void onDisable() {
-        try {
+        //try {
             m_landClaims.saveClaims();
-        } catch (Exception e) {
-            Logger.error(e.getMessage());
-        }
+        //} catch (Exception e) {
+      //      Logger.error(e.getMessage());
+       // }
     }
 }
