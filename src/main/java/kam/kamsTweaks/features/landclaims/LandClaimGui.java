@@ -3,6 +3,7 @@ package kam.kamsTweaks.features.landclaims;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ItemManager.ItemType;
+import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.Pair;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -55,47 +56,59 @@ public class LandClaimGui implements Listener {
     // Events
     @EventHandler
     public void onInventoryDrag(final InventoryDragEvent e) {
-        if (guis.containsKey((Player) e.getWhoClicked())) {
-            for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
-                if (e.getInventory().equals(screen.inv)) {
-                    e.setCancelled(true);
+        try {
+            if (guis.containsKey((Player) e.getWhoClicked())) {
+                for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
+                    if (e.getInventory().equals(screen.inv)) {
+                        e.setCancelled(true);
+                    }
                 }
             }
+        } catch (Exception exception) {
+            Logger.error(exception.getMessage());
         }
     }
 
     @EventHandler
     public void onLeave(final PlayerQuitEvent e) {
-        guis.remove(e.getPlayer());
+        try {
+            guis.remove(e.getPlayer());
+        } catch (Exception exception) {
+            Logger.error(exception.getMessage());
+        }
     }
 
     @EventHandler
     public void onInventoryClick(final InventoryClickEvent e) {
-        if (e.getInventory().getType() == InventoryType.GRINDSTONE) {
-		ItemStack result = e.getInventory().getItem(2);
-        	if (result != null && ItemManager.getType(result) == ItemType.CLAIMER) {
-        		e.setCancelled(true);
-            		e.getWhoClicked().sendMessage(Component.text("You cannot disenchant this item.").color(NamedTextColor.RED));
-			return;
-        	}
-    	}
-        if (guis.containsKey((Player) e.getWhoClicked())) {
-            for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
-                if (e.getInventory().equals(screen.inv)) {
+        try {
+            if (e.getInventory().getType() == InventoryType.GRINDSTONE) {
+            ItemStack result = e.getInventory().getItem(2);
+                if (result != null && ItemManager.getType(result) == ItemType.CLAIMER) {
                     e.setCancelled(true);
-                    if (Objects.equals(e.getCurrentItem(), screen.leftArrow)) {
-                        screen.previousPage();
-                    } else if (Objects.equals(e.getCurrentItem(), screen.rightArrow)) {
-                        screen.nextPage();
-                    } else {
-                        screen.items.forEach((slot, item) -> {
-                            if (item.first.equals(e.getCurrentItem())) {
-                                item.second.run((Player) e.getWhoClicked(), e.getInventory(), e.getCurrentItem());
-                            }
-                        });
+                        e.getWhoClicked().sendMessage(Component.text("You cannot disenchant this item.").color(NamedTextColor.RED));
+                return;
+                }
+            }
+            if (guis.containsKey((Player) e.getWhoClicked())) {
+                for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
+                    if (e.getInventory().equals(screen.inv)) {
+                        e.setCancelled(true);
+                        if (Objects.equals(e.getCurrentItem(), screen.leftArrow)) {
+                            screen.previousPage();
+                        } else if (Objects.equals(e.getCurrentItem(), screen.rightArrow)) {
+                            screen.nextPage();
+                        } else {
+                            screen.items.forEach((slot, item) -> {
+                                if (item.first.equals(e.getCurrentItem())) {
+                                    item.second.run((Player) e.getWhoClicked(), e.getInventory(), e.getCurrentItem());
+                                }
+                            });
+                        }
                     }
                 }
             }
+        } catch (Exception exception) {
+            Logger.error(exception.getMessage());
         }
     }
 
@@ -405,7 +418,7 @@ public class LandClaimGui implements Listener {
                     try {
                         meta.setOwningPlayer(oplr);
                     } catch (Exception e) {
-                        KamsTweaks.getInstance().getLogger().warning(e.getMessage());
+                        Logger.warn(e.getMessage());
                     }
                     meta.lore(List.of(new TextComponent[]{
                             switch (ui.claim.m_perms.getOrDefault(oplr, ui.claim.m_default)) {
@@ -505,7 +518,7 @@ public class LandClaimGui implements Listener {
                     try {
                         meta.setOwningPlayer(oplr);
                     } catch (Exception e) {
-                        KamsTweaks.getInstance().getLogger().warning(e.getMessage());
+                        Logger.warn(e.getMessage());
                     }
                     meta.lore(List.of(new TextComponent[]{
                             switch (claim.m_perms.getOrDefault(oplr, claim.m_default)) {

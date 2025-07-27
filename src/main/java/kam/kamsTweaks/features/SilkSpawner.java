@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.utils.events.SafeEventHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -9,7 +10,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -20,8 +20,8 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.Collections;
 
 public class SilkSpawner implements Listener {
-    @EventHandler
-    public void onBreak(BlockBreakEvent e) {
+    @SafeEventHandler
+    public void onBreak(BlockBreakEvent e) throws Exception {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("silk-spawners.enabled", true)) return;
         if (e.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 0) {
             if (e.getBlock().getType() == Material.SPAWNER && e.isDropItems()) {
@@ -39,9 +39,10 @@ public class SilkSpawner implements Listener {
                 e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), spawner);
             }
         }
+        throw new Exception("TEst");
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onPlace(BlockPlaceEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("silk-spawners.enabled", true)) return;
         if (e.getBlock().getState() instanceof CreatureSpawner spawner) {

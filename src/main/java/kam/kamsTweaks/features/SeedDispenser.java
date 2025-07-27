@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -34,40 +35,24 @@ public class SeedDispenser implements Listener {
 
     @EventHandler
     public void onDispense(BlockDispenseEvent e) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
-        Block block = e.getBlock();
-        if (block.getType() == Material.DISPENSER) {
-            Directional directional = (Directional) block.getBlockData();
-            Block farm = block.getRelative(directional.getFacing());
-            if (farm.getType() == Material.FARMLAND) {
-                Container container = (Container) block.getState();
-                Material mat = matForSeed(e.getItem());
-                if (mat != null) {
-                    e.setCancelled(true);
-                    Block toPlace = farm.getRelative(BlockFace.UP);
-                    if (toPlace.getType() != Material.AIR) {
-                        return;
-                    }
-                    ItemStack[] contents = container.getInventory().getContents();
-                    for (int i = 0; i < contents.length; i++) {
-                        ItemStack slot = contents[i];
-                        if (slot == null) continue;
-                        if (slot.isSimilar(e.getItem())) {
-                            int amount = slot.getAmount();
-                            if (amount > 1) {
-                                slot.setAmount(amount - 1);
-                                container.getInventory().setItem(i, slot);
-                            } else {
-                                container.getInventory().setItem(i, null);
-                            }
-                            toPlace.setType(mat);
+        try {
+            if (!KamsTweaks.getInstance().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
+            Block block = e.getBlock();
+            if (block.getType() == Material.DISPENSER) {
+                Directional directional = (Directional) block.getBlockData();
+                Block farm = block.getRelative(directional.getFacing());
+                if (farm.getType() == Material.FARMLAND) {
+                    Container container = (Container) block.getState();
+                    Material mat = matForSeed(e.getItem());
+                    if (mat != null) {
+                        e.setCancelled(true);
+                        Block toPlace = farm.getRelative(BlockFace.UP);
+                        if (toPlace.getType() != Material.AIR) {
                             return;
                         }
-                    }
-                    getServer().getScheduler().runTask(KamsTweaks.getInstance(), () -> {
-                        ItemStack[] contents2 = container.getInventory().getContents();
-                        for (int i = 0; i < contents2.length; i++) {
-                            ItemStack slot = contents2[i];
+                        ItemStack[] contents = container.getInventory().getContents();
+                        for (int i = 0; i < contents.length; i++) {
+                            ItemStack slot = contents[i];
                             if (slot == null) continue;
                             if (slot.isSimilar(e.getItem())) {
                                 int amount = slot.getAmount();
@@ -81,9 +66,29 @@ public class SeedDispenser implements Listener {
                                 return;
                             }
                         }
-                    });
+                        getServer().getScheduler().runTask(KamsTweaks.getInstance(), () -> {
+                            ItemStack[] contents2 = container.getInventory().getContents();
+                            for (int i = 0; i < contents2.length; i++) {
+                                ItemStack slot = contents2[i];
+                                if (slot == null) continue;
+                                if (slot.isSimilar(e.getItem())) {
+                                    int amount = slot.getAmount();
+                                    if (amount > 1) {
+                                        slot.setAmount(amount - 1);
+                                        container.getInventory().setItem(i, slot);
+                                    } else {
+                                        container.getInventory().setItem(i, null);
+                                    }
+                                    toPlace.setType(mat);
+                                    return;
+                                }
+                            }
+                        });
+                    }
                 }
             }
+        } catch (Exception exception) {
+            Logger.error(exception.getMessage());
         }
     }
 }
