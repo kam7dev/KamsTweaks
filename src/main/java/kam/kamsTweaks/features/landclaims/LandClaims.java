@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features.landclaims;
 
 import com.mojang.brigadier.Command;
+import org.bukkit.event.Listener;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -36,7 +37,7 @@ import java.util.*;
 
 import static org.bukkit.Bukkit.getServer;
 
-public class LandClaims {
+public class LandClaims implements Listener {
     public final List<Claim> claims = new ArrayList<>();
     public final List<Claim> claiming = new ArrayList<>();
 
@@ -48,9 +49,9 @@ public class LandClaims {
 
     public void setup() {
         prot.init();
-        SafeEventManager.register(prot, KamsTweaks.getInstance());
-        SafeEventManager.register(gui, KamsTweaks.getInstance());
-        SafeEventManager.register(this, KamsTweaks.getInstance());
+        getServer().getPluginManager().registerEvents(prot, KamsTweaks.getInstance());
+        getServer().getPluginManager().registerEvents(gui, KamsTweaks.getInstance());
+        getServer().getPluginManager().registerEvents(this, KamsTweaks.getInstance());
     }
 
     public LandClaims() {
