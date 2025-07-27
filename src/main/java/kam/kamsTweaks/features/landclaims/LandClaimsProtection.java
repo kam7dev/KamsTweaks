@@ -3,6 +3,7 @@ package kam.kamsTweaks.features.landclaims;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -34,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class LandClaimsProtection {
+public class LandClaimsProtection implements Listener{
     LandClaims lc;
 
     public LandClaimsProtection(LandClaims lc) {
