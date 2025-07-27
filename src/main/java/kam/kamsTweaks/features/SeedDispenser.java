@@ -2,6 +2,8 @@ package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.utils.events.SafeEventHandler;
+
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -14,7 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 import static org.bukkit.Bukkit.getServer;
 
-public class SeedDispenser implements Listener {
+public class SeedDispenser {
 
     public Material matForSeed(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) {
@@ -33,9 +35,8 @@ public class SeedDispenser implements Listener {
         };
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onDispense(BlockDispenseEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
             Block block = e.getBlock();
             if (block.getType() == Material.DISPENSER) {
@@ -87,8 +88,5 @@ public class SeedDispenser implements Listener {
                     }
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 }

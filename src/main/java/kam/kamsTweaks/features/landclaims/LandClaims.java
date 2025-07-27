@@ -14,6 +14,8 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.utils.events.SafeEventHandler;
+import kam.kamsTweaks.utils.events.SafeEventManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -22,7 +24,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -37,7 +38,7 @@ import java.util.*;
 
 import static org.bukkit.Bukkit.getServer;
 
-public class LandClaims implements Listener {
+public class LandClaims {
     public final List<Claim> claims = new ArrayList<>();
     public final List<Claim> claiming = new ArrayList<>();
 
@@ -49,9 +50,9 @@ public class LandClaims implements Listener {
 
     public void setup() {
         prot.init();
-        getServer().getPluginManager().registerEvents(prot, KamsTweaks.getInstance());
-        getServer().getPluginManager().registerEvents(gui, KamsTweaks.getInstance());
-        getServer().getPluginManager().registerEvents(this, KamsTweaks.getInstance());
+        SafeEventManager.register(prot, KamsTweaks.getInstance());
+        SafeEventManager.register(gui, KamsTweaks.getInstance());
+        SafeEventManager.register(this, KamsTweaks.getInstance());
     }
 
     public LandClaims() {
@@ -614,27 +615,19 @@ public class LandClaims implements Listener {
         BLOCKS
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onPlace(BlockPlaceEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
             if (ItemManager.getType(e.getItemInHand()) == ItemManager.ItemType.CLAIMER) {
                 e.setCancelled(true);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onJoin(PlayerJoinEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
             if (!e.getPlayer().hasPlayedBefore()) {
                 e.getPlayer().getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 }

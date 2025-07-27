@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id("xyz.jpenilla.run-paper") version "2.3.1"
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'kam'
@@ -16,10 +17,23 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.6-R0.1-SNAPSHOT")
+    implementation 'com.github.eduardomcb:discord-webhook:1.0.0'
+}
+
+
+
+tasks.named('shadowJar') {
+    archiveClassifier.set('')
+}
+
+tasks.named('jar') {
+    dependsOn tasks.named('shadowJar')
+    enabled = false // optional: disables actual jar archive creation
 }
 
 tasks {

@@ -19,7 +19,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Collections;
 
-public class SilkSpawner implements Listener {
+public class SilkSpawner {
     @SafeEventHandler
     public void onBreak(BlockBreakEvent e) throws Exception {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("silk-spawners.enabled", true)) return;
@@ -39,7 +39,6 @@ public class SilkSpawner implements Listener {
                 e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), spawner);
             }
         }
-        throw new Exception("TEst");
     }
 
     @SafeEventHandler

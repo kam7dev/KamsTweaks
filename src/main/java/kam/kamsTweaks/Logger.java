@@ -1,5 +1,8 @@
 package kam.kamsTweaks;
 
+import com.eduardomcb.discord.webhook.WebhookClient;
+import com.eduardomcb.discord.webhook.WebhookManager;
+import com.eduardomcb.discord.webhook.models.Message;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -7,24 +10,30 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
-import utils.DiscordWebhook;
-import utils.DiscordWebhook.EmbedObject;
 
 import java.io.IOException;
 
 public class Logger {
-    static DiscordWebhook webhook;
+    static WebhookManager webhook;
     static boolean inited = false;
     public static void init() {
         if (inited) return;
         inited = true;
         String url = KamsTweaks.getInstance().getConfig().getString("dev-webhook", "");
         if (url.isEmpty()) return;
-        webhook = new DiscordWebhook(url);
-        webhook.setUsername("KamsTweaks");
-        webhook.setAvatarUrl("https://raw.githubusercontent.com/Kingminer7/pixel-art/refs/heads/main/pfp/pfp-transparent.png");
+        webhook = new WebhookManager().setChannelUrl(url);
+	webhook.setListener(new WebhookClient.Callback() {
+		@Override
+		public void onSuccess(String response) {
+		        
+  		}
+
+    		@Override
+    		public void onFailure(int statusCode, String errorMessage) {
+        		KamsTweaks.getInstance().getLogger().warning("Failed to send to dev webhook! Code: " + statusCode + ", error: " + errorMessage);
+    		}
+	});
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -36,21 +45,23 @@ public class Logger {
                     KamsTweaks.getInstance().getConfig().set("dev-webhook", url);
                     KamsTweaks.getInstance().saveConfig();
                     if (webhook == null) {
-                        webhook = new DiscordWebhook(url);
-                        webhook.setUsername("KamsTweaks");
-                        webhook.setAvatarUrl("https://raw.githubusercontent.com/Kingminer7/pixel-art/refs/heads/main/pfp/pfp-transparent.png");
+                        webhook = new WebhookManager().setChannelUrl(url);
+			webhook.setListener(new WebhookClient.Callback() {
+				@Override                                                                       public void onSuccess(String response) {
+
+				}
+
+				@Override
+				public void onFailure(int statusCode, String errorMessage) {
+					KamsTweaks.getInstance().getLogger().warning("Failed to send to dev webhook! Code: " + statusCode + ", error: " + errorMessage);
+				}
+			});
                     } else {
-                        webhook.setURL(url);
+			webhook.setChannelUrl(url);
                     }
                     ctx.getSource().getSender().sendMessage("Successfully set webhook url.");
-                    webhook.setContent("Webhook Test");
-                    try {
-                        webhook.execute();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
                     return Command.SINGLE_SUCCESS;
-                }))).then(Commands.literal("Log").executes(ctx -> {
+		}))).then(Commands.literal("Log").executes(ctx -> {
                     Logger.info("Test log");
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("Warn").executes(ctx -> {
@@ -66,18 +77,16 @@ public class Logger {
 
     static void sendToHook(String message) {
         if (webhook != null) {
-            if (message.length() > 1500) {
-                for (int i = 0; i < message.length(); i += 4000) {
-                    String chunk = message.substring(i, Math.min(message.length(), i + 4000));
-                    webhook.addEmbed(new EmbedObject().setDescription(chunk));
+            if (message.length() > 1000) {
+
+                for (int i = 0; i < message.length(); i += 1000) {
+                    String chunk = message.substring(i, Math.min(message.length(), i + 1000));
+                    webhook.setMessage(new Message().setContent(chunk).setUsername("KamsTweaks").setAvatarUrl("https://raw.githubusercontent.com/Kingminer7/pixel-art/refs/heads/main/pfp/pfp-transparent.png"));
+		    webhook.exec();
                 }
             } else {
-                webhook.setContent(message);
-            }
-            try {
-                webhook.execute();
-            } catch (IOException e) {
-                KamsTweaks.getInstance().getLogger().severe("Failed to send message to dev webhook: " + e.getMessage());
+		webhook.setMessage(new Message().setContent(message).setUsername("KamsTweaks").setAvatarUrl("https://raw.githubusercontent.com/Kingminer7/pixe  l-art/refs/heads/main/pfp/pfp-transparent.png"));
+		webhook.exec();
             }
         }
     }

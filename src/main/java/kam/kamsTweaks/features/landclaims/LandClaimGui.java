@@ -5,6 +5,7 @@ import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ItemManager.ItemType;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.Pair;
+import kam.kamsTweaks.utils.events.SafeEventHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -15,7 +16,6 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -32,7 +32,7 @@ import java.util.*;
 
 import static org.bukkit.Bukkit.*;
 
-public class LandClaimGui implements Listener {
+public class LandClaimGui {
 
     Map<Player, GuiInventory> guis = new HashMap<>();
 
@@ -54,9 +54,8 @@ public class LandClaimGui implements Listener {
 
 
     // Events
-    @EventHandler
+    @SafeEventHandler
     public void onInventoryDrag(final InventoryDragEvent e) {
-        try {
             if (guis.containsKey((Player) e.getWhoClicked())) {
                 for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
                     if (e.getInventory().equals(screen.inv)) {
@@ -64,23 +63,15 @@ public class LandClaimGui implements Listener {
                     }
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onLeave(final PlayerQuitEvent e) {
-        try {
             guis.remove(e.getPlayer());
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onInventoryClick(final InventoryClickEvent e) {
-        try {
             if (e.getInventory().getType() == InventoryType.GRINDSTONE) {
             ItemStack result = e.getInventory().getItem(2);
                 if (result != null && ItemManager.getType(result) == ItemType.CLAIMER) {
@@ -107,9 +98,6 @@ public class LandClaimGui implements Listener {
                     }
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
     public static class GuiInventory {
@@ -358,7 +346,7 @@ public class LandClaimGui implements Listener {
                         }
                     });
                     Listener joinListener = new Listener() {
-                        @EventHandler
+                        @SafeEventHandler
                         public void onPlayerJoin(PlayerJoinEvent event) {
                             Player joining = event.getPlayer();
                             if (!joining.equals(target)) {

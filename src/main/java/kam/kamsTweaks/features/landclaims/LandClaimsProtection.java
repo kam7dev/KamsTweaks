@@ -3,6 +3,7 @@ package kam.kamsTweaks.features.landclaims;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.utils.events.SafeEventHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -14,7 +15,6 @@ import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class LandClaimsProtection implements Listener {
+public class LandClaimsProtection {
     LandClaims lc;
 
     public LandClaimsProtection(LandClaims lc) {
@@ -62,9 +62,8 @@ public class LandClaimsProtection implements Listener {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), hasMessaged::clear, 1, 1);
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onBreak(BlockBreakEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             Player player = e.getPlayer();
@@ -81,14 +80,10 @@ public class LandClaimsProtection implements Listener {
                         : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
                 e.setCancelled(true);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onPlace(BlockPlaceEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             Player player = e.getPlayer();
@@ -105,14 +100,10 @@ public class LandClaimsProtection implements Listener {
                         : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
                 e.setCancelled(true);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onInteract(PlayerInteractEvent e) {
-        try {
             if (e.getPlayer().getTargetEntity(5) instanceof Creature)
                 return;
             if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIMER) {
@@ -180,14 +171,11 @@ public class LandClaimsProtection implements Listener {
                     }
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
+        
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onInvOpen(InventoryOpenEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             InventoryHolder entity = e.getInventory().getHolder();
@@ -209,14 +197,10 @@ public class LandClaimsProtection implements Listener {
                     e.setCancelled(true);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onEntityInteract(PlayerInteractEntityEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             Entity entity = e.getRightClicked();
@@ -238,14 +222,10 @@ public class LandClaimsProtection implements Listener {
                     e.setCancelled(true);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onHangDestroy(HangingBreakByEntityEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             if (e.getRemover() instanceof Player player) {
@@ -265,14 +245,10 @@ public class LandClaimsProtection implements Listener {
                     e.setCancelled(true);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onVehicleDestroy(VehicleDestroyEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             Entity entity = e.getVehicle();
@@ -300,14 +276,10 @@ public class LandClaimsProtection implements Listener {
                     e.setCancelled(true);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onEntityHit(EntityDamageByEntityEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             Entity entity = e.getEntity();
@@ -331,23 +303,16 @@ public class LandClaimsProtection implements Listener {
                     e.setCancelled(true);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
+        
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onEntityInteractAt(PlayerInteractAtEntityEvent e) {
-        try {
             onEntityInteract(e);
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onKaboom(EntityExplodeEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             if (e.getEntity() instanceof TNTPrimed tnt && tnt.getSource() instanceof Player player) {
@@ -399,14 +364,10 @@ public class LandClaimsProtection implements Listener {
                     block.getState().update(true, false);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onKaboom(BlockExplodeEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             List<Block> toProtect = new ArrayList<>();
@@ -420,14 +381,10 @@ public class LandClaimsProtection implements Listener {
             for (Block block : toProtect) {
                 block.getState().update(true, false);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onFlow(BlockFromToEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             LandClaims.Claim in = lc.getClaim(event.getToBlock().getLocation());
@@ -436,14 +393,10 @@ public class LandClaimsProtection implements Listener {
                     && !lc.hasPermission(to == null ? null : to.m_owner, in, LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onBurn(BlockBurnEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             LandClaims.Claim in = null;
@@ -455,14 +408,10 @@ public class LandClaimsProtection implements Listener {
                     && !lc.hasPermission(in == null ? null : in.m_owner, to, LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onIgnite(BlockIgniteEvent event) {
-        try {
             switch (event.getCause()) {
                 case LAVA, SPREAD -> {
                     if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
@@ -527,14 +476,10 @@ public class LandClaimsProtection implements Listener {
                     }
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onPistonExtend(BlockPistonExtendEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             Block piston = event.getBlock();
@@ -573,14 +518,10 @@ public class LandClaimsProtection implements Listener {
                     return;
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onPistonRetract(BlockPistonRetractEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             Block piston = event.getBlock();
@@ -623,14 +564,10 @@ public class LandClaimsProtection implements Listener {
                     return;
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onItemDamage(EntityDamageByEntityEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             switch (event.getDamager()) {
@@ -668,14 +605,10 @@ public class LandClaimsProtection implements Listener {
                 default -> {
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onHopperPull(InventoryMoveItemEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             if (event.getDestination().getType() == InventoryType.HOPPER) {
@@ -711,14 +644,10 @@ public class LandClaimsProtection implements Listener {
                     event.setCancelled(true);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onMobTrample(EntityInteractEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             if (event.getEntity() instanceof Player)
@@ -729,14 +658,10 @@ public class LandClaimsProtection implements Listener {
             if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onPlayerTrample(PlayerInteractEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             if (event.getAction() != Action.PHYSICAL)
@@ -757,14 +682,10 @@ public class LandClaimsProtection implements Listener {
                         : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
                 event.setCancelled(true);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onEntityChangeBlock(EntityChangeBlockEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
             if (event.getEntityType() == EntityType.SHEEP)
@@ -773,8 +694,5 @@ public class LandClaimsProtection implements Listener {
             if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 }

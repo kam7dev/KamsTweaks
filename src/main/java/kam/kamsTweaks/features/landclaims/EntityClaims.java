@@ -3,6 +3,7 @@ package kam.kamsTweaks.features.landclaims;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.utils.events.SafeEventHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -24,7 +25,7 @@ import java.util.*;
 
 import static org.bukkit.Bukkit.getServer;
 
-public class EntityClaims implements Listener {
+public class EntityClaims {
     public final Map<UUID, EntityClaim> claims = new HashMap<>();
     boolean hasPermission(Player player, Entity entity, EntityPermission permission) {
         if (!claims.containsKey(entity.getUniqueId())) return true;
@@ -62,9 +63,8 @@ public class EntityClaims implements Listener {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), hasMessaged::clear, 1, 1);
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @SafeEventHandler(priority = EventPriority.HIGH)
     public void onEntityInteract(PlayerInteractEntityEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
             if (e.getRightClicked() instanceof Creature c) {
                 if (ItemManager.getType(e.getPlayer().getInventory().getItemInMainHand()) == ItemManager.ItemType.CLAIMER) {
@@ -101,14 +101,10 @@ public class EntityClaims implements Listener {
                     e.setCancelled(true);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onEntityEntityDamage(EntityDamageByEntityEvent e) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
             if (e.getEntity() instanceof Creature c) {
                 if (c instanceof Monster) return;
@@ -130,14 +126,10 @@ public class EntityClaims implements Listener {
                     e.setCancelled(true);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onEntityBlockDamage(EntityDamageByBlockEvent e)  {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
             if (e.getEntity() instanceof Creature c) {
                 if (c instanceof Monster) return;
@@ -146,14 +138,10 @@ public class EntityClaims implements Listener {
                 if (claim == null) return;
                 e.setCancelled(true);
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void onDamage(EntityDamageEvent event) {
-        try {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
             if (event.getEntity() instanceof Creature c) {
                 if (c instanceof Monster) return;
@@ -164,17 +152,10 @@ public class EntityClaims implements Listener {
                     case FIRE, FIRE_TICK, FALL, DROWNING, CAMPFIRE, SUFFOCATION -> event.setCancelled(true);
                 }
             }
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 
-    @EventHandler
+    @SafeEventHandler
     public void entityDie(EntityDeathEvent e) {
-        try {
             claims.remove(e.getEntity().getUniqueId());
-        } catch (Exception exception) {
-            Logger.error(exception.getMessage());
-        }
     }
 }

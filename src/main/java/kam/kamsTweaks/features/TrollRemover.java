@@ -13,7 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TrollRemover implements Listener {
+public class TrollRemover {
     @SafeEventHandler
     void onJoin(PlayerJoinEvent event) {
         List<ItemStack> toRemove = new ArrayList<>();
