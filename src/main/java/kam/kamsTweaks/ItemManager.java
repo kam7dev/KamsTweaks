@@ -52,6 +52,7 @@ public class ItemManager {
     }
 
     public static ItemType getType(ItemStack item) {
+        if (item == null) return null;
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             NamespacedKey key = new NamespacedKey("kamstweaks", "item");
@@ -60,6 +61,12 @@ public class ItemManager {
                 if (data == null) return null;
                 return switch (data) {
                     case "claimer" -> ItemType.CLAIMER;
+                    case "flying_boots" -> ItemType.FLYING_BOOTS;
+                    case "blindness_wand" -> ItemType.BLINDNESS_WAND;
+                    case "levitation_sword" -> ItemType.LEVITATION_SWORD;
+                    case "knockback_stick" -> ItemType.KNOCKBACK_STICK;
+                    case "fake_tnt" -> ItemType.FAKE_TNT;
+                    case "portal_bow" -> ItemType.PORTAL_BOW;
                     default -> null;
                 };
             }
