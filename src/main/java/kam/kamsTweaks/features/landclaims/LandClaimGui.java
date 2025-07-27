@@ -5,6 +5,7 @@ import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ItemManager.ItemType;
 import kam.kamsTweaks.utils.Pair;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -31,7 +32,7 @@ import java.util.*;
 
 import static org.bukkit.Bukkit.*;
 
-public class LandClaimGui {
+public class LandClaimGui implements Listener {
 
     Map<Player, GuiInventory> guis = new HashMap<>();
 
