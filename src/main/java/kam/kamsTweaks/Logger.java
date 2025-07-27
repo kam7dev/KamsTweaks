@@ -34,7 +34,7 @@ public class Logger {
         	//	KamsTweaks.getInstance().getLogger().warning("Failed to send to dev webhook! Code: " + statusCode + ", error: " + errorMessage);
     		//}
 	//});
-    //}
+    }
 
     //@SuppressWarnings("UnstableApiUsage")
     //public static void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
