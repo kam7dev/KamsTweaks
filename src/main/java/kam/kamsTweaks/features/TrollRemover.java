@@ -6,6 +6,10 @@ import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.events.SafeEventHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
@@ -46,6 +50,33 @@ public class TrollRemover {
         }
         switch(ItemManager.getType(event.getNewItem())) {
             case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> event.getPlayer().getInventory().remove(event.getNewItem());
+            case null, default -> {}
+        }
+    }
+
+    @SafeEventHandler
+    void onSlotChange(InventoryClickEvent event) {
+        event.setCancelled(true);
+        switch(ItemManager.getType(event.getCurrentItem())) {
+            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> event.getInventory().remove(event.getCurrentItem());
+            case null, default -> {}
+        }
+    }
+
+    @SafeEventHandler
+    void onSlotChange(InventoryMoveItemEvent event) {
+        event.setCancelled(true);
+        switch(ItemManager.getType(event.getItem())) {
+            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> event.getSource().remove(event.getItem());
+            case null, default -> {}
+        }
+    }
+
+    @SafeEventHandler
+    void onSlotChange(InventoryPickupItemEvent event) {
+        event.setCancelled(true);
+        switch(ItemManager.getType(event.getItem().getItemStack())) {
+            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> event.getInventory().remove(event.getItem().getItemStack());
             case null, default -> {}
         }
     }
