@@ -12,6 +12,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -22,7 +23,7 @@ import java.util.*;
 
 import static org.bukkit.Bukkit.getServer;
 
-public class EntityClaims {
+public class EntityClaims implements Listener {
     public final Map<UUID, EntityClaim> claims = new HashMap<>();
     boolean hasPermission(Player player, Entity entity, EntityPermission permission) {
         if (!claims.containsKey(entity.getUniqueId())) return true;
