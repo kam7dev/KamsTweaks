@@ -3,6 +3,7 @@ package kam.kamsTweaks;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.features.SilkSpawner;
+import kam.kamsTweaks.features.TrollRemover;
 import kam.kamsTweaks.features.landclaims.EntityClaims;
 import kam.kamsTweaks.features.landclaims.LandClaims;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,6 +32,7 @@ public final class KamsTweaks extends JavaPlugin {
         getServer().getPluginManager().registerEvents(m_entityClaims, this);
         getServer().getPluginManager().registerEvents(m_seedDispenser, this);
         getServer().getPluginManager().registerEvents(m_silkSpawner, this);
+        getServer().getPluginManager().registerEvents(new TrollRemover(), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             m_landClaims.registerCommands(commands);
