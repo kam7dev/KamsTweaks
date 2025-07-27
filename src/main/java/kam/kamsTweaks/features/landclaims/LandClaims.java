@@ -15,7 +15,7 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ItemManager;
 import org.bukkit.event.EventHandler;
-import kam.kamsTweaks.utils.events.SafeEventManager;
+import kam.kamsTweaks.Logger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;

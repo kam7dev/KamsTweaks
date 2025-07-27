@@ -2,6 +2,7 @@ package kam.kamsTweaks.features.landclaims;
 
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import net.kyori.adventure.text.Component;

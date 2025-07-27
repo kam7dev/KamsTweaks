@@ -6,6 +6,7 @@ import kam.kamsTweaks.features.SilkSpawner;
 import kam.kamsTweaks.features.TrollRemover;
 import kam.kamsTweaks.features.landclaims.EntityClaims;
 import kam.kamsTweaks.features.landclaims.LandClaims;
+import kam.kamsTweaks.Logger;
 //import kam.kamsTweaks.utils.events.SafeEventManager;
 import org.bukkit.plugin.java.JavaPlugin;
 

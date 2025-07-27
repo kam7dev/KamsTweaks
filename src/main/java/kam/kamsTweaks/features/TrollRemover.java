@@ -8,6 +8,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
+import kam.kamsTweaks.Logger;
 
 import java.util.ArrayList;
 import java.util.List;

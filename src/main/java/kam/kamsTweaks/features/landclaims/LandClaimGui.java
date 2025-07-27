@@ -4,6 +4,7 @@ import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ItemManager.ItemType;
 import kam.kamsTweaks.utils.Pair;
+import kam.kamsTweaks.Logger;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import net.kyori.adventure.text.Component;
