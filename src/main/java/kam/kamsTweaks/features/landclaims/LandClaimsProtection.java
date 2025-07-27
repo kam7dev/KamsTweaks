@@ -2,8 +2,7 @@ package kam.kamsTweaks.features.landclaims;
 
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
-import kam.kamsTweaks.utils.events.SafeEventHandler;
+import org.bukkit.event.EventHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -15,7 +14,6 @@ import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -62,7 +60,7 @@ public class LandClaimsProtection {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), hasMessaged::clear, 1, 1);
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onBreak(BlockBreakEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -82,7 +80,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onPlace(BlockPlaceEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -102,7 +100,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onInteract(PlayerInteractEvent e) {
             if (e.getPlayer().getTargetEntity(5) instanceof Creature)
                 return;
@@ -174,7 +172,7 @@ public class LandClaimsProtection {
         
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onInvOpen(InventoryOpenEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -199,7 +197,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onEntityInteract(PlayerInteractEntityEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -224,7 +222,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onHangDestroy(HangingBreakByEntityEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -247,7 +245,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onVehicleDestroy(VehicleDestroyEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -278,7 +276,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onEntityHit(EntityDamageByEntityEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -306,12 +304,12 @@ public class LandClaimsProtection {
         
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onEntityInteractAt(PlayerInteractAtEntityEvent e) {
             onEntityInteract(e);
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onKaboom(EntityExplodeEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -366,7 +364,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onKaboom(BlockExplodeEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -383,7 +381,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onFlow(BlockFromToEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -395,7 +393,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onBurn(BlockBurnEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -410,7 +408,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onIgnite(BlockIgniteEvent event) {
             switch (event.getCause()) {
                 case LAVA, SPREAD -> {
@@ -478,7 +476,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onPistonExtend(BlockPistonExtendEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -520,7 +518,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onPistonRetract(BlockPistonRetractEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -566,7 +564,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onItemDamage(EntityDamageByEntityEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -607,7 +605,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onHopperPull(InventoryMoveItemEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -646,7 +644,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onMobTrample(EntityInteractEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -660,7 +658,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onPlayerTrample(PlayerInteractEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;
@@ -684,7 +682,7 @@ public class LandClaimsProtection {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onEntityChangeBlock(EntityChangeBlockEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                 return;

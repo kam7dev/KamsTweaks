@@ -2,8 +2,7 @@ package kam.kamsTweaks.features.landclaims;
 
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
-import kam.kamsTweaks.utils.events.SafeEventHandler;
+import org.bukkit.event.EventHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -12,9 +11,7 @@ import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -63,7 +60,7 @@ public class EntityClaims {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), hasMessaged::clear, 1, 1);
     }
 
-    @SafeEventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onEntityInteract(PlayerInteractEntityEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
             if (e.getRightClicked() instanceof Creature c) {
@@ -103,7 +100,7 @@ public class EntityClaims {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onEntityEntityDamage(EntityDamageByEntityEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
             if (e.getEntity() instanceof Creature c) {
@@ -128,7 +125,7 @@ public class EntityClaims {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onEntityBlockDamage(EntityDamageByBlockEvent e)  {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
             if (e.getEntity() instanceof Creature c) {
@@ -140,7 +137,7 @@ public class EntityClaims {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onDamage(EntityDamageEvent event) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
             if (event.getEntity() instanceof Creature c) {
@@ -154,7 +151,7 @@ public class EntityClaims {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void entityDie(EntityDeathEvent e) {
             claims.remove(e.getEntity().getUniqueId());
     }

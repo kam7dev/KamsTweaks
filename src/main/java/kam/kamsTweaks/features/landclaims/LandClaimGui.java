@@ -3,9 +3,8 @@ package kam.kamsTweaks.features.landclaims;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ItemManager.ItemType;
-import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.Pair;
-import kam.kamsTweaks.utils.events.SafeEventHandler;
+import org.bukkit.event.EventHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -54,7 +53,7 @@ public class LandClaimGui {
 
 
     // Events
-    @SafeEventHandler
+    @EventHandler
     public void onInventoryDrag(final InventoryDragEvent e) {
             if (guis.containsKey((Player) e.getWhoClicked())) {
                 for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
@@ -65,12 +64,12 @@ public class LandClaimGui {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onLeave(final PlayerQuitEvent e) {
             guis.remove(e.getPlayer());
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onInventoryClick(final InventoryClickEvent e) {
             if (e.getInventory().getType() == InventoryType.GRINDSTONE) {
             ItemStack result = e.getInventory().getItem(2);
@@ -346,7 +345,7 @@ public class LandClaimGui {
                         }
                     });
                     Listener joinListener = new Listener() {
-                        @SafeEventHandler
+                        @EventHandler
                         public void onPlayerJoin(PlayerJoinEvent event) {
                             Player joining = event.getPlayer();
                             if (!joining.equals(target)) {

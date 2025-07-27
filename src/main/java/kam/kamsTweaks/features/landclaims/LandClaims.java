@@ -13,8 +13,7 @@ import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ItemManager;
-import kam.kamsTweaks.Logger;
-import kam.kamsTweaks.utils.events.SafeEventHandler;
+import org.bukkit.event.EventHandler;
 import kam.kamsTweaks.utils.events.SafeEventManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -24,7 +23,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -615,7 +613,7 @@ public class LandClaims {
         BLOCKS
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onPlace(BlockPlaceEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
             if (ItemManager.getType(e.getItemInHand()) == ItemManager.ItemType.CLAIMER) {
@@ -623,7 +621,7 @@ public class LandClaims {
             }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onJoin(PlayerJoinEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
             if (!e.getPlayer().hasPlayedBefore()) {

@@ -2,8 +2,6 @@ package kam.kamsTweaks.features;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import kam.kamsTweaks.ItemManager;
-import kam.kamsTweaks.Logger;
-import kam.kamsTweaks.utils.events.SafeEventHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.*;
@@ -14,8 +12,8 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TrollRemover {
-    @SafeEventHandler
+public class TrollRemover implements Listener {
+    @EventHandler
     void onJoin(PlayerJoinEvent event) {
         List<ItemStack> toRemove = new ArrayList<>();
         event.getPlayer().getInventory().forEach(item -> {
@@ -29,7 +27,7 @@ public class TrollRemover {
         }
     }
 
-    @SafeEventHandler
+    @EventHandler
     void onUse(PlayerInteractEvent event) {
         switch (ItemManager.getType(event.getItem())) {
             case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK ->
@@ -39,7 +37,7 @@ public class TrollRemover {
         }
     }
 
-    @SafeEventHandler
+    @EventHandler
     void onEquip(PlayerArmorChangeEvent event) {
         switch(ItemManager.getType(event.getOldItem())) {
             case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> event.getPlayer().getInventory().remove(event.getOldItem());
@@ -51,7 +49,7 @@ public class TrollRemover {
         }
     }
 
-    @SafeEventHandler
+    @EventHandler
     void onSlotChange(InventoryClickEvent event) {
         switch(ItemManager.getType(event.getCurrentItem())) {
             case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> {
@@ -61,7 +59,7 @@ public class TrollRemover {
         }
     }
 
-    @SafeEventHandler
+    @EventHandler
     void onSlotChange(InventoryMoveItemEvent event) {
         switch(ItemManager.getType(event.getItem())) {
             case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> {
@@ -72,7 +70,7 @@ public class TrollRemover {
         }
     }
 
-    @SafeEventHandler
+    @EventHandler
     void onSlotChange(InventoryPickupItemEvent event) {
         switch(ItemManager.getType(event.getItem().getItemStack())) {
             case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> {
@@ -82,7 +80,7 @@ public class TrollRemover {
         }
     }
 
-    @SafeEventHandler
+    @EventHandler
     void onInvOpen(InventoryOpenEvent event) {
         List<ItemStack> toRemove = new ArrayList<>();
         event.getInventory().forEach(item -> {

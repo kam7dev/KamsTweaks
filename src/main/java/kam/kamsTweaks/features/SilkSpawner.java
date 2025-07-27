@@ -1,7 +1,7 @@
 package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.utils.events.SafeEventHandler;
+import org.bukkit.event.EventHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -19,8 +19,8 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Collections;
 
-public class SilkSpawner {
-    @SafeEventHandler
+public class SilkSpawner implements Listener  {
+    @EventHandler
     public void onBreak(BlockBreakEvent e) throws Exception {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("silk-spawners.enabled", true)) return;
         if (e.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 0) {
@@ -41,7 +41,7 @@ public class SilkSpawner {
         }
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onPlace(BlockPlaceEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("silk-spawners.enabled", true)) return;
         if (e.getBlock().getState() instanceof CreatureSpawner spawner) {

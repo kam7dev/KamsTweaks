@@ -1,16 +1,13 @@
 package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
-import kam.kamsTweaks.utils.events.SafeEventHandler;
+import org.bukkit.event.EventHandler;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Container;
 import org.bukkit.block.data.Directional;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -35,7 +32,7 @@ public class SeedDispenser {
         };
     }
 
-    @SafeEventHandler
+    @EventHandler
     public void onDispense(BlockDispenseEvent e) {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
             Block block = e.getBlock();

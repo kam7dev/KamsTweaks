@@ -75,34 +75,34 @@ public class Logger {
         commands.registrar().register(buildCommand);
     }
 
-    static void sendToHook(String message) {
-        if (webhook != null) {
-            if (message.length() > 1000) {
-
-                for (int i = 0; i < message.length(); i += 1000) {
-                    String chunk = message.substring(i, Math.min(message.length(), i + 1000));
-                    webhook.setMessage(new Message().setContent(chunk).setUsername("KamsTweaks").setAvatarUrl("https://raw.githubusercontent.com/Kingminer7/pixel-art/refs/heads/main/pfp/pfp-transparent.png"));
-		    webhook.exec();
-                }
-            } else {
-		webhook.setMessage(new Message().setContent(message).setUsername("KamsTweaks").setAvatarUrl("https://raw.githubusercontent.com/Kingminer7/pixe  l-art/refs/heads/main/pfp/pfp-transparent.png"));
-		webhook.exec();
-            }
-        }
-    }
+//    static void sendToHook(String message) {
+//        if (webhook != null) {
+//            if (message.length() > 1000) {
+//
+//                for (int i = 0; i < message.length(); i += 1000) {
+//                    String chunk = message.substring(i, Math.min(message.length(), i + 1000));
+//                    webhook.setMessage(new Message().setContent(chunk).setUsername("KamsTweaks").setAvatarUrl("https://raw.githubusercontent.com/Kingminer7/pixel-art/refs/heads/main/pfp/pfp-transparent.png"));
+//		    webhook.exec();
+//                }
+//            } else {
+//		webhook.setMessage(new Message().setContent(message).setUsername("KamsTweaks").setAvatarUrl("https://raw.githubusercontent.com/Kingminer7/pixe  l-art/refs/heads/main/pfp/pfp-transparent.png"));
+//		webhook.exec();
+//            }
+//        }
+//    }
 
     public static void info(String message) {
         KamsTweaks.getInstance().getLogger().info(message);
-        sendToHook(message);
+//        sendToHook(message);
     }
 
     public static void warn(String message) {
         KamsTweaks.getInstance().getLogger().warning(message);
-        sendToHook(message);
+//        sendToHook(message);
     }
 
     public static void error(String message) {
         KamsTweaks.getInstance().getLogger().severe(message);
-        sendToHook(message);
+//        sendToHook(message);
     }
 }
