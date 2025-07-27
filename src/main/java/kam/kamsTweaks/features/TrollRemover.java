@@ -8,7 +8,6 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
-import kam.kamsTweaks.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +17,11 @@ public class TrollRemover implements Listener {
     void onJoin(PlayerJoinEvent event) {
         List<ItemStack> toRemove = new ArrayList<>();
         event.getPlayer().getInventory().forEach(item -> {
-            switch(ItemManager.getType(item)) {
-                case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> toRemove.add(item);
-                case null, default -> {}
+            switch (ItemManager.getType(item)) {
+                case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK ->
+                        toRemove.add(item);
+                case null, default -> {
+                }
             }
         });
         for (ItemStack item : toRemove) {
@@ -40,44 +41,49 @@ public class TrollRemover implements Listener {
 
     @EventHandler
     void onEquip(PlayerArmorChangeEvent event) {
-        switch(ItemManager.getType(event.getOldItem())) {
-            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> event.getPlayer().getInventory().remove(event.getOldItem());
-            case null, default -> {}
+        switch (ItemManager.getType(event.getOldItem())) {
+            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK ->
+                    event.getPlayer().getInventory().remove(event.getOldItem());
+            case null, default -> {
+            }
         }
-        switch(ItemManager.getType(event.getNewItem())) {
-            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> event.getPlayer().getInventory().remove(event.getNewItem());
-            case null, default -> {}
+        switch (ItemManager.getType(event.getNewItem())) {
+            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK ->
+                    event.getPlayer().getInventory().remove(event.getNewItem());
+            case null, default -> {
+            }
         }
     }
 
     @EventHandler
     void onSlotChange(InventoryClickEvent event) {
-        switch(ItemManager.getType(event.getCurrentItem())) {
-            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> {
-                event.getInventory().remove(event.getCurrentItem());
+        switch (ItemManager.getType(event.getCurrentItem())) {
+            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK ->
+                    event.getInventory().remove(event.getCurrentItem());
+            case null, default -> {
             }
-            case null, default -> {}
         }
     }
 
     @EventHandler
     void onSlotChange(InventoryMoveItemEvent event) {
-        switch(ItemManager.getType(event.getItem())) {
+        switch (ItemManager.getType(event.getItem())) {
             case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> {
                 event.getSource().remove(event.getItem());
                 event.getDestination().remove(event.getItem());
             }
-            case null, default -> {}
+            case null, default -> {
+            }
         }
     }
 
     @EventHandler
     void onSlotChange(InventoryPickupItemEvent event) {
-        switch(ItemManager.getType(event.getItem().getItemStack())) {
-            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> {
-                event.getInventory().remove(event.getItem().getItemStack());
+        switch (ItemManager.getType(event.getItem().getItemStack())) {
+            case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK ->
+                    event.getInventory().remove(event.getItem().getItemStack());
+            case null, default -> {
             }
-            case null, default -> {}
         }
     }
 
@@ -85,15 +91,27 @@ public class TrollRemover implements Listener {
     void onInvOpen(InventoryOpenEvent event) {
         List<ItemStack> toRemove = new ArrayList<>();
         event.getInventory().forEach(item -> {
-            Logger.info("Test - " + ItemManager.getType(item));
-            switch(ItemManager.getType(item)) {
-                case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK -> toRemove.add(item);
-                case null, default -> {}
+            switch (ItemManager.getType(item)) {
+                case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK ->
+                        toRemove.add(item);
+                case null, default -> {
+                }
             }
         });
         for (ItemStack item : toRemove) {
-            Logger.info("Removing " + ItemManager.getType(item).name());
             event.getInventory().remove(item);
+        }
+        toRemove.clear();
+        event.getPlayer().getInventory().forEach(item -> {
+            switch (ItemManager.getType(item)) {
+                case BLINDNESS_WAND, FAKE_TNT, FLYING_BOOTS, LEVITATION_SWORD, PORTAL_BOW, KNOCKBACK_STICK ->
+                        toRemove.add(item);
+                case null, default -> {
+                }
+            }
+        });
+        for (ItemStack item : toRemove) {
+            event.getPlayer().getInventory().remove(item);
         }
     }
 }

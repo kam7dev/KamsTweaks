@@ -25,6 +25,7 @@ public class ItemManager {
         FAKE_TNT,
         PORTAL_BOW
     }
+
     private static Map<ItemType, ItemStack> items;
     private static boolean initialized = false;
 

@@ -19,9 +19,9 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Collections;
 
-public class SilkSpawner implements Listener  {
+public class SilkSpawner implements Listener {
     @EventHandler
-    public void onBreak(BlockBreakEvent e) throws Exception {
+    public void onBreak(BlockBreakEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("silk-spawners.enabled", true)) return;
         if (e.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 0) {
             if (e.getBlock().getType() == Material.SPAWNER && e.isDropItems()) {

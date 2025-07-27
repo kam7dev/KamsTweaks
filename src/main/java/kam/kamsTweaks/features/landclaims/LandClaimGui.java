@@ -18,7 +18,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.HandlerList;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -53,52 +52,51 @@ public class LandClaimGui implements Listener {
     }
 
 
-
     // Events
     @EventHandler
     public void onInventoryDrag(final InventoryDragEvent e) {
-            if (guis.containsKey((Player) e.getWhoClicked())) {
-                for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
-                    if (e.getInventory().equals(screen.inv)) {
-                        e.setCancelled(true);
-                    }
+        if (guis.containsKey((Player) e.getWhoClicked())) {
+            for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
+                if (e.getInventory().equals(screen.inv)) {
+                    e.setCancelled(true);
                 }
             }
+        }
     }
 
     @EventHandler
     public void onLeave(final PlayerQuitEvent e) {
-            guis.remove(e.getPlayer());
+        guis.remove(e.getPlayer());
     }
 
     @EventHandler
     public void onInventoryClick(final InventoryClickEvent e) {
-            if (e.getInventory().getType() == InventoryType.GRINDSTONE) {
+        if (e.getInventory().getType() == InventoryType.GRINDSTONE) {
             ItemStack result = e.getInventory().getItem(2);
-                if (result != null && ItemManager.getType(result) == ItemType.CLAIMER) {
-                    e.setCancelled(true);
-                        e.getWhoClicked().sendMessage(Component.text("You cannot disenchant this item.").color(NamedTextColor.RED));
+            if (result != null && ItemManager.getType(result) == ItemType.CLAIMER) {
+                e.setCancelled(true);
+                e.getWhoClicked().sendMessage(Component.text("You cannot disenchant this item.").color(NamedTextColor.RED));
                 return;
-                }
             }
-            if (guis.containsKey((Player) e.getWhoClicked())) {
-                for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
-                    if (e.getInventory().equals(screen.inv)) {
-                        e.setCancelled(true);
-                        if (Objects.equals(e.getCurrentItem(), screen.leftArrow)) {
-                            screen.previousPage();
-                        } else if (Objects.equals(e.getCurrentItem(), screen.rightArrow)) {
-                            screen.nextPage();
-                        } else {
-                            screen.items.forEach((slot, item) -> {
-                                if (item.first.equals(e.getCurrentItem())) {
-                                    item.second.run((Player) e.getWhoClicked(), e.getInventory(), e.getCurrentItem());
-                                }
-                            });
-                        }
+        }
+        if (guis.containsKey((Player) e.getWhoClicked())) {
+            for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
+                if (e.getInventory().equals(screen.inv)) {
+                    e.setCancelled(true);
+                    if (Objects.equals(e.getCurrentItem(), screen.leftArrow)) {
+                        screen.previousPage();
+                    } else if (Objects.equals(e.getCurrentItem(), screen.rightArrow)) {
+                        screen.nextPage();
+                    } else {
+                        screen.items.forEach((slot, item) -> {
+                            if (item.first.equals(e.getCurrentItem())) {
+                                item.second.run((Player) e.getWhoClicked(), e.getInventory(), e.getCurrentItem());
+                            }
+                        });
                     }
                 }
             }
+        }
     }
 
     public static class GuiInventory {
@@ -113,6 +111,7 @@ public class LandClaimGui implements Listener {
             ItemStack leftArrow;
             ItemStack paper;
             ItemStack rightArrow;
+
             public Screen(int size, Component title) {
                 this.title = title;
                 this.size = Math.min(54, Math.max(9, (size / 9) * 9));
@@ -131,6 +130,7 @@ public class LandClaimGui implements Listener {
 
                 changeSize(size);
             }
+
             void updateItems() {
                 highest = 0;
                 for (Integer key : items.keySet()) {
@@ -154,34 +154,42 @@ public class LandClaimGui implements Listener {
                     inv.setItem(size - 4, rightArrow);
                 }
             }
+
             public void addItem(ItemStack item, GuiRunnable callback, int position) {
                 items.put(position, new Pair<>(item, callback));
                 highest = Math.max(highest, position);
             }
+
             public void removeItem(int position) {
                 items.remove(position);
             }
+
             public void clearItems() {
                 items.clear();
             }
+
             void goToPage(int page) {
                 if (page > highest / limit) return;
                 if (page < 0) return;
                 this.page = page;
                 updateItems();
             }
+
             void nextPage() {
                 goToPage(page + 1);
             }
+
             void previousPage() {
                 goToPage(page - 1);
             }
+
             void changeSize(int size) {
                 this.size = Math.min(54, Math.max(9, (size / 9) * 9));
                 limit = highest > this.size ? this.size - 9 : this.size;
                 inv = createInventory(null, this.size, title);
                 updateItems();
             }
+
             void changeTitle(Component title) {
                 this.title = title;
                 inv = createInventory(null, Math.min(size, 54), title);
@@ -272,7 +280,7 @@ public class LandClaimGui implements Listener {
             homeScreen.addItem(createGuiItem(Material.IRON_DOOR, Component.text("Edit Permissions").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Edit permissions for the claim you're currently in.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Only works if you own the claim you're in").color(NamedTextColor.LIGHT_PURPLE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 if (ui.claim == null) {
                     player.sendMessage(Component.text("This area isn't claimed.").color(NamedTextColor.RED));
-                } else if(ui.claim.m_owner == null || !ui.claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
+                } else if (ui.claim.m_owner == null || !ui.claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
                     if (player.hasPermission("kamstweaks.landclaims.manageall")) {
                         ui.confirmType = "admin-bypass";
                         confirmScreen.changeTitle(Component.text("Edit " + (ui.claim.m_owner == null ? "The Server" : ui.claim.m_owner.getName() == null ? "Unknown" : ui.claim.m_owner.getName()) + "'s claim?"));
@@ -323,14 +331,14 @@ public class LandClaimGui implements Listener {
                         };
                     }
                     lc.showArea(player, claim.m_start, claim.m_end, 1, 20 * 10, c);
-                    Location l = new Location(claim.m_start.getWorld(), (claim.m_start.x() + claim.m_end.x())/2, (claim.m_start.y() + claim.m_end.y())/2, (claim.m_start.z() + claim.m_end.z())/2);
+                    Location l = new Location(claim.m_start.getWorld(), (claim.m_start.x() + claim.m_end.x()) / 2, (claim.m_start.y() + claim.m_end.y()) / 2, (claim.m_start.z() + claim.m_end.z()) / 2);
                     if (l.distance(player.getLocation()) > 100) continue;
                     TextDisplay display = player.getWorld().spawn(l, TextDisplay.class, entity -> {
                         String s;
                         if (claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
                             s = "You own this claim.";
                         } else {
-                            s = switch(claim.m_perms.getOrDefault(getServer().getOfflinePlayer(player.getUniqueId()), claim.m_default)) {
+                            s = switch (claim.m_perms.getOrDefault(getServer().getOfflinePlayer(player.getUniqueId()), claim.m_default)) {
                                 case NONE -> "You can only look around.";
                                 case DOORS -> "You can use doors.";
                                 case INTERACT -> "You can interact with blocks.";
@@ -413,7 +421,8 @@ public class LandClaimGui implements Listener {
                             switch (ui.claim.m_perms.getOrDefault(oplr, ui.claim.m_default)) {
                                 case NONE -> Component.text("None").color(NamedTextColor.RED);
                                 case DOORS -> Component.text("Doors Only").color(NamedTextColor.GOLD);
-                                case INTERACT -> Component.text("Block Interactions").color(NamedTextColor.LIGHT_PURPLE);
+                                case INTERACT ->
+                                        Component.text("Block Interactions").color(NamedTextColor.LIGHT_PURPLE);
                                 case BLOCKS -> Component.text("Break/Place Blocks").color(NamedTextColor.AQUA);
                             }
                     }));

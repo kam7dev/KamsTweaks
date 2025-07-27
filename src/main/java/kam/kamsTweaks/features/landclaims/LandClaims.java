@@ -65,7 +65,7 @@ public class LandClaims implements Listener {
             Location corner2,
             double step,
             int durationTicks,
-	    Color color
+            Color color
     ) {
         double minX = Math.min(corner1.getX(), corner2.getX());
         double maxX = Math.max(corner1.getX(), corner2.getX()) + 1;
@@ -130,13 +130,14 @@ public class LandClaims implements Listener {
         int maxZ = Math.max(bound1.getBlockZ(), bound2.getBlockZ());
 
         return target.getBlockX() >= minX && target.getBlockX() <= maxX
-            && target.getBlockY() >= minY && target.getBlockY() <= maxY
-            && target.getBlockZ() >= minZ && target.getBlockZ() <= maxZ;
+                && target.getBlockY() >= minY && target.getBlockY() <= maxY
+                && target.getBlockZ() >= minZ && target.getBlockZ() <= maxZ;
     }
 
     boolean hasPermission(OfflinePlayer player, Claim claim, ClaimPermission perm) {
         if (claim == null) return true;
-        if (player != null && claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) return true;
+        if (player != null && claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId()))
+            return true;
         ClaimPermission claimPerm = claim.m_perms.getOrDefault(player != null ? getServer().getOfflinePlayer(player.getUniqueId()) : null, claim.m_default);
         return claimPerm.compareTo(perm) >= 0;
     }
@@ -162,7 +163,7 @@ public class LandClaims implements Listener {
                             if (other.m_owner != null && !other.m_owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
                                 e.getPlayer().sendMessage(Component.text("This land is already claimed by ").color(NamedTextColor.RED).append(Component.text(other.m_owner.getName() == null ? "Unknown player" : other.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                                 return;
-                            } else if(other.m_owner == null) {
+                            } else if (other.m_owner == null) {
                                 e.getPlayer().sendMessage(Component.text("This land is already claimed by ").color(NamedTextColor.RED).append(Component.text("the server").color(NamedTextColor.GOLD)).append(Component.text(".")));
                                 return;
                             }
@@ -185,7 +186,7 @@ public class LandClaims implements Listener {
                                 if (other.m_owner != null && !other.m_owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
                                     e.getPlayer().sendMessage(Component.text("This land intersects a claim by ").color(NamedTextColor.RED).append(Component.text(other.m_owner.getName() == null ? "Unknown player" : other.m_owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                                     return;
-                                } else if(other.m_owner == null) {
+                                } else if (other.m_owner == null) {
                                     e.getPlayer().sendMessage(Component.text("This land intersects a claim by ").color(NamedTextColor.RED).append(Component.text("the server").color(NamedTextColor.GOLD)).append(Component.text(".")));
                                     return;
                                 }
@@ -209,82 +210,82 @@ public class LandClaims implements Listener {
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("claims")
                 .then(Commands.literal("config").requires(sender -> sender.getSender().hasPermission("kamstweaks.landclaims.configure"))
-                    .then(Commands.literal("enabled")
-                        .then(Commands.argument("enabled", BoolArgumentType.bool()).executes(ctx -> {
-                            try {
-                                KamsTweaks.getInstance().getConfig().set("land-claims.enabled", ctx.getArgument("enabled", Boolean.class));
-                                ctx.getSource().getSender().sendMessage("Successfully " + (ctx.getArgument("enabled", Boolean.class) == true ? "enabled" : "disabled") + " land claims.");
-                            } catch (Exception exception) {
-                                Logger.error(exception.getMessage());
-                            }
-                            return Command.SINGLE_SUCCESS;
-                        }))
-                        .executes(ctx -> {
-                            try {
-                                ctx.getSource().getSender().sendMessage("Land claims are currently " + KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true) + ".");
-                            } catch (Exception exception) {
-                                Logger.error(exception.getMessage());
-                            }
-                            return Command.SINGLE_SUCCESS;
-                        })
-                    )
-                    .then(Commands.literal("admin-bypass-claims")
-                            .then(Commands.argument("enabled", BoolArgumentType.bool()).executes(ctx -> {
-                                try {
-                                    KamsTweaks.getInstance().getConfig().set("land-claims.admin-bypass-claims", ctx.getArgument("enabled", Boolean.class));
-                                    ctx.getSource().getSender().sendMessage("Successfully " + (ctx.getArgument("enabled", Boolean.class) == true ? "enabled" : "disabled") + " admins bypassing land claims." );
-                                } catch (Exception exception) {
-                                    Logger.error(exception.getMessage());
-                                }
-                                return Command.SINGLE_SUCCESS;
-                            }))
-                            .executes(ctx -> {
-                                try {
-                                    ctx.getSource().getSender().sendMessage("Admins bypassing land claims is currently " + KamsTweaks.getInstance().getConfig().getBoolean("land-claims.admin-bypass-claims", true) + "." );
-                                } catch (Exception exception) {
-                                    Logger.error(exception.getMessage());
-                                }
-                                return Command.SINGLE_SUCCESS;
-                            })
-                    )
-                    .then(Commands.literal("max-claims")
-                            .then(Commands.argument("claims", IntegerArgumentType.integer()).executes(ctx -> {
-                                try {
-                                    KamsTweaks.getInstance().getConfig().set("land-claims.max-claims", ctx.getArgument("claims", Integer.class));
-                                    ctx.getSource().getSender().sendMessage("Successfully set max claims to " + ctx.getArgument("claims", Integer.class) + ".");
-                                } catch (Exception exception) {
-                                    Logger.error(exception.getMessage());
-                                }
-                                return Command.SINGLE_SUCCESS;
-                            }))
-                            .executes(ctx -> {
-                                try {
-                                    ctx.getSource().getSender().sendMessage("Max claims is currently " + KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 10) + "." );
-                                } catch (Exception exception) {
-                                    Logger.error(exception.getMessage());
-                                }
-                                return Command.SINGLE_SUCCESS;
-                            })
-                    )
-                    .then(Commands.literal("max-claim-size")
-                            .then(Commands.argument("size", IntegerArgumentType.integer()).executes(ctx -> {
-                                try {
-                                    KamsTweaks.getInstance().getConfig().set("land-claims.max-claim-size", ctx.getArgument("size", Integer.class));
-                                    ctx.getSource().getSender().sendMessage("Successfully set max claim size to " + ctx.getArgument("size", Integer.class) + ".");
-                                } catch (Exception exception) {
-                                    Logger.error(exception.getMessage());
-                                }
-                                return Command.SINGLE_SUCCESS;
-                            }))
-                            .executes(ctx -> {
-                                try {
-                                    ctx.getSource().getSender().sendMessage("Max claim size is currently " + KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claim-size", 27000) + "." );
-                                } catch (Exception exception) {
-                                    Logger.error(exception.getMessage());
-                                }
-                                return Command.SINGLE_SUCCESS;
-                            })
-                    )
+                        .then(Commands.literal("enabled")
+                                .then(Commands.argument("enabled", BoolArgumentType.bool()).executes(ctx -> {
+                                    try {
+                                        KamsTweaks.getInstance().getConfig().set("land-claims.enabled", ctx.getArgument("enabled", Boolean.class));
+                                        ctx.getSource().getSender().sendMessage("Successfully " + (ctx.getArgument("enabled", Boolean.class) == true ? "enabled" : "disabled") + " land claims.");
+                                    } catch (Exception exception) {
+                                        Logger.error(exception.getMessage());
+                                    }
+                                    return Command.SINGLE_SUCCESS;
+                                }))
+                                .executes(ctx -> {
+                                    try {
+                                        ctx.getSource().getSender().sendMessage("Land claims are currently " + KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true) + ".");
+                                    } catch (Exception exception) {
+                                        Logger.error(exception.getMessage());
+                                    }
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                        )
+                        .then(Commands.literal("admin-bypass-claims")
+                                .then(Commands.argument("enabled", BoolArgumentType.bool()).executes(ctx -> {
+                                    try {
+                                        KamsTweaks.getInstance().getConfig().set("land-claims.admin-bypass-claims", ctx.getArgument("enabled", Boolean.class));
+                                        ctx.getSource().getSender().sendMessage("Successfully " + (ctx.getArgument("enabled", Boolean.class) == true ? "enabled" : "disabled") + " admins bypassing land claims.");
+                                    } catch (Exception exception) {
+                                        Logger.error(exception.getMessage());
+                                    }
+                                    return Command.SINGLE_SUCCESS;
+                                }))
+                                .executes(ctx -> {
+                                    try {
+                                        ctx.getSource().getSender().sendMessage("Admins bypassing land claims is currently " + KamsTweaks.getInstance().getConfig().getBoolean("land-claims.admin-bypass-claims", true) + ".");
+                                    } catch (Exception exception) {
+                                        Logger.error(exception.getMessage());
+                                    }
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                        )
+                        .then(Commands.literal("max-claims")
+                                .then(Commands.argument("claims", IntegerArgumentType.integer()).executes(ctx -> {
+                                    try {
+                                        KamsTweaks.getInstance().getConfig().set("land-claims.max-claims", ctx.getArgument("claims", Integer.class));
+                                        ctx.getSource().getSender().sendMessage("Successfully set max claims to " + ctx.getArgument("claims", Integer.class) + ".");
+                                    } catch (Exception exception) {
+                                        Logger.error(exception.getMessage());
+                                    }
+                                    return Command.SINGLE_SUCCESS;
+                                }))
+                                .executes(ctx -> {
+                                    try {
+                                        ctx.getSource().getSender().sendMessage("Max claims is currently " + KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 10) + ".");
+                                    } catch (Exception exception) {
+                                        Logger.error(exception.getMessage());
+                                    }
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                        )
+                        .then(Commands.literal("max-claim-size")
+                                .then(Commands.argument("size", IntegerArgumentType.integer()).executes(ctx -> {
+                                    try {
+                                        KamsTweaks.getInstance().getConfig().set("land-claims.max-claim-size", ctx.getArgument("size", Integer.class));
+                                        ctx.getSource().getSender().sendMessage("Successfully set max claim size to " + ctx.getArgument("size", Integer.class) + ".");
+                                    } catch (Exception exception) {
+                                        Logger.error(exception.getMessage());
+                                    }
+                                    return Command.SINGLE_SUCCESS;
+                                }))
+                                .executes(ctx -> {
+                                    try {
+                                        ctx.getSource().getSender().sendMessage("Max claim size is currently " + KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claim-size", 27000) + ".");
+                                    } catch (Exception exception) {
+                                        Logger.error(exception.getMessage());
+                                    }
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                        )
                 )
                 .then(Commands.literal("get-tool")
                         .executes(ctx -> {
@@ -341,7 +342,7 @@ public class LandClaims implements Listener {
                                                 }
                                                 int i = 0;
                                                 Iterator<Claim> it = claims.iterator();
-                                                while (it.hasNext()){
+                                                while (it.hasNext()) {
                                                     Claim claim = it.next();
                                                     if (claim.m_owner.equals(player)) {
                                                         i++;
@@ -391,7 +392,7 @@ public class LandClaims implements Listener {
                                                 }
                                                 int i = 0;
                                                 Iterator<Map.Entry<UUID, EntityClaims.EntityClaim>> it = KamsTweaks.getInstance().m_entityClaims.claims.entrySet().iterator();
-                                                while (it.hasNext()){
+                                                while (it.hasNext()) {
                                                     Map.Entry<UUID, EntityClaims.EntityClaim> claim = it.next();
                                                     if (claim.getValue().m_owner.equals(player)) {
                                                         i++;
@@ -407,29 +408,55 @@ public class LandClaims implements Listener {
                         )
                 )
                 .then(Commands.literal("at")
-                    .then(Commands.argument("pos", ArgumentTypes.blockPosition()).executes(ctx -> {
-                        try {
-                            CommandSender sender = ctx.getSource().getSender();
-                            if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
-                                sender.sendPlainMessage("Land claims are disabled.");
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            Entity exec = ctx.getSource().getExecutor();
-                            final BlockPositionResolver blockPositionResolver = ctx.getArgument("pos", BlockPositionResolver.class);
-                            final BlockPosition loc = blockPositionResolver.resolve(ctx.getSource());
-                            Claim res = getClaim(loc.toLocation(exec == null ? getServer().getWorlds().getFirst() : exec.getWorld()));
-                            if (res == null)
-                                sender.sendMessage(Component.text("This land isn't claimed."));
-                            else if (res.m_owner == null)
-                                sender.sendMessage(Component.text("This claim is owned by the server."));
-                            else
-                                sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName() == null ? "Unknown player" : res.m_owner.getName()).color(NamedTextColor.GOLD)));
-                        } catch (Exception exception) {
-                            Logger.error(exception.getMessage());
-                        }
-                        return Command.SINGLE_SUCCESS;
-                    })
-                    .then(Commands.argument("world", ArgumentTypes.world())
+                        .then(Commands.argument("pos", ArgumentTypes.blockPosition()).executes(ctx -> {
+                                            try {
+                                                CommandSender sender = ctx.getSource().getSender();
+                                                if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
+                                                    sender.sendPlainMessage("Land claims are disabled.");
+                                                    return Command.SINGLE_SUCCESS;
+                                                }
+                                                Entity exec = ctx.getSource().getExecutor();
+                                                final BlockPositionResolver blockPositionResolver = ctx.getArgument("pos", BlockPositionResolver.class);
+                                                final BlockPosition loc = blockPositionResolver.resolve(ctx.getSource());
+                                                Claim res = getClaim(loc.toLocation(exec == null ? getServer().getWorlds().getFirst() : exec.getWorld()));
+                                                if (res == null)
+                                                    sender.sendMessage(Component.text("This land isn't claimed."));
+                                                else if (res.m_owner == null)
+                                                    sender.sendMessage(Component.text("This claim is owned by the server."));
+                                                else
+                                                    sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName() == null ? "Unknown player" : res.m_owner.getName()).color(NamedTextColor.GOLD)));
+                                            } catch (Exception exception) {
+                                                Logger.error(exception.getMessage());
+                                            }
+                                            return Command.SINGLE_SUCCESS;
+                                        })
+                                        .then(Commands.argument("world", ArgumentTypes.world())
+                                                .executes(ctx -> {
+                                                    try {
+                                                        CommandSender sender = ctx.getSource().getSender();
+                                                        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
+                                                            sender.sendPlainMessage("Land claims are disabled.");
+                                                            return Command.SINGLE_SUCCESS;
+                                                        }
+                                                        final BlockPosition loc = ctx.getArgument("pos", BlockPositionResolver.class).resolve(ctx.getSource());
+                                                        final World world = ctx.getArgument("world", World.class);
+                                                        if (world == null) {
+                                                            sender.sendMessage("Cannot check owner of claim without world.");
+                                                            return Command.SINGLE_SUCCESS;
+                                                        }
+                                                        Claim res = getClaim(loc.toLocation(world));
+                                                        if (res == null)
+                                                            sender.sendMessage(Component.text("This land isn't claimed."));
+                                                        else if (res.m_owner == null)
+                                                            sender.sendMessage(Component.text("This claim is owned by the server."));
+                                                        else
+                                                            sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName() == null ? "Unknown player" : res.m_owner.getName()).color(NamedTextColor.GOLD)));
+                                                    } catch (Exception exception) {
+                                                        Logger.error(exception.getMessage());
+                                                    }
+                                                    return Command.SINGLE_SUCCESS;
+                                                }))
+                        )
                         .executes(ctx -> {
                             try {
                                 CommandSender sender = ctx.getSource().getSender();
@@ -437,13 +464,12 @@ public class LandClaims implements Listener {
                                     sender.sendPlainMessage("Land claims are disabled.");
                                     return Command.SINGLE_SUCCESS;
                                 }
-                                final BlockPosition loc = ctx.getArgument("pos", BlockPositionResolver.class).resolve(ctx.getSource());
-                                final World world = ctx.getArgument("world", World.class);
-                                if (world == null) {
-                                    sender.sendMessage("Cannot check owner of claim without world.");
+                                Entity executor = ctx.getSource().getExecutor();
+                                if (executor == null) {
+                                    sender.sendMessage("Cannot check owner of claim without position.");
                                     return Command.SINGLE_SUCCESS;
                                 }
-                                Claim res = getClaim(loc.toLocation(world));
+                                Claim res = getClaim(executor.getLocation());
                                 if (res == null)
                                     sender.sendMessage(Component.text("This land isn't claimed."));
                                 else if (res.m_owner == null)
@@ -454,32 +480,7 @@ public class LandClaims implements Listener {
                                 Logger.error(exception.getMessage());
                             }
                             return Command.SINGLE_SUCCESS;
-                        }))
-                    )
-                    .executes(ctx -> {
-                        try {
-                            CommandSender sender = ctx.getSource().getSender();
-                            if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
-                                sender.sendPlainMessage("Land claims are disabled.");
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            Entity executor = ctx.getSource().getExecutor();
-                            if (executor == null) {
-                                sender.sendMessage("Cannot check owner of claim without position.");
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            Claim res = getClaim(executor.getLocation());
-                            if (res == null)
-                                sender.sendMessage(Component.text("This land isn't claimed."));
-                            else if (res.m_owner == null)
-                                sender.sendMessage(Component.text("This claim is owned by the server."));
-                            else
-                                sender.sendMessage(Component.text("This claim is owned by ").append(Component.text(res.m_owner.getName() == null ? "Unknown player" : res.m_owner.getName()).color(NamedTextColor.GOLD)));
-                        } catch (Exception exception) {
-                            Logger.error(exception.getMessage());
-                        }
-                        return Command.SINGLE_SUCCESS;
-                    })
+                        })
                 );
 
         LiteralCommandNode<CommandSourceStack> buildCommand = command.build();
@@ -489,7 +490,7 @@ public class LandClaims implements Listener {
     private void setupFile() {
         claimsFile = new File(KamsTweaks.getInstance().getDataFolder(), "claims.yml");
         if (!claimsFile.exists()) {
-            boolean mkdir = claimsFile.getParentFile().mkdirs();
+            boolean ignored = claimsFile.getParentFile().mkdirs();
             KamsTweaks.getInstance().saveResource("claims.yml", false);
         }
         claimsConfig = YamlConfiguration.loadConfiguration(claimsFile);
@@ -600,6 +601,7 @@ public class LandClaims implements Listener {
         OfflinePlayer m_owner;
         Map<OfflinePlayer, ClaimPermission> m_perms = new HashMap<>();
         ClaimPermission m_default = ClaimPermission.DOORS;
+
         public Claim(OfflinePlayer owner, Location start, Location end) {
             m_owner = owner;
             m_start = start;
@@ -616,17 +618,17 @@ public class LandClaims implements Listener {
 
     @EventHandler
     public void onPlace(BlockPlaceEvent e) {
-            if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
-            if (ItemManager.getType(e.getItemInHand()) == ItemManager.ItemType.CLAIMER) {
-                e.setCancelled(true);
-            }
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+        if (ItemManager.getType(e.getItemInHand()) == ItemManager.ItemType.CLAIMER) {
+            e.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-            if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
-            if (!e.getPlayer().hasPlayedBefore()) {
-                e.getPlayer().getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
-            }
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+        if (!e.getPlayer().hasPlayedBefore()) {
+            e.getPlayer().getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
+        }
     }
 }
