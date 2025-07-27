@@ -2,6 +2,7 @@ package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -13,7 +14,7 @@ import org.bukkit.inventory.ItemStack;
 
 import static org.bukkit.Bukkit.getServer;
 
-public class SeedDispenser {
+public class SeedDispenser implements Listener {
 
     public Material matForSeed(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) {
