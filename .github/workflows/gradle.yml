@@ -95,14 +95,14 @@ jobs:
       - name: Read mod version & mod id
         id: read_version
         run: |
-          echo "MOD_VERSION=$(jq -r '.version' mod.json)" >> $GITHUB_ENV
+          echo "VERSION=$(yq -r '.version' paper-plugin.yml)" >> $GITHUB_ENV
       - name: Create Draft Release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.MOD_VERSION }}
-          name: ${{ env.MOD_VERSION }}
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
           body: |
             TODO before publishing:
              - mark if pre-release

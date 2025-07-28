@@ -2,7 +2,6 @@ package kam.kamsTweaks.features.landclaims;
 
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import net.kyori.adventure.text.Component;
@@ -112,7 +111,6 @@ public class EntityClaims implements Listener {
             if (c instanceof Wolf wolf) {
                 if (wolf.getTarget() != null) {
                     if (wolf.getTarget() == e.getDamager()) {
-                        Logger.info("Test");
                         return;
                     }
                 }
