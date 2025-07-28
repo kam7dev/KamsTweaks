@@ -29,7 +29,7 @@ public class TrollRemover implements Listener {
     );
 
     private boolean isTrollItem(ItemStack item) {
-        return item != null && trollItems.contains(ItemManager.getType(item));
+        return item != null && ItemManager.getType(item) != null && trollItems.contains(ItemManager.getType(item));
     }
 
     private void removeTrollItemsFromBundle(BundleMeta meta) {

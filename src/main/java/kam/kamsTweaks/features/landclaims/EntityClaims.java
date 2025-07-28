@@ -2,15 +2,13 @@ package kam.kamsTweaks.features.landclaims;
 
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Creature;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByBlockEvent;
@@ -111,6 +109,14 @@ public class EntityClaims implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (e.getEntity() instanceof Creature c) {
             if (c instanceof Monster) return;
+            if (c instanceof Wolf wolf) {
+                if (wolf.getTarget() != null) {
+                    if (wolf.getTarget() == e.getDamager()) {
+                        Logger.info("Test");
+                        return;
+                    }
+                }
+            }
             if (e.getDamager() instanceof Player player) {
                 if (hasPermission(player, c, EntityPermission.KILL)) return;
                 EntityClaim claim = claims.get(c.getUniqueId());
@@ -153,6 +159,7 @@ public class EntityClaims implements Listener {
             if (claim == null) return;
             switch (event.getCause()) {
                 case FIRE, FIRE_TICK, FALL, DROWNING, CAMPFIRE, SUFFOCATION -> event.setCancelled(true);
+                default -> {}
             }
         }
     }

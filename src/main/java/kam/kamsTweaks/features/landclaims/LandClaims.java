@@ -564,7 +564,6 @@ public class LandClaims implements Listener {
                     UUID entity = UUID.fromString(key);
                     String ownerStr = claimsConfig.getString("entities." + key + ".owner");
                     UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
-                    if (Bukkit.getEntity(entity) == null) continue;
                     EntityClaims.EntityClaim claim = new EntityClaims.EntityClaim(owner == null ? null : getServer().getOfflinePlayer(owner));
                     claim.m_default = EntityClaims.EntityPermission.valueOf(claimsConfig.getString("entities." + key + ".default"));
                     if (claimsConfig.contains("entities." + key + ".perms")) {
