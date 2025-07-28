@@ -92,10 +92,10 @@ jobs:
         with:
           path: './artifacts/'
       
-      - name: Read mod version & mod id
+      - name: Read mod version
         id: read_version
         run: |
-          echo "VERSION=$(yq -r '.version' paper-plugin.yml)" >> $GITHUB_ENV
+          echo "VERSION=$(yq -r '.version' src/main/resources/paper-plugin.yml)" >> $GITHUB_ENV
       - name: Create Draft Release
         uses: softprops/action-gh-release@v1
         env:
