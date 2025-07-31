@@ -450,24 +450,32 @@ public class LandClaimGui implements Listener {
             }, 5);
 
             permScreen.addItem(createGuiItem(Material.RED_CONCRETE, Component.text("No block interaction").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to none");
                 if (ui.editing == null) ui.claim.m_default = LandClaims.ClaimPermission.NONE;
                 else ui.claim.m_perms.put(ui.editing, LandClaims.ClaimPermission.NONE);
                 ui.close(false);
             }, 1);
 
             permScreen.addItem(createGuiItem(Material.ORANGE_CONCRETE, Component.text("Doors only").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to doors");
                 if (ui.editing == null) ui.claim.m_default = LandClaims.ClaimPermission.DOORS;
                 else ui.claim.m_perms.put(ui.editing, LandClaims.ClaimPermission.DOORS);
                 ui.close(false);
             }, 3);
 
             permScreen.addItem(createGuiItem(Material.PURPLE_CONCRETE, Component.text("Interact with blocks").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to interactions");
                 if (ui.editing == null) ui.claim.m_default = LandClaims.ClaimPermission.INTERACT;
                 else ui.claim.m_perms.put(ui.editing, LandClaims.ClaimPermission.INTERACT);
                 ui.close(false);
             }, 5);
 
             permScreen.addItem(createGuiItem(Material.CYAN_CONCRETE, Component.text("Break/place any blocks").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to blocks");
                 if (ui.editing == null) ui.claim.m_default = LandClaims.ClaimPermission.BLOCKS;
                 else ui.claim.m_perms.put(ui.editing, LandClaims.ClaimPermission.BLOCKS);
                 ui.close(false);
@@ -476,15 +484,18 @@ public class LandClaimGui implements Listener {
             confirmScreen.addItem(createGuiItem(Material.GREEN_CONCRETE, Component.text("Yes").color(NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 switch (ui.confirmType) {
                     case "delete" -> {
+                        if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) Logger.warn("[Claim management] " + player.getName() + " just deleted " + ui.claim.m_owner.getName() + "'s claim.");
                         lc.claims.remove(ui.claim);
                         ui.close(false);
                     }
                     case "admin-bypass" -> ui.changeToScreen(editScreen);
+                    case "admin-bypass-entity" -> ui.changeToScreen(entityEditScreen);
                     case "entity-claim" -> {
                         KamsTweaks.getInstance().m_entityClaims.claims.put(ui.targetEntity.getUniqueId(), new EntityClaims.EntityClaim(player));
                         ui.close(false);
                     }
                     case "unclaim" -> {
+                        if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) Logger.warn("[Claim management] " + player.getName() + " just deleted " + KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId()).m_owner.getName() + "'s entity claim.");
                         KamsTweaks.getInstance().m_entityClaims.claims.remove(ui.targetEntity.getUniqueId());
                         ui.close(false);
                     }
@@ -547,6 +558,8 @@ public class LandClaimGui implements Listener {
             entityPermScreen.addItem(createGuiItem(Material.RED_CONCRETE, Component.text("No interaction").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 if (!KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) return;
                 EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s entity claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + claim.m_default + " to none");
                 if (ui.editing == null) claim.m_default = EntityClaims.EntityPermission.NONE;
                 else claim.m_perms.put(ui.editing, EntityClaims.EntityPermission.NONE);
                 ui.close(false);
@@ -555,6 +568,8 @@ public class LandClaimGui implements Listener {
             entityPermScreen.addItem(createGuiItem(Material.ORANGE_CONCRETE, Component.text("Interactions only").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 if (!KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) return;
                 EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s entity claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + claim.m_default + " to interactions");
                 if (ui.editing == null) claim.m_default = EntityClaims.EntityPermission.INTERACT;
                 else claim.m_perms.put(ui.editing, EntityClaims.EntityPermission.INTERACT);
                 ui.close(false);
@@ -563,6 +578,8 @@ public class LandClaimGui implements Listener {
             entityPermScreen.addItem(createGuiItem(Material.CYAN_CONCRETE, Component.text("Damage entities").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 if (!KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) return;
                 EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s entity claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + claim.m_default + " to damage");
                 if (ui.editing == null) claim.m_default = EntityClaims.EntityPermission.KILL;
                 else claim.m_perms.put(ui.editing, EntityClaims.EntityPermission.KILL);
                 ui.close(false);
