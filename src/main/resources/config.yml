@@ -24,3 +24,8 @@ entity-claims:
 # Silk Touch Spawners configuration
 silk-spawners:
   enabled: true
+
+# What level of console logging to do.
+# This is mainly so when I forget to commit info logs, it doesn't spam console
+# Must be one of 'error', 'warn', 'info', or 'debug'
+log-level: warn

@@ -27,6 +27,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 
@@ -83,13 +84,17 @@ public class LandClaimGui implements Listener {
             for (GuiInventory.Screen screen : guis.get((Player) e.getWhoClicked()).screens) {
                 if (e.getInventory().equals(screen.inv)) {
                     e.setCancelled(true);
+                    if (e.getCurrentItem() == null) return;
                     if (Objects.equals(e.getCurrentItem(), screen.leftArrow)) {
                         screen.previousPage();
                     } else if (Objects.equals(e.getCurrentItem(), screen.rightArrow)) {
                         screen.nextPage();
                     } else {
                         screen.items.forEach((slot, item) -> {
-                            if (item.first.equals(e.getCurrentItem())) {
+                            var idStr = e.getCurrentItem().getItemMeta().getPersistentDataContainer().getOrDefault(new NamespacedKey("kamstweaks", "guibutton"), PersistentDataType.STRING, "");
+                            if (idStr.isEmpty()) return;
+                            var id = UUID.fromString(idStr);
+                            if (item.first.second.equals(id)) {
                                 item.second.run((Player) e.getWhoClicked(), e.getInventory(), e.getCurrentItem());
                             }
                         });
@@ -101,7 +106,7 @@ public class LandClaimGui implements Listener {
 
     public static class GuiInventory {
         static class Screen {
-            public Map<Integer, Pair<ItemStack, GuiRunnable>> items = new HashMap<>();
+            public Map<Integer, Pair<Pair<ItemStack, UUID>, GuiRunnable>> items = new HashMap<>();
             public Inventory inv;
             private int limit;
             private int size;
@@ -145,7 +150,7 @@ public class LandClaimGui implements Listener {
                 paper.setItemMeta(meta);
                 items.forEach((pos, item) -> {
                     if (pos >= page * limit && pos < (page + 1) * limit) {
-                        inv.setItem(pos - page * limit, item.first);
+                        inv.setItem(pos - page * limit, item.first.first);
                     }
                 });
                 if (highest > limit) {
@@ -156,7 +161,11 @@ public class LandClaimGui implements Listener {
             }
 
             public void addItem(ItemStack item, GuiRunnable callback, int position) {
-                items.put(position, new Pair<>(item, callback));
+                UUID id = UUID.randomUUID();
+                var meta = item.getItemMeta();
+                meta.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "guibutton"), PersistentDataType.STRING, id.toString());
+                item.setItemMeta(meta);
+                items.put(position, new Pair<>(new Pair<>(item, id), callback));
                 highest = Math.max(highest, position);
             }
 
@@ -298,6 +307,7 @@ public class LandClaimGui implements Listener {
                     LandClaims.Claim claim = iterator.next();
                     if (claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
                         player.sendMessage(Component.text("Cancelled claiming land.").color(NamedTextColor.RED));
+                        ui.close(false);
                         iterator.remove();
                         return;
                     }
@@ -435,6 +445,8 @@ public class LandClaimGui implements Listener {
                             ui.changeToScreen(permScreen);
                         } else if (ui.targetEntity != null) {
                             ui.changeToScreen(entityPermScreen);
+                        } else {
+                            Logger.error(player_.name() + " was somehow in the gui without a claim or entity selected?!?!");
                         }
                     }, i);
                     i++;
