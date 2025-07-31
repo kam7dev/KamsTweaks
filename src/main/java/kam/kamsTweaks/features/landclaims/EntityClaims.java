@@ -93,10 +93,10 @@ public class EntityClaims implements Listener {
             if (c instanceof Monster) return;
             if (!hasPermission(e.getPlayer(), c, EntityPermission.INTERACT)) {
                 OfflinePlayer owner = claims.get(e.getRightClicked().getUniqueId()).m_owner;
-                if (e.getPlayer().hasPermission("kamstweaks.landclaims.bypass")) {
-                    message(e.getPlayer(), owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), true);
-                    return;
-                }
+                // if (e.getPlayer().hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(e.getPlayer(), owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), true);
+                //     return;
+                // }
                 message(e.getPlayer(), owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), false);
                 e.setCancelled(true);
             }
@@ -120,10 +120,10 @@ public class EntityClaims implements Listener {
                 EntityClaim claim = claims.get(c.getUniqueId());
                 if (claim == null) return;
                 OfflinePlayer owner = claim.m_owner;
-                if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                    message(player, owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), true);
-                    return;
-                }
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player, owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), true);
+                //     return;
+                // }
                 message(player, owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), false);
                 e.setCancelled(true);
             } else {

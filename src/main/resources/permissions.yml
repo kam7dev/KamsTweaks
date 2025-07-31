@@ -1,6 +1,3 @@
-kamstweaks.landclaims.bypass:
-  default: op
-  description: "Bypass land claims."
 kamstweaks.landclaims.manageall:
   default: op
   description: "Manage any player's land claims"

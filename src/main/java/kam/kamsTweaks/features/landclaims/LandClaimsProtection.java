@@ -69,13 +69,13 @@ public class LandClaimsProtection implements Listener {
         Player player = e.getPlayer();
         LandClaims.Claim claim = lc.getClaim(e.getBlock().getLocation());
         if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-            if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                message(player,
-                        claim.m_owner == null ? "the server"
-                                : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                        true);
-                return;
-            }
+            // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+            //     message(player,
+            //             claim.m_owner == null ? "the server"
+            //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+            //             true);
+            //     return;
+            // }
             message(player, claim.m_owner == null ? "the server"
                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
             e.setCancelled(true);
@@ -89,13 +89,13 @@ public class LandClaimsProtection implements Listener {
         Player player = e.getPlayer();
         LandClaims.Claim claim = lc.getClaim(e.getBlock().getLocation());
         if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-            if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                message(player,
-                        claim.m_owner == null ? "the server"
-                                : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                        true);
-                return;
-            }
+            // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+            //     message(player,
+            //             claim.m_owner == null ? "the server"
+            //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+            //             true);
+            //     return;
+            // }
             message(player, claim.m_owner == null ? "the server"
                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
             e.setCancelled(true);
@@ -209,12 +209,12 @@ public class LandClaimsProtection implements Listener {
             LandClaims.Claim claim = lc.getClaim(e.getClickedBlock().getLocation());
             if (e.getClickedBlock().getType().toString().contains("DOOR")) {
                 if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.DOORS)) {
-                    if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                        message(player, claim.m_owner == null ? "the server"
-                                        : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                                true);
-                        return;
-                    }
+                    // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                    //     message(player, claim.m_owner == null ? "the server"
+                    //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                    //             true);
+                    //     return;
+                    // }
                     message(player,
                             claim.m_owner == null ? "the server"
                                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
@@ -223,12 +223,12 @@ public class LandClaimsProtection implements Listener {
                 }
             } else {
                 if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.INTERACT)) {
-                    if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                        message(player, claim.m_owner == null ? "the server"
-                                        : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                                true);
-                        return;
-                    }
+                    // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                    //     message(player, claim.m_owner == null ? "the server"
+                    //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                    //             true);
+                    //     return;
+                    // }
                     message(player,
                             claim.m_owner == null ? "the server"
                                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
@@ -249,13 +249,13 @@ public class LandClaimsProtection implements Listener {
             Player player = (Player) e.getPlayer();
             LandClaims.Claim claim = lc.getClaim(((Entity) entity).getLocation());
             if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.INTERACT)) {
-                if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                    message(player,
-                            claim.m_owner == null ? "the server"
-                                    : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                            true);
-                    return;
-                }
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player,
+                //             claim.m_owner == null ? "the server"
+                //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                //             true);
+                //     return;
+                // }
                 message(player,
                         claim.m_owner == null ? "the server"
                                 : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
@@ -274,13 +274,13 @@ public class LandClaimsProtection implements Listener {
             Player player = e.getPlayer();
             LandClaims.Claim claim = lc.getClaim(entity.getLocation());
             if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.INTERACT)) {
-                if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                    message(player,
-                            claim.m_owner == null ? "the server"
-                                    : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                            true);
-                    return;
-                }
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player,
+                //             claim.m_owner == null ? "the server"
+                //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                //             true);
+                //     return;
+                // }
                 message(player,
                         claim.m_owner == null ? "the server"
                                 : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
@@ -297,13 +297,13 @@ public class LandClaimsProtection implements Listener {
         if (e.getRemover() instanceof Player player) {
             LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
             if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                    message(player,
-                            claim.m_owner == null ? "the server"
-                                    : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                            true);
-                    return;
-                }
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player,
+                //             claim.m_owner == null ? "the server"
+                //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                //             true);
+                //     return;
+                // }
                 message(player,
                         claim.m_owner == null ? "the server"
                                 : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
@@ -323,13 +323,13 @@ public class LandClaimsProtection implements Listener {
         if (e.getAttacker() instanceof Player player) {
             LandClaims.Claim claim = lc.getClaim(e.getVehicle().getLocation());
             if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                    message(player,
-                            claim.m_owner == null ? "the server"
-                                    : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                            true);
-                    return;
-                }
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player,
+                //             claim.m_owner == null ? "the server"
+                //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                //             true);
+                //     return;
+                // }
                 message(player,
                         claim.m_owner == null ? "the server"
                                 : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
@@ -355,13 +355,13 @@ public class LandClaimsProtection implements Listener {
         if (e.getDamager() instanceof Player player) {
             LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
             if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                    message(player,
-                            claim.m_owner == null ? "the server"
-                                    : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                            true);
-                    return;
-                }
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player,
+                //             claim.m_owner == null ? "the server"
+                //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                //             true);
+                //     return;
+                // }
                 message(player,
                         claim.m_owner == null ? "the server"
                                 : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
@@ -383,7 +383,7 @@ public class LandClaimsProtection implements Listener {
             return;
         if (e.getEntity() instanceof TNTPrimed tnt && tnt.getSource() instanceof Player player) {
             List<String> who = new ArrayList<>();
-            boolean bypass = player.hasPermission("kamstweaks.landclaims.bypass");
+            // boolean bypass = player.hasPermission("kamstweaks.landclaims.bypass");
             List<Block> toProtect = new ArrayList<>();
             for (Block block : e.blockList()) {
                 LandClaims.Claim claim = lc.getClaim(block.getLocation());
@@ -396,8 +396,7 @@ public class LandClaimsProtection implements Listener {
                             : claim.m_owner.getName();
                     if (!who.contains(a))
                         who.add(a);
-                    if (!bypass)
-                        toProtect.add(block);
+                    toProtect.add(block);
                 }
             }
             StringBuilder plrs = new StringBuilder();
@@ -408,10 +407,10 @@ public class LandClaimsProtection implements Listener {
                     plrs.append(", ");
                 plrs.append(plr);
             }
-            if (bypass && !plrs.isEmpty()) {
-                message(player, plrs.toString(), true);
-                return;
-            }
+            // if (bypass && !plrs.isEmpty()) {
+            //     message(player, plrs.toString(), true);
+            //     return;
+            // }
             message(player, plrs.toString(), false);
             e.blockList().removeAll(toProtect);
             for (Block block : toProtect) {
@@ -502,12 +501,12 @@ public class LandClaimsProtection implements Listener {
                     LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
                     if (shooter instanceof Player player) {
                         if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                            if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                                message(player, claim.m_owner == null ? "the server"
-                                                : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                                        true);
-                                return;
-                            }
+                            // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                            //     message(player, claim.m_owner == null ? "the server"
+                            //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                            //             true);
+                            //     return;
+                            // }
                             message(player, claim.m_owner == null ? "the server"
                                             : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
                                     false);
@@ -522,12 +521,12 @@ public class LandClaimsProtection implements Listener {
                     LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
                     if (event.getIgnitingEntity() instanceof Player player) {
                         if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                            if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                                message(player, claim.m_owner == null ? "the server"
-                                                : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                                        true);
-                                return;
-                            }
+                            // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                            //     message(player, claim.m_owner == null ? "the server"
+                            //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                            //             true);
+                            //     return;
+                            // }
                             message(player, claim.m_owner == null ? "the server"
                                             : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
                                     false);
@@ -544,12 +543,12 @@ public class LandClaimsProtection implements Listener {
                 LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
                 if (event.getIgnitingEntity() instanceof Player player) {
                     if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                        if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                            message(player, claim.m_owner == null ? "the server"
-                                            : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                                    true);
-                            return;
-                        }
+                        // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                        //     message(player, claim.m_owner == null ? "the server"
+                        //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                        //             true);
+                        //     return;
+                        // }
                         message(player, claim.m_owner == null ? "the server"
                                         : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
                                 false);
@@ -757,13 +756,13 @@ public class LandClaimsProtection implements Listener {
         Player player = event.getPlayer();
         LandClaims.Claim claim = lc.getClaim(event.getClickedBlock().getLocation());
         if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-            if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                message(player,
-                        claim.m_owner == null ? "the server"
-                                : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                        true);
-                return;
-            }
+            // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+            //     message(player,
+            //             claim.m_owner == null ? "the server"
+            //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+            //             true);
+            //     return;
+            // }
             message(player, claim.m_owner == null ? "the server"
                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
             event.setCancelled(true);
@@ -779,13 +778,13 @@ public class LandClaimsProtection implements Listener {
         LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
         if (event.getEntity() instanceof Player player) {
             if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
-                if (player.hasPermission("kamstweaks.landclaims.bypass")) {
-                    message(player,
-                            claim.m_owner == null ? "the server"
-                                    : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
-                            true);
-                    return;
-                }
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player,
+                //             claim.m_owner == null ? "the server"
+                //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                //             true);
+                //     return;
+                // }
                 message(player, claim.m_owner == null ? "the server"
                         : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
                 event.setCancelled(true);
