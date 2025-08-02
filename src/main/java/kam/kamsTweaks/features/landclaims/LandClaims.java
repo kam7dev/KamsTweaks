@@ -570,11 +570,11 @@ public class LandClaims implements Listener {
         }
     }
 
-    private String serializeLocation(Location loc) {
+    public static String serializeLocation(Location loc) {
         return loc.getWorld() == null ? "" : loc.getWorld().getUID() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ();
     }
 
-    private Location deserializeLocation(String s) {
+    public static Location deserializeLocation(String s) {
         String[] parts = s.split(",");
         UUID worldUuid = UUID.fromString(parts[0]);
         return new Location(

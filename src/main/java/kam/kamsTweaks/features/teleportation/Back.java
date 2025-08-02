@@ -44,7 +44,7 @@ public class Back {
                         Component.text("Returning to previous location")
                                 .color(NamedTextColor.GOLD)
                                 .append(Component.text(time > 0 ? (" in " + time + " seconds, ") : "").color(NamedTextColor.RED))
-                                .append(Component.text(time > 0 ? "please do not move." : "").color(NamedTextColor.GOLD)));
+                                .append(Component.text(time > 0 ? "please do not move." : ".").color(NamedTextColor.GOLD)));
                 handler.scheduleTeleport(player, handler.locations.get(player), time);
                 return Command.SINGLE_SUCCESS;
             }
