@@ -4,6 +4,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.features.*;
 import kam.kamsTweaks.features.landclaims.EntityClaims;
 import kam.kamsTweaks.features.landclaims.LandClaims;
+import kam.kamsTweaks.features.teleportation.TeleportationHandler;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -19,6 +20,7 @@ public final class KamsTweaks extends JavaPlugin {
     public EntityClaims m_entityClaims = new EntityClaims();
     SilkSpawner m_silkSpawner = new SilkSpawner();
     Names m_names = new Names();
+    TeleportationHandler m_teleportation = new TeleportationHandler();
 
     public static KamsTweaks getInstance() {
         return m_instance;
@@ -33,10 +35,12 @@ public final class KamsTweaks extends JavaPlugin {
         loadConfigs();
         m_landClaims.loadClaims();
         m_names.loadNames();
+        m_teleportation.load();
 
         m_landClaims.setup();
         m_entityClaims.init();
         m_names.init();
+        m_teleportation.init();
         
         getServer().getPluginManager().registerEvents(m_entityClaims, this);
         getServer().getPluginManager().registerEvents(m_seedDispenser, this);
@@ -48,6 +52,7 @@ public final class KamsTweaks extends JavaPlugin {
             m_landClaims.registerCommands(commands);
             new SlashHat().registerCommands(commands);
             m_names.registerCommands(commands);
+            m_teleportation.registerCommands(commands);
         });
     }
 
@@ -55,6 +60,7 @@ public final class KamsTweaks extends JavaPlugin {
     public void onDisable() {
         m_landClaims.saveClaims();
         m_names.saveNames();
+        m_teleportation.save();
         saveConfigs();
     }
 

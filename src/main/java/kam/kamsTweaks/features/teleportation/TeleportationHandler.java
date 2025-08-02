@@ -1,0 +1,125 @@
+package kam.kamsTweaks.features.teleportation;
+
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import kam.kamsTweaks.KamsTweaks;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class TeleportationHandler {
+    public Map<Player, Location> locations = new HashMap<>();
+    public Map<Player, Integer> teleportations = new HashMap<>();
+
+    SetHome setHome = new SetHome();
+    TPA tpa = new TPA();
+    Warp warp = new Warp();
+    Back back = new Back();
+
+    public void teleport(Player player, Location location) {
+        player.teleport(location);
+        locations.put(player, location);
+        teleportations.remove(player);
+    }
+
+    public void scheduleTeleport(Player player, Location location, double time) {
+        var ref = new Object() {
+            Listener listener;
+        };
+
+        int task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
+            teleport(player, location);
+            HandlerList.unregisterAll(ref.listener);
+        }, (long) time * 20);
+        teleportations.put(player, task);
+
+        ref.listener = new Listener() {
+            void cancel() {
+                teleportations.remove(player);
+                HandlerList.unregisterAll(ref.listener);
+                Bukkit.getScheduler().cancelTask(task);
+            }
+            @EventHandler
+            public void onPlayerLeave(PlayerQuitEvent event) {
+                if (event.getPlayer().equals(player)) {
+                    cancel();
+                }
+            }
+            @EventHandler
+            public void onPlayerMove(PlayerMoveEvent event) {
+                if (event.getPlayer().equals(player) && event.hasChangedBlock()) {
+                    cancel();
+                }
+            }
+        };
+        Bukkit.getPluginManager().registerEvents(ref.listener, KamsTweaks.getInstance());
+    }
+
+    public void scheduleTeleport(Player player, Entity target, double time) {
+        var ref = new Object() {
+            Listener listener;
+        };
+
+        int task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
+            teleport(player, target.getLocation());
+            HandlerList.unregisterAll(ref.listener);
+        }, (long) time * 20);
+        teleportations.put(player, task);
+
+        ref.listener = new Listener() {
+            void cancel() {
+                teleportations.remove(player);
+                HandlerList.unregisterAll(ref.listener);
+                Bukkit.getScheduler().cancelTask(task);
+            }
+            @EventHandler
+            public void onPlayerLeave(PlayerQuitEvent event) {
+                if (event.getPlayer().equals(player)) {
+                    cancel();
+                }
+            }
+            @EventHandler
+            public void onPlayerMove(PlayerMoveEvent event) {
+                if (event.getPlayer().equals(player) && event.hasChangedBlock()) {
+                    cancel();
+                }
+            }
+        };
+        Bukkit.getPluginManager().registerEvents(ref.listener, KamsTweaks.getInstance());
+    }
+
+    public void init() {
+        setHome.init(this);
+        tpa.init(this);
+        warp.init(this);
+        back.init(this);
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
+        setHome.registerCommands(commands);
+        tpa.registerCommands(commands);
+        warp.registerCommands(commands);
+        back.registerCommands(commands);
+    }
+
+    public void save() {
+        setHome.saveHomes();
+        warp.saveWarps();
+    }
+
+    public void load() {
+        setHome.loadHomes();
+        warp.loadWarps();
+    }
+}

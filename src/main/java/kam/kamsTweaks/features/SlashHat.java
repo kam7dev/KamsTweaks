@@ -39,6 +39,7 @@ public class SlashHat {
 			sender.sendMessage("Only players can use /hat.");
 			return Command.SINGLE_SUCCESS;
 		});
-		LiteralCommandNode<CommandSourceStack> buildCommand = command.build();            commands.registrar().register(buildCommand);
+		LiteralCommandNode<CommandSourceStack> buildCommand = command.build();
+		commands.registrar().register(buildCommand);
 	}
 }
