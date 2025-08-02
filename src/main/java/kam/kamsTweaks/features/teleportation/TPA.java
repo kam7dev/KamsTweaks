@@ -2,13 +2,10 @@ package kam.kamsTweaks.features.teleportation;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
-import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Pair;
@@ -23,7 +20,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,24 +34,38 @@ public class TPA {
         this.handler = handler;
     }
 
-    void accept(Player who, Player teleporting) {
-        if (!tpas.containsKey(teleporting)) return;
-        Bukkit.getScheduler().cancelTask(tpas.get(teleporting).second.second);
-        tpas.remove(teleporting);
+    void accept(Player acceptor, Player requester) {
+        if (!tpas.containsKey(requester)) return;
+        Bukkit.getScheduler().cancelTask(tpas.get(requester).second.second);
+        tpas.remove(requester);
         double time = KamsTweaks.getInstance().getConfig().getDouble("teleportation.timer");
-        teleporting.sendMessage(
+        requester.sendMessage(
                 Component.text("You have accepted the TPA request from ").color(NamedTextColor.GOLD)
-                        .append(who.displayName().color(NamedTextColor.RED))
-                        .append(Component.text(". " + (time > 0 ? "They have been teleported to you." : "They will be teleported to you")).color(NamedTextColor.GOLD))
-                        .append(Component.text(time > 0 ? (" in " + time + " seconds") : "")).color(NamedTextColor.RED)
+                        .append(acceptor.displayName().color(NamedTextColor.RED))
+                        .append(Component.text(". " + (time > 0 ? "They will be teleported to you" : "They have been teleported to you.")).color(NamedTextColor.GOLD))
+                        .append(Component.text(time > 0 ? (" in " + time + " seconds") : "").color(NamedTextColor.RED))
                         .append(Component.text(".").color(NamedTextColor.GOLD)));
-        teleporting.sendMessage(
-                who.displayName().color(NamedTextColor.RED)
+        acceptor.sendMessage(
+                requester.displayName().color(NamedTextColor.RED)
                         .append(Component.text(" has accepted your TPA request. ").color(NamedTextColor.GOLD))
                         .append(Component.text(time > 0 ? "You will be teleported to them" : "You have been teleported to them").color(NamedTextColor.GOLD))
                         .append(Component.text(time > 0 ? (" in " + time + " seconds") : "")).color(NamedTextColor.RED)
                         .append(Component.text(time > 0 ? ", please do not move." : ".").color(NamedTextColor.GOLD)));
-        handler.scheduleTeleport(teleporting, who, time);
+        handler.scheduleTeleport(requester, acceptor, time);
+    }
+
+    void decline(Player decliner, Player requester) {
+        if (!tpas.containsKey(requester)) return;
+        Bukkit.getScheduler().cancelTask(tpas.get(requester).second.second);
+        tpas.remove(requester);
+        decliner.sendMessage(
+                Component.text("You have declined the TPA request from ").color(NamedTextColor.GOLD)
+                        .append(decliner.displayName().color(NamedTextColor.RED))
+                        .append(Component.text(". ").color(NamedTextColor.GOLD)));
+        requester.sendMessage(
+                requester.displayName().color(NamedTextColor.RED)
+                        .append(Component.text(" has denied your TPA request. ").color(NamedTextColor.GOLD)));
+        handler.teleportations.remove(requester);
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -78,6 +88,10 @@ public class TPA {
                 }
                 final PlayerSelectorArgumentResolver resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
                 final Player plr = resolver.resolve(ctx.getSource()).getFirst();
+                if (plr.equals(player)) {
+                    sender.sendMessage(Component.text("You can't teleport to yourself, silly!").color(NamedTextColor.RED));
+                    return Command.SINGLE_SUCCESS;
+                }
                 sender.sendMessage(
                         Component.text("TPA request sent to ").color(NamedTextColor.GOLD)
                                 .append(plr.displayName().color(NamedTextColor.RED))
@@ -106,19 +120,27 @@ public class TPA {
                 ref.second = task;
                 tpas.put(player, new Pair<>(plr, ref));
                 ref.first = new Listener() {
-                    void cancel() {
+                    void cancel(Player disconner) {
+                        if (disconner == player) {
+                            plr.sendMessage(Component.text("Teleport request cancelled because ").color(NamedTextColor.GOLD)
+                                    .append(player.displayName().color(NamedTextColor.RED))
+                                    .append(Component.text(" disconnected.").color(NamedTextColor.GOLD)));
+                        } else if (disconner == plr) {
+                            player.sendMessage(Component.text("Teleport request cancelled because ").color(NamedTextColor.GOLD)
+                                    .append(plr.displayName().color(NamedTextColor.RED))
+                                    .append(Component.text(" disconnected.").color(NamedTextColor.GOLD)));
+                        }
                         handler.teleportations.remove(player);
                         tpas.remove(player);
                         HandlerList.unregisterAll(ref.first);
                         Bukkit.getScheduler().cancelTask(task);
-                        plr.sendMessage(Component.text("Teleport request cancelled because ").color(NamedTextColor.GOLD)
-                                .append(player.displayName().color(NamedTextColor.RED))
-                                .append(Component.text(" disconnected.").color(NamedTextColor.GOLD)));
                     }
                     @EventHandler
                     public void onPlayerLeave(PlayerQuitEvent event) {
                         if (event.getPlayer().equals(player)) {
-                            cancel();
+                            cancel(player);
+                        } else if (event.getPlayer().equals(plr)) {
+                            cancel(plr);
                         }
                     }
                 };
@@ -175,5 +197,81 @@ public class TPA {
             return Command.SINGLE_SUCCESS;
         }));
         commands.registrar().register(tpaccept.build());
+
+        LiteralArgumentBuilder<CommandSourceStack> tpdecline = Commands.literal("tpdecline").executes(ctx -> {
+            CommandSender sender = ctx.getSource().getSender();
+            if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                sender.sendPlainMessage("/tpa is disabled.");
+                return Command.SINGLE_SUCCESS;
+            }
+            Entity executor = ctx.getSource().getExecutor();
+            if (executor instanceof Player player) {
+                Player who = null;
+                for (Player p : tpas.sequencedKeySet()) {
+                    var pair = tpas.get(p);
+                    if (pair.first.equals(player)) {
+                        who = p;
+                        break;
+                    }
+                }
+                if (who == null) {
+                    sender.sendMessage(Component.text("You don't have any incoming TPA requests.").color(NamedTextColor.RED));
+                    return Command.SINGLE_SUCCESS;
+                }
+                decline(player, who);
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage("Only players can use /tpa.");
+            return Command.SINGLE_SUCCESS;
+        }).then(Commands.argument("player", ArgumentTypes.player()).executes(ctx -> {
+            CommandSender sender = ctx.getSource().getSender();
+            if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                sender.sendPlainMessage("/tpa is disabled.");
+                return Command.SINGLE_SUCCESS;
+            }
+            Entity executor = ctx.getSource().getExecutor();
+            if (executor instanceof Player player) {
+                final PlayerSelectorArgumentResolver resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
+                final Player who = resolver.resolve(ctx.getSource()).getFirst();
+                if (!tpas.containsKey(who) || tpas.get(who).first != player) {
+                    sender.sendMessage(Component.text("You don't have any incoming TPA requests from ").color(NamedTextColor.RED).append(who.displayName().color(NamedTextColor.GOLD)).append(Component.text(".").color(NamedTextColor.RED)));
+                    return Command.SINGLE_SUCCESS;
+                }
+                decline(player, who);
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage("Only players can use /tpa.");
+            return Command.SINGLE_SUCCESS;
+        }));
+        commands.registrar().register(tpdecline.build());
+        LiteralArgumentBuilder<CommandSourceStack> tpcancel = Commands.literal("tpcancel").executes(ctx -> {
+            CommandSender sender = ctx.getSource().getSender();
+            if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                sender.sendPlainMessage("/tpa is disabled.");
+                return Command.SINGLE_SUCCESS;
+            }
+            Entity executor = ctx.getSource().getExecutor();
+            if (executor instanceof Player player) {
+                if (!tpas.containsKey(player)) {
+                    sender.sendMessage(Component.text("You don't have any outgoing TPA requests.").color(NamedTextColor.RED));
+                    return Command.SINGLE_SUCCESS;
+                }
+                var info = tpas.get(player);
+                Bukkit.getScheduler().cancelTask(info.second.second);
+                tpas.remove(player);
+                player.sendMessage(
+                        Component.text("You have cancelled the TPA request to ").color(NamedTextColor.GOLD)
+                                .append(info.first.displayName().color(NamedTextColor.RED))
+                                .append(Component.text(". ").color(NamedTextColor.GOLD)));
+                info.first.sendMessage(
+                        player.displayName().color(NamedTextColor.RED)
+                                .append(Component.text(" has cancelled their TPA request to you. ").color(NamedTextColor.GOLD)));
+                handler.teleportations.remove(player);
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage("Only players can use /tpa.");
+            return Command.SINGLE_SUCCESS;
+        });
+        commands.registrar().register(tpcancel.build());
     }
 }

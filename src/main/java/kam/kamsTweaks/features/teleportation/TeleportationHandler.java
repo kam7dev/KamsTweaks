@@ -3,6 +3,8 @@ package kam.kamsTweaks.features.teleportation;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.KamsTweaks;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -45,6 +47,7 @@ public class TeleportationHandler {
 
         ref.listener = new Listener() {
             void cancel() {
+                player.sendMessage(Component.text("Teleport cancelled because you moved.").color(NamedTextColor.GOLD));
                 teleportations.remove(player);
                 HandlerList.unregisterAll(ref.listener);
                 Bukkit.getScheduler().cancelTask(task);
@@ -78,6 +81,10 @@ public class TeleportationHandler {
 
         ref.listener = new Listener() {
             void cancel() {
+                target.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
+                        .append(player.displayName().color(NamedTextColor.RED))
+                        .append(Component.text(" moved.").color(NamedTextColor.GOLD)));
+                player.sendMessage(Component.text("Teleport cancelled because you moved.").color(NamedTextColor.GOLD));
                 teleportations.remove(player);
                 HandlerList.unregisterAll(ref.listener);
                 Bukkit.getScheduler().cancelTask(task);
