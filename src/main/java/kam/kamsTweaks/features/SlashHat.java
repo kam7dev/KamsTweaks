@@ -22,7 +22,7 @@ public class SlashHat {
 	public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
 		LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("hat").executes(ctx -> {
 			CommandSender sender = ctx.getSource().getSender();
-                        if (!KamsTweaks.getInstance().getConfig().getBoolean("slash-hat.enabled", true)) {
+                        if (!KamsTweaks.getInstance().getConfig().getBoolean("slash-hat", true)) {
 				sender.sendPlainMessage("/hat is disabled.");
 				return Command.SINGLE_SUCCESS;
 			}

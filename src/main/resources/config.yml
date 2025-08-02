@@ -29,3 +29,11 @@ silk-spawners:
 # This is mainly so when I forget to commit info logs, it doesn't spam console
 # Must be one of 'error', 'warn', 'info', or 'debug'
 log-level: warn
+
+# /hat
+slash-hat: true
+
+# nicknames
+nicknames: true
+# name colors
+name-colors: true

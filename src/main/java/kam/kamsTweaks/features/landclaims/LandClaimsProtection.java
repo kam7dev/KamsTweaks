@@ -122,6 +122,7 @@ public class LandClaimsProtection implements Listener {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         if (e.getPlayer().getTargetEntity(5) instanceof Creature)
@@ -159,7 +160,6 @@ public class LandClaimsProtection implements Listener {
             return;
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             assert e.getClickedBlock() != null;
-            //noinspection deprecation
             if (e.getClickedBlock().getType().isInteractable()) {
                 Player player = e.getPlayer();
                 assert e.getClickedBlock() != null;

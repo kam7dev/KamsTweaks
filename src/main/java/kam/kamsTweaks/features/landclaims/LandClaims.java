@@ -489,7 +489,7 @@ public class LandClaims implements Listener {
 
     public void saveClaims() {
         setupFile();
-        claimsConfig.set("claims", null); // clear previous entries
+        claimsConfig.set("claims", null);
 
         int i = 0;
         for (Claim claim : claims) {
@@ -502,7 +502,7 @@ public class LandClaims implements Listener {
             i++;
         }
 
-        claimsConfig.set("entities", null); // clear previous entries
+        claimsConfig.set("entities", null);
 
         KamsTweaks.getInstance().m_entityClaims.claims.forEach((uuid, claim) -> {
             String path = "entities." + uuid;
