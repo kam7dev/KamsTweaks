@@ -10,6 +10,7 @@ import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -26,7 +27,6 @@ import static kam.kamsTweaks.features.landclaims.LandClaims.serializeLocation;
 
 public class Spawn {
     TeleportationHandler handler;
-    Map<String, Location> warps = new HashMap<>();
     public void init(TeleportationHandler handler) {
         this.handler = handler;
     }
@@ -38,7 +38,7 @@ public class Spawn {
                 .executes(ctx -> {
             CommandSender sender = ctx.getSource().getSender();
             if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.spawn.enabled", true)) {
-                sender.sendPlainMessage("Warps are disabled.");
+                sender.sendPlainMessage("/spawn is disabled.");
                 return Command.SINGLE_SUCCESS;
             }
             Entity executor = ctx.getSource().getExecutor();
@@ -47,22 +47,18 @@ public class Spawn {
                     sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;
                 }
-                String warp = ctx.getArgument("name", String.class);
-                if (!warps.containsKey(warp)) {
-                    sender.sendMessage(Component.text("Warp \"" + warp + "\" does not exist.").color(NamedTextColor.RED));
-                    return Command.SINGLE_SUCCESS;
-                }
                 double time = KamsTweaks.getInstance().getConfig().getDouble("teleportation.timer");
                 sender.sendMessage(
-                        Component.text("Teleporting to the " + warp + " warp")
+                        Component.text("Teleporting to spawn")
                                 .color(NamedTextColor.GOLD)
-                                .append(Component.text(time > 0 ? (" in " + time + " seconds, ") : "").color(NamedTextColor.RED))
-                                .append(Component.text(time > 0 ? "please do not move." : ".").color(NamedTextColor.GOLD)));
-                Location loc = warps.get(warp);
+                                .append(Component.text(time > 0 ? " in " : ".").color(NamedTextColor.GOLD))
+                                .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
+                                .append(Component.text(time > 0 ? ", please do not move." : "").color(NamedTextColor.GOLD)));
+                Location loc = Bukkit.getWorlds().getFirst().getSpawnLocation();
                 handler.scheduleTeleport(player, loc, time);
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage("Only players can use warps.");
+            sender.sendMessage("Only players can use /spawn.");
             return Command.SINGLE_SUCCESS;
         });
         commands.registrar().register(spawn.build());

@@ -88,8 +88,9 @@ public class SetHome {
                 sender.sendMessage(
                         Component.text("Teleporting to your home")
                                 .color(NamedTextColor.GOLD)
-                                .append(Component.text(time > 0 ? (" in " + time + " seconds, ") : "").color(NamedTextColor.RED))
-                                .append(Component.text(time > 0 ? "please do not move." : ".").color(NamedTextColor.GOLD)));
+                                .append(Component.text(time > 0 ? " in " : ".").color(NamedTextColor.GOLD))
+                                .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
+                                .append(Component.text(time > 0 ? ", please do not move." : "").color(NamedTextColor.GOLD)));
                 Location loc = homes.get(player.getUniqueId());
                 handler.scheduleTeleport(player, loc, time);
                 return Command.SINGLE_SUCCESS;

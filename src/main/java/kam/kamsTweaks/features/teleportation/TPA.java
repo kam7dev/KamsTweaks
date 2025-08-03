@@ -42,14 +42,14 @@ public class TPA {
         requester.sendMessage(
                 Component.text("You have accepted the TPA request from ").color(NamedTextColor.GOLD)
                         .append(acceptor.displayName().color(NamedTextColor.RED))
-                        .append(Component.text(". " + (time > 0 ? "They will be teleported to you" : "They have been teleported to you.")).color(NamedTextColor.GOLD))
-                        .append(Component.text(time > 0 ? (" in " + time + " seconds") : "").color(NamedTextColor.RED))
+                        .append(Component.text(". " + (time > 0 ? "They will be teleported to you in " : "They have been teleported to you.")).color(NamedTextColor.GOLD))
+                        .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
                         .append(Component.text(".").color(NamedTextColor.GOLD)));
         acceptor.sendMessage(
                 requester.displayName().color(NamedTextColor.RED)
                         .append(Component.text(" has accepted your TPA request. ").color(NamedTextColor.GOLD))
-                        .append(Component.text(time > 0 ? "You will be teleported to them" : "You have been teleported to them").color(NamedTextColor.GOLD))
-                        .append(Component.text(time > 0 ? (" in " + time + " seconds") : "")).color(NamedTextColor.RED)
+                        .append(Component.text(time > 0 ? "You will be teleported to them in " : "You have been teleported to them").color(NamedTextColor.GOLD))
+                        .append(Component.text(time > 0 ? (time + " seconds") : "")).color(NamedTextColor.RED)
                         .append(Component.text(time > 0 ? ", please do not move." : ".").color(NamedTextColor.GOLD)));
         handler.scheduleTeleport(requester, acceptor, time);
     }

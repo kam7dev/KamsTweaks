@@ -27,10 +27,11 @@ public class TeleportationHandler {
     TPA tpa = new TPA();
     Warp warp = new Warp();
     Back back = new Back();
+    Spawn spawn = new Spawn();
 
     public void teleport(Player player, Location location) {
+        locations.put(player, player.getLocation());
         player.teleport(location);
-        locations.put(player, location);
         teleportations.remove(player);
     }
 
@@ -110,6 +111,7 @@ public class TeleportationHandler {
         tpa.init(this);
         warp.init(this);
         back.init(this);
+        spawn.init(this);
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -118,6 +120,7 @@ public class TeleportationHandler {
         tpa.registerCommands(commands);
         warp.registerCommands(commands);
         back.registerCommands(commands);
+        spawn.registerCommands(commands);
     }
 
     public void save() {

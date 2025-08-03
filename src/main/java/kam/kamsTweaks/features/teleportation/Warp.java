@@ -44,7 +44,7 @@ public class Warp {
     public void loadWarps() {
         warps.clear();
         FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
-        if (config.contains("homes")) {
+        if (config.contains("warps")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("warps")).getKeys(false)) {
                 try {
                     String locStr = config.getString("warps." + key);
@@ -62,14 +62,14 @@ public class Warp {
 
     @SuppressWarnings("UnstableApiUsage")
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        LiteralArgumentBuilder<CommandSourceStack> warpCmd = Commands.literal("warp").then(Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
+        LiteralArgumentBuilder<CommandSourceStack> warpCmd = Commands.literal("warp")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.warp"))
+                .then(Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
                     for (String warp : warps.keySet()) {
                         builder.suggest(warp);
                     }
                     return builder.buildFuture();
-                })
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.warp"))
-                .executes(ctx -> {
+                }).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
                         sender.sendPlainMessage("Warps are disabled.");
@@ -88,10 +88,12 @@ public class Warp {
                         }
                         double time = KamsTweaks.getInstance().getConfig().getDouble("teleportation.timer");
                         sender.sendMessage(
-                                Component.text("Teleporting to the " + warp + " warp")
-                                        .color(NamedTextColor.GOLD)
-                                        .append(Component.text(time > 0 ? (" in " + time + " seconds, ") : "").color(NamedTextColor.RED))
-                                        .append(Component.text(time > 0 ? "please do not move." : ".").color(NamedTextColor.GOLD)));
+                                Component.text("Teleporting to the ").color(NamedTextColor.GOLD)
+                                        .append(Component.text(warp).color(NamedTextColor.RED))
+                                        .append(Component.text(" warp").color(NamedTextColor.GOLD))
+                                        .append(Component.text(time > 0 ? " in " : ".").color(NamedTextColor.GOLD))
+                                        .append(Component.text(time > 0 ? (time + "") : "").color(NamedTextColor.RED))
+                                        .append(Component.text(time > 0 ? " seconds, please do not move." : "").color(NamedTextColor.GOLD)));
                         Location loc = warps.get(warp);
                         handler.scheduleTeleport(player, loc, time);
                         return Command.SINGLE_SUCCESS;
@@ -122,9 +124,9 @@ public class Warp {
                 });
         commands.registrar().register(warpsCmd.build());
 
-        LiteralArgumentBuilder<CommandSourceStack> sethome = Commands.literal("addwarp").then(Commands.argument("name", StringArgumentType.word())
+        LiteralArgumentBuilder<CommandSourceStack> sethome = Commands.literal("addwarp")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.addwarp"))
-                .executes(ctx -> {
+                .then(Commands.argument("name", StringArgumentType.word()).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
                         sender.sendPlainMessage("Warps are disabled.");
