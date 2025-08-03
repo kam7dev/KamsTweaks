@@ -79,7 +79,9 @@ public class Names implements Listener {
 
     @SuppressWarnings("UnstableApiUsage")
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        LiteralArgumentBuilder<CommandSourceStack> nickCmd = Commands.literal("nick").then(Commands.argument("name", StringArgumentType.string()).executes(ctx -> {
+        LiteralArgumentBuilder<CommandSourceStack> nickCmd = Commands.literal("nick")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.names.nick"))
+                .then(Commands.argument("name", StringArgumentType.string()).executes(ctx -> {
             CommandSender sender = ctx.getSource().getSender();
             if (!KamsTweaks.getInstance().getConfig().getBoolean("nicknames", true)) {
                 sender.sendPlainMessage("Nicknames are disabled.");
@@ -113,7 +115,9 @@ public class Names implements Listener {
         }));
         commands.registrar().register(nickCmd.build());
 
-        LiteralArgumentBuilder<CommandSourceStack> colorCmd = Commands.literal("color").then(Commands.argument("color", StringArgumentType.string()).suggests((ctx, builder) -> {
+        LiteralArgumentBuilder<CommandSourceStack> colorCmd = Commands.literal("color")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.names.color"))
+                .then(Commands.argument("color", StringArgumentType.string()).suggests((ctx, builder) -> {
             for (String color : NamedTextColor.NAMES.keys()) {
                 builder.suggest(color.toLowerCase());
             }

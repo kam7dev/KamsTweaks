@@ -223,18 +223,18 @@ public class LandClaims implements Listener {
                                     return Command.SINGLE_SUCCESS;
                                 })
                         )
-                        .then(Commands.literal("admin-bypass-claims")
-                                .then(Commands.argument("enabled", BoolArgumentType.bool()).executes(ctx -> {
-                                    KamsTweaks.getInstance().getConfig().set("land-claims.admin-bypass-claims", ctx.getArgument("enabled", Boolean.class));
-                                    KamsTweaks.getInstance().saveConfig();
-                                    ctx.getSource().getSender().sendMessage("Successfully " + (ctx.getArgument("enabled", Boolean.class) == true ? "enabled" : "disabled") + " admins bypassing land claims.");
-                                    return Command.SINGLE_SUCCESS;
-                                }))
-                                .executes(ctx -> {
-                                    ctx.getSource().getSender().sendMessage("Admins bypassing land claims is currently " + KamsTweaks.getInstance().getConfig().getBoolean("land-claims.admin-bypass-claims", true) + ".");
-                                    return Command.SINGLE_SUCCESS;
-                                })
-                        )
+//                        .then(Commands.literal("admin-bypass-claims")
+//                                .then(Commands.argument("enabled", BoolArgumentType.bool()).executes(ctx -> {
+//                                    KamsTweaks.getInstance().getConfig().set("land-claims.admin-bypass-claims", ctx.getArgument("enabled", Boolean.class));
+//                                    KamsTweaks.getInstance().saveConfig();
+//                                    ctx.getSource().getSender().sendMessage("Successfully " + (ctx.getArgument("enabled", Boolean.class) == true ? "enabled" : "disabled") + " admins bypassing land claims.");
+//                                    return Command.SINGLE_SUCCESS;
+//                                }))
+//                                .executes(ctx -> {
+//                                    ctx.getSource().getSender().sendMessage("Admins bypassing land claims is currently " + KamsTweaks.getInstance().getConfig().getBoolean("land-claims.admin-bypass-claims", true) + ".");
+//                                    return Command.SINGLE_SUCCESS;
+//                                })
+//                        )
                         .then(Commands.literal("max-claims")
                                 .then(Commands.argument("claims", IntegerArgumentType.integer()).executes(ctx -> {
                                     KamsTweaks.getInstance().getConfig().set("land-claims.max-claims", ctx.getArgument("claims", Integer.class));

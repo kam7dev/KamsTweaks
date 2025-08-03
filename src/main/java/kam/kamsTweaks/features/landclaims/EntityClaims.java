@@ -94,6 +94,10 @@ public class EntityClaims implements Listener {
                     e.getPlayer().sendMessage(Component.text("This entity is already claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                     return;
                 }
+                if (!e.getPlayer().hasPermission("kamstweaks.landclaims.claim")) {
+                    e.getPlayer().sendMessage(Component.text("You do not have permission to claim entities.").color(NamedTextColor.RED));
+                    return;
+                }
                 KamsTweaks.getInstance().m_landClaims.gui.showClaimGui(e.getPlayer(), null);
                 var ui = KamsTweaks.getInstance().m_landClaims.gui.guis.get(e.getPlayer());
                 ui.confirmType = "entity-claim";

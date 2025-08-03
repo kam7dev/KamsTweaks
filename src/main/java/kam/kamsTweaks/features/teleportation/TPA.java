@@ -70,7 +70,9 @@ public class TPA {
 
     @SuppressWarnings("UnstableApiUsage")
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        LiteralArgumentBuilder<CommandSourceStack> tpa = Commands.literal("tpa").then(Commands.argument("player", ArgumentTypes.player()).executes(ctx -> {
+        LiteralArgumentBuilder<CommandSourceStack> tpa = Commands.literal("tpa")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.tpa"))
+                .then(Commands.argument("player", ArgumentTypes.player()).executes(ctx -> {
             CommandSender sender = ctx.getSource().getSender();
             if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
                 sender.sendPlainMessage("/tpa is disabled.");
@@ -151,7 +153,9 @@ public class TPA {
             return Command.SINGLE_SUCCESS;
         }));
         commands.registrar().register(tpa.build());
-        LiteralArgumentBuilder<CommandSourceStack> tpaccept = Commands.literal("tpaccept").executes(ctx -> {
+        LiteralArgumentBuilder<CommandSourceStack> tpaccept = Commands.literal("tpaccept")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.tpa"))
+                .executes(ctx -> {
             CommandSender sender = ctx.getSource().getSender();
             if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
                 sender.sendPlainMessage("/tpa is disabled.");
@@ -198,7 +202,9 @@ public class TPA {
         }));
         commands.registrar().register(tpaccept.build());
 
-        LiteralArgumentBuilder<CommandSourceStack> tpdecline = Commands.literal("tpdecline").executes(ctx -> {
+        LiteralArgumentBuilder<CommandSourceStack> tpdecline = Commands.literal("tpdecline")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.tpa"))
+                .executes(ctx -> {
             CommandSender sender = ctx.getSource().getSender();
             if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
                 sender.sendPlainMessage("/tpa is disabled.");
@@ -244,7 +250,9 @@ public class TPA {
             return Command.SINGLE_SUCCESS;
         }));
         commands.registrar().register(tpdecline.build());
-        LiteralArgumentBuilder<CommandSourceStack> tpcancel = Commands.literal("tpcancel").executes(ctx -> {
+        LiteralArgumentBuilder<CommandSourceStack> tpcancel = Commands.literal("tpcancel")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.tpa"))
+                .executes(ctx -> {
             CommandSender sender = ctx.getSource().getSender();
             if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
                 sender.sendPlainMessage("/tpa is disabled.");

@@ -66,7 +66,9 @@ public class SetHome {
 
     @SuppressWarnings("UnstableApiUsage")
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        LiteralArgumentBuilder<CommandSourceStack> home = Commands.literal("home").executes(ctx -> {
+        LiteralArgumentBuilder<CommandSourceStack> home = Commands.literal("home")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.homes"))
+                .executes(ctx -> {
             CommandSender sender = ctx.getSource().getSender();
             if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.homes.enabled", true)) {
                 sender.sendPlainMessage("Homes are disabled.");
@@ -97,7 +99,9 @@ public class SetHome {
         });
         commands.registrar().register(home.build());
 
-        LiteralArgumentBuilder<CommandSourceStack> sethome = Commands.literal("sethome").executes(ctx -> {
+        LiteralArgumentBuilder<CommandSourceStack> sethome = Commands.literal("sethome")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.homes"))
+                .executes(ctx -> {
             CommandSender sender = ctx.getSource().getSender();
             if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.homes.enabled", true)) {
                 sender.sendPlainMessage("Homes are disabled.");
@@ -109,7 +113,7 @@ public class SetHome {
                 sender.sendMessage(Component.text("Your home has been set.").color(NamedTextColor.GOLD));
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage("Only players can use /home.");
+            sender.sendMessage("Only players can use /sethome.");
             return Command.SINGLE_SUCCESS;
         });
         commands.registrar().register(sethome.build());

@@ -20,7 +20,9 @@ import net.kyori.adventure.text.Component;
 public class SlashHat {
 	@SuppressWarnings("UnstableApiUsage")
 	public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-		LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("hat").executes(ctx -> {
+		LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("hat")
+				.requires(source -> source.getSender().hasPermission("kamstweaks.hat"))
+				.executes(ctx -> {
 			CommandSender sender = ctx.getSource().getSender();
                         if (!KamsTweaks.getInstance().getConfig().getBoolean("slash-hat", true)) {
 				sender.sendPlainMessage("/hat is disabled.");

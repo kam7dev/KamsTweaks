@@ -302,6 +302,11 @@ public class LandClaimGui implements Listener {
                 }
             }, 3);
             homeScreen.addItem(createGuiItem(Material.SHIELD, Component.text("Claim").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Claim land.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!player.hasPermission("kamstweaks.landclaims.claim")) {
+                    ui.close(false);
+                    player.sendMessage(Component.text("You do not have permission to claim land.").color(NamedTextColor.RED));
+                    return;
+                }
                 Iterator<LandClaims.Claim> iterator = lc.claiming.iterator();
                 while (iterator.hasNext()) {
                     LandClaims.Claim claim = iterator.next();
