@@ -21,6 +21,7 @@ public final class KamsTweaks extends JavaPlugin {
     SilkSpawner m_silkSpawner = new SilkSpawner();
     Names m_names = new Names();
     TeleportationHandler m_teleportation = new TeleportationHandler();
+    Graves m_graves = new Graves();
 
     public static KamsTweaks getInstance() {
         return m_instance;
@@ -36,6 +37,7 @@ public final class KamsTweaks extends JavaPlugin {
         m_landClaims.loadClaims();
         m_names.loadNames();
         m_teleportation.load();
+        m_graves.loadGraves();
 
         m_landClaims.setup();
         m_entityClaims.init();
@@ -46,6 +48,7 @@ public final class KamsTweaks extends JavaPlugin {
         getServer().getPluginManager().registerEvents(m_seedDispenser, this);
         getServer().getPluginManager().registerEvents(m_silkSpawner, this);
         getServer().getPluginManager().registerEvents(m_names, this);
+        getServer().getPluginManager().registerEvents(m_graves, this);
         getServer().getPluginManager().registerEvents(new TrollRemover(), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
@@ -61,6 +64,7 @@ public final class KamsTweaks extends JavaPlugin {
         m_landClaims.saveClaims();
         m_names.saveNames();
         m_teleportation.save();
+        m_graves.saveGraves();
         saveConfigs();
     }
 
