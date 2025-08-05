@@ -2,49 +2,81 @@ package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.features.landclaims.LandClaims;
 import kam.kamsTweaks.utils.Inventories;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static kam.kamsTweaks.features.landclaims.LandClaims.deserializeLocation;
 import static kam.kamsTweaks.features.landclaims.LandClaims.serializeLocation;
 import static org.bukkit.Bukkit.getServer;
 
 public class Graves implements Listener {
-    List<Grave> graves = new ArrayList<>();
+    Map<Integer, Grave> graves = new HashMap<>();
+    static int highest = 0;
     @EventHandler
     public void onDie(PlayerDeathEvent event) {
         Player player = event.getPlayer();
+        if (player.getInventory().isEmpty() && player.getTotalExperience() == 0) return;
         Grave grave = new Grave(player, player.getLocation());
-        graves.add(grave);
-        event.setKeepInventory(true);
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(new ItemStack[]{});
-        player.getInventory().setItemInOffHand(null);
-        player.setExp(0);
+        graves.put(grave.id, grave);
+        event.getDrops().clear();
+        event.setDroppedExp(0);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onEntityInteract(PlayerInteractEntityEvent e) {
+        Entity entity = e.getRightClicked();
+        Logger.error("A");
+        if (entity instanceof ArmorStand stand) {
+            Logger.error("B");
+            Player player = e.getPlayer();
+            NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
+            if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
+            Logger.error("C");
+            e.setCancelled(true);
+            if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
+                return;
+            Logger.error("D");
+            @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
+            if (!graves.containsKey(id)) return;
+            Logger.error("E");
+            var grave = graves.get(id);
+            if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
+                Logger.error("F");
+                player.openInventory(grave.getInventory());
+                player.setTotalExperience(player.getTotalExperience() + grave.experience);
+                grave.experience = 0;
+            }
+        }
     }
 
     public static class Grave {
         OfflinePlayer owner;
         Inventory inventory;
         Location location;
-        float experience;
-        public Grave(OfflinePlayer owner, Inventory inventory, Location location, float experience) {
+        int experience;
+        int id;
+        public Grave(OfflinePlayer owner, Inventory inventory, Location location, int experience) {
             this.owner = owner;
             this.inventory = inventory;
             this.location = location;
@@ -73,7 +105,10 @@ public class Graves implements Listener {
             inv.setBoots(null);
             inventory.setItem(31, inv.getItemInOffHand());
             inv.setItemInOffHand(null);
-            this.experience = owner.getExp();
+            this.experience = owner.getTotalExperience();
+            this.id = highest;
+            highest++;
+            createStand();
         }
 
         public OfflinePlayer getOwner() {
@@ -87,23 +122,33 @@ public class Graves implements Listener {
         public Location getLocation() {
             return location;
         }
-    }
 
-    public void saveGraves() {
-        int i = 0;
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
-        for (Grave grave : graves) {
-            Inventories.saveInventory(grave.getInventory(), config, "graves." + i);
-            config.set("graves." + i + ".location", serializeLocation(grave.location));
-            config.set("graves." + i + ".owner", grave.owner.getUniqueId().toString());
-            config.set("graves." + i + ".xp", grave.experience);
-            i++;
+        public void createStand() {
+            ArmorStand stand = location.getWorld().spawn(location.addRotation(90, 0).subtract(0, 1.4375, 0), ArmorStand.class);
+            stand.setGravity(false);
+            stand.setItem(EquipmentSlot.HEAD, new ItemStack(Material.STONE_BRICK_WALL));
+            stand.setCustomNameVisible(true);
+            stand.setBasePlate(false);
+            stand.setInvisible(true);
+            stand.setInvulnerable(true);
+            stand.customName(Component.text(owner.getName() == null ? "Unknown" : owner.getName()).color(NamedTextColor.GOLD).append(Component.text("'s Grave").color(NamedTextColor.WHITE)));
+            stand.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "grave"), PersistentDataType.INTEGER, id);
         }
     }
 
+    public void saveGraves() {
+        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        graves.forEach((id, grave) -> {
+            Inventories.saveInventory(grave.getInventory(), config, "graves." + id);
+            config.set("graves." + id + ".location", serializeLocation(grave.location));
+            config.set("graves." + id + ".owner", grave.owner.getUniqueId().toString());
+            config.set("graves." + id + ".xp", grave.experience);
+        });
+    }
+
     public void loadGraves() {
-        int i = 0;
         graves.clear();
+        highest = 0;
         FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
         if (config.contains("graves")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("graves")).getKeys(false)) {
@@ -111,13 +156,16 @@ public class Graves implements Listener {
                     String ownerStr = config.getString("graves." + key + ".owner");
                     UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
                     String locationStr = config.getString("graves." + key + ".location");
-                    float xp = (float) config.get("graves." + key + ".xp", 0);
+                    int xp = (int) config.get("graves." + key + ".xp", 0);
                     assert locationStr != null;
                     Location location = deserializeLocation(locationStr);
                     if (location.getWorld() == null) continue;
                     Inventory inv = Inventories.loadInventory(Component.empty(), 36, config, "graves." + key);
                     Grave grave = new Grave(owner == null ? null : getServer().getOfflinePlayer(owner), inv, location, xp);
-                    graves.add(grave);
+                    int id = Integer.parseInt(key);
+                    if (highest < id) highest = id;
+                    grave.id = id;
+                    graves.put(id, grave);
                 } catch (Exception e) {
                     Logger.warn(e.getMessage());
                 }
