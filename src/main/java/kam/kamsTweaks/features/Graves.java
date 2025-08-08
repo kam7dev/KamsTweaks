@@ -16,6 +16,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -46,28 +47,29 @@ public class Graves implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityInteract(PlayerInteractEntityEvent e) {
         Entity entity = e.getRightClicked();
-        Logger.error("A");
         if (entity instanceof ArmorStand stand) {
-            Logger.error("B");
             Player player = e.getPlayer();
             NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
             if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
-            Logger.error("C");
             e.setCancelled(true);
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
-            Logger.error("D");
             @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
-            Logger.error("E");
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
-                Logger.error("F");
                 player.openInventory(grave.getInventory());
-                player.setTotalExperience(player.getTotalExperience() + grave.experience);
-                grave.experience = 0;
+                if (grave.experience != 0) {
+                    changePlayerExp(player, grave.experience);
+                    grave.experience = 0;
+                }
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onEntityInteractAt(PlayerInteractAtEntityEvent e) {
+        onEntityInteract(e);
     }
 
     public static class Grave {
@@ -87,25 +89,25 @@ public class Graves implements Listener {
             this.owner = owner;
             this.location = location;
             PlayerInventory inv = owner.getInventory();
-            this.inventory = Bukkit.createInventory(null, 36);
-            for (int i = 0; i < 27; i++) {
+            this.inventory = Bukkit.createInventory(null, 45);
+            for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
                 if (item != null && !item.isEmpty()) {
                     inventory.setItem(i, item);
                     inv.setItem(i, null);
                 }
             }
-            inventory.setItem(27, inv.getHelmet());
+            inventory.setItem(36, inv.getHelmet());
             inv.setHelmet(null);
-            inventory.setItem(28, inv.getChestplate());
+            inventory.setItem(37, inv.getChestplate());
             inv.setChestplate(null);
-            inventory.setItem(29, inv.getLeggings());
+            inventory.setItem(38, inv.getLeggings());
             inv.setLeggings(null);
-            inventory.setItem(30, inv.getBoots());
+            inventory.setItem(39, inv.getBoots());
             inv.setBoots(null);
-            inventory.setItem(31, inv.getItemInOffHand());
+            inventory.setItem(40, inv.getItemInOffHand());
             inv.setItemInOffHand(null);
-            this.experience = owner.getTotalExperience();
+            this.experience = getPlayerExp(owner);
             this.id = highest;
             highest++;
             createStand();
@@ -172,4 +174,60 @@ public class Graves implements Listener {
             }
         }
     }
+
+    // From essentials
+
+    // Calculate amount of EXP needed to level up
+    public static int getExpToLevelUp(int level){
+        if(level <= 15){
+            return 2*level+7;
+        } else if(level <= 30){
+            return 5*level-38;
+        } else {
+            return 9*level-158;
+        }
+    }
+
+    // Calculate total experience up to a level
+    public static int getExpAtLevel(int level){
+        if(level <= 16){
+            return (int) (Math.pow(level,2) + 6*level);
+        } else if(level <= 31){
+            return (int) (2.5*Math.pow(level,2) - 40.5*level + 360.0);
+        } else {
+            return (int) (4.5*Math.pow(level,2) - 162.5*level + 2220.0);
+        }
+    }
+
+    // Calculate player's current EXP amount
+    public static int getPlayerExp(Player player){
+        int exp = 0;
+        int level = player.getLevel();
+
+        // Get the amount of XP in past levels
+        exp += getExpAtLevel(level);
+
+        // Get amount of XP towards next level
+        exp += Math.round(getExpToLevelUp(level) * player.getExp());
+
+        return exp;
+    }
+
+    // Give or take EXP
+    public static int changePlayerExp(Player player, int exp){
+        // Get player's current exp
+        int currentExp = getPlayerExp(player);
+
+        // Reset player's current exp to 0
+        player.setExp(0);
+        player.setLevel(0);
+
+        // Give the player their exp back, with the difference
+        int newExp = currentExp + exp;
+        player.giveExp(newExp);
+
+        // Return the player's new exp amount
+        return newExp;
+    }
+
 }
