@@ -505,6 +505,7 @@ public class LandClaims implements Listener {
         claimsConfig.set("entities", null);
 
         KamsTweaks.getInstance().m_entityClaims.claims.forEach((uuid, claim) -> {
+            if (claim == null) return;
             String path = "entities." + uuid;
             if (claim.m_owner != null) claimsConfig.set(path + ".owner", claim.m_owner.getUniqueId().toString());
             claimsConfig.set(path + ".default", claim.m_default.name());
