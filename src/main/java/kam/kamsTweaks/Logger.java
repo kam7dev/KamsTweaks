@@ -26,7 +26,6 @@ public class Logger {
     }
 
     public static void warn(String message) {
-        KamsTweaks.getInstance().getLogger().info(logLevel.name());
         if (logLevel.ordinal() >= LogLevel.WARN.ordinal())
             KamsTweaks.getInstance().getLogger().warning(message);
     }

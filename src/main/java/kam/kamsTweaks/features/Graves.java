@@ -2,7 +2,6 @@ package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
-import kam.kamsTweaks.features.landclaims.LandClaims;
 import kam.kamsTweaks.utils.Inventories;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -10,25 +9,23 @@ import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static kam.kamsTweaks.features.landclaims.LandClaims.deserializeLocation;
-import static kam.kamsTweaks.features.landclaims.LandClaims.serializeLocation;
 import static org.bukkit.Bukkit.getServer;
 
 public class Graves implements Listener {
@@ -45,6 +42,66 @@ public class Graves implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH)
+    public void onClick(InventoryClickEvent e) {
+        var clickedInv = e.getClickedInventory();
+        graves.forEach((id, grave) -> {
+            switch (e.getAction()) {
+                case PLACE_ALL:
+                case PLACE_ONE:
+                case PLACE_SOME:
+                case SWAP_WITH_CURSOR:
+                case HOTBAR_SWAP:
+                case PLACE_FROM_BUNDLE:
+                case PLACE_ALL_INTO_BUNDLE:
+                case PLACE_SOME_INTO_BUNDLE:
+                    if (clickedInv != null && clickedInv.equals(grave.inventory)) {
+                        e.setCancelled(true);
+                    }
+                    break;
+
+                case MOVE_TO_OTHER_INVENTORY:
+                    if (clickedInv != null && clickedInv.equals(e.getView().getBottomInventory()) && e.getView().getTopInventory().equals(grave.inventory)) {
+//                        if (e.getView().getTopInventory().firstEmpty() != -1) { // space available in top inventory
+                            e.setCancelled(true);
+//                        }
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        });
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onDrag(InventoryDragEvent e) {
+        graves.forEach((id, grave) -> {
+            if (e.getInventory().equals(grave.inventory)) {
+                for (int rawSlot : e.getRawSlots()) {
+                    if (rawSlot < e.getView().getTopInventory().getSize()) {
+                        e.setCancelled(true);
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onCloseInv(InventoryCloseEvent e) {
+        AtomicInteger rem = new AtomicInteger(-1);
+        graves.forEach((id, grave) -> {
+            if (e.getInventory().equals(grave.getInventory())) {
+                if (grave.getInventory().isEmpty()) {
+                    if (grave.stand != null) grave.stand.remove();
+                    rem.set(id);
+                }
+            }
+        });
+        if (rem.get() != -1) graves.remove(rem.get());
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
     public void onEntityInteract(PlayerInteractEntityEvent e) {
         Entity entity = e.getRightClicked();
         if (entity instanceof ArmorStand stand) {
@@ -55,9 +112,12 @@ public class Graves implements Listener {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
             @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
+            Logger.info("" + id);
+            Logger.info(graves.keySet().toString());
             if (!graves.containsKey(id)) return;
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
+                Logger.info("Test 66");
                 player.openInventory(grave.getInventory());
                 if (grave.experience != 0) {
                     changePlayerExp(player, grave.experience);
@@ -76,6 +136,7 @@ public class Graves implements Listener {
         OfflinePlayer owner;
         Inventory inventory;
         Location location;
+        ArmorStand stand;
         int experience;
         int id;
         public Grave(OfflinePlayer owner, Inventory inventory, Location location, int experience) {
@@ -89,7 +150,7 @@ public class Graves implements Listener {
             this.owner = owner;
             this.location = location;
             PlayerInventory inv = owner.getInventory();
-            this.inventory = Bukkit.createInventory(null, 45);
+            this.inventory = Bukkit.createInventory(null, 45, Component.text("Grave"));
             for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
                 if (item != null && !item.isEmpty()) {
@@ -126,20 +187,30 @@ public class Graves implements Listener {
         }
 
         public void createStand() {
-            ArmorStand stand = location.getWorld().spawn(location.addRotation(90, 0).subtract(0, 1.4375, 0), ArmorStand.class);
+            stand = location.getWorld().spawn(location.clone().addRotation(90, 0).subtract(0, 1.4375, 0), ArmorStand.class);
             stand.setGravity(false);
             stand.setItem(EquipmentSlot.HEAD, new ItemStack(Material.STONE_BRICK_WALL));
             stand.setCustomNameVisible(true);
             stand.setBasePlate(false);
+            stand.setPersistent(false);
             stand.setInvisible(true);
             stand.setInvulnerable(true);
             stand.customName(Component.text(owner.getName() == null ? "Unknown" : owner.getName()).color(NamedTextColor.GOLD).append(Component.text("'s Grave").color(NamedTextColor.WHITE)));
-            stand.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "grave"), PersistentDataType.INTEGER, id);
+            stand.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "grave"), PersistentDataType.INTEGER, this.id);
+        }
+
+        void setArmorStand(ArmorStand stand) {
+            this.stand = stand;
+        }
+
+        ArmorStand getArmorStand() {
+            return stand;
         }
     }
 
     public void saveGraves() {
         FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        config.set("graves", null);
         graves.forEach((id, grave) -> {
             Inventories.saveInventory(grave.getInventory(), config, "graves." + id);
             config.set("graves." + id + ".location", serializeLocation(grave.location));
@@ -162,17 +233,35 @@ public class Graves implements Listener {
                     assert locationStr != null;
                     Location location = deserializeLocation(locationStr);
                     if (location.getWorld() == null) continue;
-                    Inventory inv = Inventories.loadInventory(Component.empty(), 36, config, "graves." + key);
+                    Inventory inv = Inventories.loadInventory(Component.text("Grave"), 45, config, "graves." + key);
                     Grave grave = new Grave(owner == null ? null : getServer().getOfflinePlayer(owner), inv, location, xp);
                     int id = Integer.parseInt(key);
                     if (highest < id) highest = id;
                     grave.id = id;
                     graves.put(id, grave);
+                    grave.createStand();
                 } catch (Exception e) {
                     Logger.warn(e.getMessage());
                 }
             }
         }
+    }
+
+    public static String serializeLocation(Location loc) {
+        return loc.getWorld() == null ? "" : loc.getWorld().getUID() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
+    }
+
+    public static Location deserializeLocation(String s) {
+        String[] parts = s.split(",");
+        UUID worldUuid = UUID.fromString(parts[0]);
+        return new Location(
+                getServer().getWorld(worldUuid),
+                Double.parseDouble(parts[1]),
+                Double.parseDouble(parts[2]),
+                Double.parseDouble(parts[3]),
+                Float.parseFloat(parts[4]),
+                Float.parseFloat(parts[5])
+        );
     }
 
     // From essentials
