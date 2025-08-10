@@ -51,3 +51,6 @@ teleportation:
     enabled: true
   back:
     enabled: true
+
+graves:
+  enabled: true
