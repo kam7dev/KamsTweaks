@@ -40,7 +40,7 @@ public class Names implements Listener {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("names")).getKeys(false)) {
                 try {
                     UUID owner = UUID.fromString(key);
-                    String nick = config.getString("names." + key + ".nick", Bukkit.getServer().getOfflinePlayer(owner).getName());
+                    String nick = config.getString("names." + key + ".nick", Bukkit.getServer().getOfflinePlayer(owner).getName()).replaceAll("[^a-zA-Z0-9\\-_. ,()\\[\\]{}]", "");;
                     String colorStr = config.getString("names." + key + ".color");
                     NamedTextColor color = null;
                     if (colorStr != null) {
@@ -93,6 +93,10 @@ public class Names implements Listener {
                 String name = ctx.getArgument("name", String.class);
                 if (name.length() > 20) {
                     sender.sendPlainMessage("Nicknames cannot be longer than 20 characters.");
+                    return Command.SINGLE_SUCCESS;
+                }
+                if (!name.matches("[a-zA-Z0-9\\-_. ,()\\[\\]{}]*")) {
+                    sender.sendPlainMessage("Nicknames can only contain letters, numbers, and some symbols.");
                     return Command.SINGLE_SUCCESS;
                 }
                 if (data.containsKey(player.getUniqueId())) {
