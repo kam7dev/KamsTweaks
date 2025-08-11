@@ -41,6 +41,7 @@ public class Names implements Listener {
                 try {
                     UUID owner = UUID.fromString(key);
                     String nick = config.getString("names." + key + ".nick", Bukkit.getServer().getOfflinePlayer(owner).getName()).replaceAll("[^a-zA-Z0-9\\-_. ,()\\[\\]{}]", "");;
+		    if (nick.isBlank()) continue;
                     String colorStr = config.getString("names." + key + ".color");
                     NamedTextColor color = null;
                     if (colorStr != null) {
@@ -95,8 +96,12 @@ public class Names implements Listener {
                     sender.sendPlainMessage("Nicknames cannot be longer than 20 characters.");
                     return Command.SINGLE_SUCCESS;
                 }
+		if (name.isBlank()) {
+	            sender.sendPlainMessage("Nicknames cannot be empty.");
+		    return Command.SINGLE_SUCCESS;
+		}
                 if (!name.matches("[a-zA-Z0-9\\-_. ,()\\[\\]{}]*")) {
-                    sender.sendPlainMessage("Nicknames can only contain letters, numbers, and some symbols.");
+                    sender.sendPlainMessage("Nicknames can only contain letters, numbers, spaces, and some symbols.");
                     return Command.SINGLE_SUCCESS;
                 }
                 if (data.containsKey(player.getUniqueId())) {
