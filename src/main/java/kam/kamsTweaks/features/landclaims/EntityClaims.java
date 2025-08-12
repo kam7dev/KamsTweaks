@@ -79,7 +79,8 @@ public class EntityClaims implements Listener {
                         ui.targetEntity = e.getRightClicked();
                         return;
                     }
-                    if (e.getPlayer().hasPermission("kamstweaks.landclaims.manageall")) {
+                    // admin abuse :/
+                    /*if (e.getPlayer().hasPermission("kamstweaks.landclaims.manageall")) {
                         KamsTweaks.getInstance().m_landClaims.gui.showClaimGui(e.getPlayer(), null);
                         var ui = KamsTweaks.getInstance().m_landClaims.gui.guis.get(e.getPlayer());
                         var screen = ui.getScreen(4);
@@ -89,6 +90,7 @@ public class EntityClaims implements Listener {
                         ui.targetEntity = e.getRightClicked();
                         return;
                     }
+                    */
                     if (hasMessaged.contains(e.getPlayer().getUniqueId())) return;
                     hasMessaged.add(e.getPlayer().getUniqueId());
                     e.getPlayer().sendMessage(Component.text("This entity is already claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));

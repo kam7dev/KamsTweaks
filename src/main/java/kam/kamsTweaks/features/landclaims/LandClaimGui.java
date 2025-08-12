@@ -290,13 +290,14 @@ public class LandClaimGui implements Listener {
                 if (ui.claim == null) {
                     player.sendMessage(Component.text("This area isn't claimed.").color(NamedTextColor.RED));
                 } else if (ui.claim.m_owner == null || !ui.claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
-                    if (player.hasPermission("kamstweaks.landclaims.manageall")) {
-                        ui.confirmType = "admin-bypass";
-                        confirmScreen.changeTitle(Component.text("Edit " + (ui.claim.m_owner == null ? "The Server" : ui.claim.m_owner.getName() == null ? "Unknown" : ui.claim.m_owner.getName()) + "'s claim?"));
-                        ui.changeToScreen(confirmScreen);
-                    } else {
+                    // admin abuse made me remove :/
+                    /* if (player.hasPermission("kamstweaks.landclaims.manageall")) {
+                          ui.confirmType = "admin-bypass";
+                          confirmScreen.changeTitle(Component.text("Edit " + (ui.claim.m_owner == null ? "The Server" : ui.claim.m_owner.getName() == null ? "Unknown" : ui.claim.m_owner.getName()) + "'s claim?"));
+                          ui.changeToScreen(confirmScreen);
+                      } else { */
                         player.sendMessage(Component.text("You don't own this area.").color(NamedTextColor.RED));
-                    }
+                    //}
                 } else {
                     ui.changeToScreen(editScreen);
                 }
