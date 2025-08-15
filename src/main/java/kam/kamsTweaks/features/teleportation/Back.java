@@ -11,13 +11,19 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class Back {
+import static org.bukkit.Bukkit.getServer;
+
+public class Back implements Listener {
     TeleportationHandler handler;
 
     public void init(TeleportationHandler handler) {
+        getServer().getPluginManager().registerEvents(this, KamsTweaks.getInstance());
         this.handler = handler;
     }
 
@@ -55,5 +61,12 @@ public class Back {
         });
         LiteralCommandNode<CommandSourceStack> buildCommand = command.build();
         commands.registrar().register(buildCommand);
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent e) {
+        Player player = e.getPlayer();
+        handler.locations.put(player, player.getLocation());
+        player.sendMessage(Component.text("Return to your death location with /back.").color(NamedTextColor.GOLD));
     }
 }

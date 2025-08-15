@@ -38,6 +38,7 @@ public class TPA {
         if (!tpas.containsKey(requester)) return;
         Bukkit.getScheduler().cancelTask(tpas.get(requester).second.second);
         tpas.remove(requester);
+        HandlerList.unregisterAll(tpas.get(requester).second.first);
         double time = KamsTweaks.getInstance().getConfig().getDouble("teleportation.timer");
         requester.sendMessage(
                 Component.text("You have accepted the TPA request from ").color(NamedTextColor.GOLD)
@@ -58,6 +59,7 @@ public class TPA {
         if (!tpas.containsKey(requester)) return;
         Bukkit.getScheduler().cancelTask(tpas.get(requester).second.second);
         tpas.remove(requester);
+        HandlerList.unregisterAll(tpas.get(requester).second.first);
         decliner.sendMessage(
                 Component.text("You have declined the TPA request from ").color(NamedTextColor.GOLD)
                         .append(decliner.displayName().color(NamedTextColor.RED))
@@ -267,6 +269,7 @@ public class TPA {
                 var info = tpas.get(player);
                 Bukkit.getScheduler().cancelTask(info.second.second);
                 tpas.remove(player);
+                HandlerList.unregisterAll(info.second.first);
                 player.sendMessage(
                         Component.text("You have cancelled the TPA request to ").color(NamedTextColor.GOLD)
                                 .append(info.first.displayName().color(NamedTextColor.RED))

@@ -17,6 +17,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -39,6 +40,27 @@ public class Graves implements Listener {
         graves.put(grave.id, grave);
         event.getDrops().clear();
         event.setDroppedExp(0);
+    }
+
+    public boolean isLocationInChunk(Chunk chunk, Location location) {
+        int chunkMinX = chunk.getX() << 4;
+        int chunkMinZ = chunk.getZ() << 4;
+        int chunkMaxX = chunkMinX + 15;
+        int chunkMaxZ = chunkMinZ + 15;
+        if (chunk.getWorld() != location.getWorld()) return false;
+        return location.getBlockX() >= chunkMinX && location.getBlockX() <= chunkMaxX &&
+                location.getBlockZ() >= chunkMinZ && location.getBlockZ() <= chunkMaxZ;
+    }
+
+    @EventHandler
+    public void chunkLoad(ChunkLoadEvent e) {
+        graves.forEach((id, grave) -> {
+            if (List.of(e.getChunk().getEntities()).contains(grave.stand)) return;
+            if (isLocationInChunk(e.getChunk(), grave.location)) {
+                Logger.debug("spawning");
+                grave.createStand();
+            }
+        });
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -192,6 +214,7 @@ public class Graves implements Listener {
             stand.setItem(EquipmentSlot.HEAD, new ItemStack(Material.STONE_BRICK_WALL));
             stand.setCustomNameVisible(true);
             stand.setBasePlate(false);
+            stand.setRemoveWhenFarAway(false);
             stand.setPersistent(false);
             stand.setInvisible(true);
             stand.setInvulnerable(true);

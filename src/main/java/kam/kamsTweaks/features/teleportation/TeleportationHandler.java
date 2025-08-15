@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +49,6 @@ public class TeleportationHandler {
 
         ref.listener = new Listener() {
             void cancel() {
-                player.sendMessage(Component.text("Teleport cancelled because you moved.").color(NamedTextColor.GOLD));
                 teleportations.remove(player);
                 HandlerList.unregisterAll(ref.listener);
                 Bukkit.getScheduler().cancelTask(task);
@@ -60,8 +60,16 @@ public class TeleportationHandler {
                 }
             }
             @EventHandler
+            public void onPlayerDeath(PlayerDeathEvent event) {
+                if (event.getPlayer().equals(player)) {
+                    player.sendMessage(Component.text("Teleport cancelled because you died.").color(NamedTextColor.GOLD));
+                    cancel();
+                }
+            }
+            @EventHandler
             public void onPlayerMove(PlayerMoveEvent event) {
                 if (event.getPlayer().equals(player) && event.hasChangedBlock()) {
+                    player.sendMessage(Component.text("Teleport cancelled because you moved.").color(NamedTextColor.GOLD));
                     cancel();
                 }
             }
