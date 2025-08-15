@@ -13,6 +13,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
@@ -42,6 +44,26 @@ public class Graves implements Listener {
         event.setDroppedExp(0);
     }
 
+    void tp() {
+        Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> {
+            graves.forEach((id, grave) -> {
+                if (!grave.stand.getLocation().equals(grave.location)) {
+                    grave.stand.teleport(grave.location.clone().addRotation(90, 0).subtract(0, 1.4375, 0));
+                }
+            });
+        }, 3L);
+    }
+
+    @EventHandler
+    public void onPistonExtend(BlockPistonExtendEvent event) {
+        tp();
+    }
+
+    @EventHandler
+    public void onPistonRetract(BlockPistonRetractEvent event) {
+        tp();
+    }
+
     public boolean isLocationInChunk(Chunk chunk, Location location) {
         int chunkMinX = chunk.getX() << 4;
         int chunkMinZ = chunk.getZ() << 4;
@@ -57,7 +79,6 @@ public class Graves implements Listener {
         graves.forEach((id, grave) -> {
             if (List.of(e.getChunk().getEntities()).contains(grave.stand)) return;
             if (isLocationInChunk(e.getChunk(), grave.location)) {
-                Logger.debug("spawning");
                 grave.createStand();
             }
         });

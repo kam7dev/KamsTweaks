@@ -137,7 +137,7 @@ public class Warp {
                         String warp = ctx.getArgument("name", String.class);
                         warps.put(warp, player.getLocation());
                         sender.sendMessage(Component.text("Successfully created the warp ").color(NamedTextColor.GOLD)
-                                .append(player.displayName().color(NamedTextColor.RED))
+                                .append(Component.text(warp).color(NamedTextColor.RED))
                                 .append(Component.text(".").color(NamedTextColor.GOLD)));
                         return Command.SINGLE_SUCCESS;
                     }
