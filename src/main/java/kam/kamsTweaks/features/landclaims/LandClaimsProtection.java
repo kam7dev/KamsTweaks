@@ -12,22 +12,12 @@ import org.bukkit.block.Block;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.*;
-import org.bukkit.entity.minecart.ExplosiveMinecart;
-import org.bukkit.entity.minecart.HopperMinecart;
-import org.bukkit.entity.minecart.StorageMinecart;
+import org.bukkit.entity.minecart.*;
 import org.bukkit.event.block.*;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityInteractEvent;
-import org.bukkit.event.hanging.HangingBreakByEntityEvent;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.entity.*;
+import org.bukkit.event.hanging.*;
+import org.bukkit.event.inventory.*;
+import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.InventoryHolder;
@@ -232,6 +222,52 @@ public class LandClaimsProtection implements Listener {
             Player player = e.getPlayer();
             LandClaims.Claim claim = lc.getClaim(entity.getLocation());
             if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.INTERACT)) {
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player,
+                //             claim.m_owner == null ? "the server"
+                //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                //             true);
+                //     return;
+                // }
+                message(player,
+                        claim.m_owner == null ? "the server"
+                                : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                        false);
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onHangPlace(HangingPlaceEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        if (e.getPlayer() instanceof Player player) {
+            LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
+            if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player,
+                //             claim.m_owner == null ? "the server"
+                //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                //             true);
+                //     return;
+                // }
+                message(player,
+                        claim.m_owner == null ? "the server"
+                                : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                        false);
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityPlace(EntityPlaceEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        if (e.getPlayer() instanceof Player player) {
+            LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
+            if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
                 // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
                 //     message(player,
                 //             claim.m_owner == null ? "the server"
