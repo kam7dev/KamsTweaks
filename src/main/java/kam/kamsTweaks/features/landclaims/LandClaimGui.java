@@ -576,8 +576,8 @@ public class LandClaimGui implements Listener {
             entityPermScreen.addItem(createGuiItem(Material.RED_CONCRETE, Component.text("No interaction").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 if (!KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) return;
                 EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
-                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
-                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s entity claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + claim.m_default + " to none");
+                if (!claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + claim.m_owner.getName() + "'s entity claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + claim.m_default + " to none");
                 if (ui.editing == null) claim.m_default = EntityClaims.EntityPermission.NONE;
                 else claim.m_perms.put(ui.editing, EntityClaims.EntityPermission.NONE);
                 ui.close(false);
@@ -586,8 +586,8 @@ public class LandClaimGui implements Listener {
             entityPermScreen.addItem(createGuiItem(Material.ORANGE_CONCRETE, Component.text("Interactions only").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 if (!KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) return;
                 EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
-                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
-                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s entity claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + claim.m_default + " to interactions");
+                if (!claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + claim.m_owner.getName() + "'s entity claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + claim.m_default + " to interactions");
                 if (ui.editing == null) claim.m_default = EntityClaims.EntityPermission.INTERACT;
                 else claim.m_perms.put(ui.editing, EntityClaims.EntityPermission.INTERACT);
                 ui.close(false);
@@ -596,8 +596,8 @@ public class LandClaimGui implements Listener {
             entityPermScreen.addItem(createGuiItem(Material.CYAN_CONCRETE, Component.text("Damage entities").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 if (!KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) return;
                 EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
-                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
-                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s entity claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + claim.m_default + " to damage");
+                if (!claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
+                    Logger.warn("[Claim management] " + player.getName() + " just edited " + claim.m_owner.getName() + "'s entity claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + claim.m_default + " to damage");
                 if (ui.editing == null) claim.m_default = EntityClaims.EntityPermission.KILL;
                 else claim.m_perms.put(ui.editing, EntityClaims.EntityPermission.KILL);
                 ui.close(false);
