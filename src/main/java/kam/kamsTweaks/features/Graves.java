@@ -2,19 +2,21 @@ package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.features.landclaims.LandClaims;
 import kam.kamsTweaks.utils.Inventories;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
@@ -34,11 +36,60 @@ import static org.bukkit.Bukkit.getServer;
 public class Graves implements Listener {
     Map<Integer, Grave> graves = new HashMap<>();
     static int highest = 0;
+
+    public Location checkLocation(Location loc) {
+
+        if (loc.getBlockY() < loc.getWorld().getMinHeight()) {
+            var block = loc.getWorld().getHighestBlockAt(loc);
+            if (block.getType().isAir()) {
+                loc.setYaw(0);
+                loc.set(loc.getBlockX() + .5f, 63, loc.getBlockZ() + .25f);
+                var down = loc.getBlock().getRelative(BlockFace.DOWN);
+                switch(loc.getWorld().getEnvironment()) {
+                    case NORMAL: {
+                        down.setType(Material.STONE);
+                        break;
+                    }
+                    case NETHER: {
+                        down.setType(Material.NETHERRACK);
+                        break;
+                    }
+                    case THE_END: {
+                        down.setType(Material.END_STONE);
+                        break;
+                    }
+                }
+                var back = down.getRelative(BlockFace.SOUTH);
+                if (back.getType().equals(Material.AIR)) {
+                    switch(loc.getWorld().getEnvironment()) {
+                        case NORMAL: {
+                            back.setType(Material.STONE);
+                            break;
+                        }
+                        case NETHER: {
+                            back.setType(Material.NETHERRACK);
+                            break;
+                        }
+                        case THE_END: {
+                            back.setType(Material.END_STONE);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                loc.setY(block.getY() + 1);
+            }
+        }
+
+        return loc;
+    }
+
     @EventHandler
     public void onDie(PlayerDeathEvent event) {
         Player player = event.getPlayer();
         if (player.getInventory().isEmpty() && player.getTotalExperience() == 0) return;
-        Grave grave = new Grave(player, player.getLocation());
+        var loc = checkLocation(player.getLocation());
+        Grave grave = new Grave(player, loc);
         graves.put(grave.id, grave);
         event.getDrops().clear();
         event.setDroppedExp(0);
@@ -104,9 +155,7 @@ public class Graves implements Listener {
 
                 case MOVE_TO_OTHER_INVENTORY:
                     if (clickedInv != null && clickedInv.equals(e.getView().getBottomInventory()) && e.getView().getTopInventory().equals(grave.inventory)) {
-//                        if (e.getView().getTopInventory().firstEmpty() != -1) { // space available in top inventory
-                            e.setCancelled(true);
-//                        }
+                        e.setCancelled(true);
                     }
                     break;
 
@@ -145,6 +194,41 @@ public class Graves implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH)
+    public void onEntityHit(EntityDamageByEntityEvent e) {
+        Entity entity = e.getEntity();
+        if (entity instanceof ArmorStand stand && e.getDamager() instanceof Player player) {
+            NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
+            if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
+            e.setCancelled(true);
+            if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
+                return;
+            @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
+            if (!graves.containsKey(id)) return;
+            var grave = graves.get(id);
+            if (grave.getOwner().getUniqueId().equals(player.getUniqueId()) && player.getInventory().isEmpty()) {
+                PlayerInventory inv = player.getInventory();
+                Inventory inventory = grave.getInventory();
+                for (int i = 0; i < 36; i++) {
+                    ItemStack item = inventory.getItem(i);
+                    if (item != null && !item.isEmpty()) {
+                        inv.setItem(i, item);
+                    }
+                }
+                inv.setHelmet(inventory.getItem(36));
+                inv.setChestplate(inventory.getItem(37));
+                inv.setLeggings(inventory.getItem(38));
+                inv.setBoots(inventory.getItem(39));
+                inv.setItemInOffHand(inventory.getItem(40));
+                if (grave.experience != 0) {
+                    changePlayerExp(player, grave.experience);
+                }
+                if (grave.stand != null) grave.stand.remove();
+                graves.remove(grave.id);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
     public void onEntityInteract(PlayerInteractEntityEvent e) {
         Entity entity = e.getRightClicked();
         if (entity instanceof ArmorStand stand) {
@@ -155,12 +239,9 @@ public class Graves implements Listener {
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
             @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
-            Logger.info("" + id);
-            Logger.info(graves.keySet().toString());
             if (!graves.containsKey(id)) return;
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
-                Logger.info("Test 66");
                 player.openInventory(grave.getInventory());
                 if (grave.experience != 0) {
                     changePlayerExp(player, grave.experience);
@@ -275,7 +356,7 @@ public class Graves implements Listener {
                     String locationStr = config.getString("graves." + key + ".location");
                     int xp = (int) config.get("graves." + key + ".xp", 0);
                     assert locationStr != null;
-                    Location location = deserializeLocation(locationStr);
+                    Location location = checkLocation(deserializeLocation(locationStr));
                     if (location.getWorld() == null) continue;
                     Inventory inv = Inventories.loadInventory(Component.text("Grave"), 45, config, "graves." + key);
                     Grave grave = new Grave(owner == null ? null : getServer().getOfflinePlayer(owner), inv, location, xp);

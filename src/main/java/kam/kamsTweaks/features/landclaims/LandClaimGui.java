@@ -513,7 +513,8 @@ public class LandClaimGui implements Listener {
                         ui.close(false);
                     }
                     case "unclaim" -> {
-                        if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) Logger.warn("[Claim management] " + player.getName() + " just deleted " + KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId()).m_owner.getName() + "'s entity claim.");
+                        EntityClaims.EntityClaim claim = KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId());
+                        if (!claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) Logger.warn("[Claim management] " + player.getName() + " just deleted " + KamsTweaks.getInstance().m_entityClaims.claims.get(ui.targetEntity.getUniqueId()).m_owner.getName() + "'s entity claim.");
                         KamsTweaks.getInstance().m_entityClaims.claims.remove(ui.targetEntity.getUniqueId());
                         ui.close(false);
                     }
