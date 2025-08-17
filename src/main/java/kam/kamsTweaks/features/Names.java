@@ -11,6 +11,7 @@ import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.Pair;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -27,7 +28,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class Names implements Listener {
-    Map<UUID, Pair<String, NamedTextColor>> data = new HashMap<>();
+    Map<UUID, Pair<String, TextColor>> data = new HashMap<>();
 
     public void init() {
 
@@ -41,13 +42,18 @@ public class Names implements Listener {
                 try {
                     UUID owner = UUID.fromString(key);
                     String nick = config.getString("names." + key + ".nick", Bukkit.getServer().getOfflinePlayer(owner).getName()).replaceAll("[^a-zA-Z0-9\\-_. ,()\\[\\]{}:;\"'!?+&$~`/]", "");;
-		    if (nick.isBlank()) continue;
+		            if (nick.isBlank()) continue;
                     String colorStr = config.getString("names." + key + ".color");
-                    NamedTextColor color = null;
+                    TextColor color = null;
                     if (colorStr != null) {
                         color = NamedTextColor.NAMES.value(colorStr);
+                        if (color == null) {
+                            if (!colorStr.startsWith("#")) colorStr = "#" + colorStr;
+                            color = TextColor.fromHexString(colorStr);
+                        }
                     }
-                    Pair<String, NamedTextColor> info = new Pair<>(nick, color);
+                    if (color == null) continue;
+                    Pair<String, TextColor> info = new Pair<>(nick, color);
                     data.put(owner, info);
                 } catch (Exception e) {
                     Logger.warn(e.getMessage());
@@ -78,7 +84,6 @@ public class Names implements Listener {
         event.getPlayer().displayName(comp);
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> nickCmd = Commands.literal("nick")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.names.nick"))
@@ -90,16 +95,16 @@ public class Names implements Listener {
             }
             Entity executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
-                Pair<String, NamedTextColor> info;
+                Pair<String, TextColor> info;
                 String name = ctx.getArgument("name", String.class);
                 if (name.length() > 20) {
                     sender.sendPlainMessage("Nicknames cannot be longer than 20 characters.");
                     return Command.SINGLE_SUCCESS;
                 }
-		if (name.isBlank()) {
-	            sender.sendPlainMessage("Nicknames cannot be empty.");
-		    return Command.SINGLE_SUCCESS;
-		}
+                if (name.isBlank()) {
+                        sender.sendPlainMessage("Nicknames cannot be empty.");
+                    return Command.SINGLE_SUCCESS;
+                }
                 if (!name.matches("[a-zA-Z0-9\\-_. ,()\\[\\]{}:;\"'!?+&$~`/]*")) {
                     sender.sendPlainMessage("Nicknames can only contain letters, numbers, spaces, and some symbols.");
                     return Command.SINGLE_SUCCESS;
@@ -139,9 +144,13 @@ public class Names implements Listener {
             }
             Entity executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
-                Pair<String, NamedTextColor> info;
+                Pair<String, TextColor> info;
                 String colorStr = ctx.getArgument("color", String.class).toLowerCase();
-                NamedTextColor color = NamedTextColor.NAMES.value(colorStr);
+                TextColor color = NamedTextColor.NAMES.value(colorStr);
+                if (color == null) {
+                    if (!colorStr.startsWith("#")) colorStr = "#" + colorStr;
+                    color = TextColor.fromHexString(colorStr);
+                }
                 if (data.containsKey(player.getUniqueId())) {
                     info = data.get(player.getUniqueId());
                     info.second = color;
