@@ -649,6 +649,7 @@ public class LandClaimsProtection implements Listener {
     public void onItemDamage(EntityDamageByEntityEvent event) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
+        if (!(event.getEntity() instanceof Item)) return;
         switch (event.getDamager()) {
             case TNTPrimed tnt -> {
                 if (tnt.getSource() instanceof Player player) {
