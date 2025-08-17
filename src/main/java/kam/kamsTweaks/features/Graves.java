@@ -38,7 +38,6 @@ public class Graves implements Listener {
     static int highest = 0;
 
     public Location checkLocation(Location loc) {
-
         if (loc.getBlockY() < loc.getWorld().getMinHeight()) {
             var block = loc.getWorld().getHighestBlockAt(loc);
             if (block.getType().isAir()) {
@@ -199,31 +198,50 @@ public class Graves implements Listener {
         if (entity instanceof ArmorStand stand && e.getDamager() instanceof Player player) {
             NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
             if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
-            e.setCancelled(true);
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
             @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
             var grave = graves.get(id);
-            if (grave.getOwner().getUniqueId().equals(player.getUniqueId()) && player.getInventory().isEmpty()) {
+            if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
                 PlayerInventory inv = player.getInventory();
                 Inventory inventory = grave.getInventory();
                 for (int i = 0; i < 36; i++) {
+                    if (inv.getItem(i) != null && !Objects.requireNonNull(inv.getItem(i)).isEmpty()) continue;
                     ItemStack item = inventory.getItem(i);
                     if (item != null && !item.isEmpty()) {
                         inv.setItem(i, item);
+                        inventory.setItem(i, null);
                     }
                 }
-                inv.setHelmet(inventory.getItem(36));
-                inv.setChestplate(inventory.getItem(37));
-                inv.setLeggings(inventory.getItem(38));
-                inv.setBoots(inventory.getItem(39));
-                inv.setItemInOffHand(inventory.getItem(40));
+                if (inv.getHelmet() == null || Objects.requireNonNull(inv.getHelmet()).isEmpty()) {
+                    inv.setHelmet(inventory.getItem(36));
+                    inventory.setItem(36, null);
+                }
+                if (inv.getChestplate() == null || Objects.requireNonNull(inv.getChestplate()).isEmpty()) {
+                    inv.setChestplate(inventory.getItem(37));
+                    inventory.setItem(37, null);
+                }
+                if (inv.getLeggings() == null || Objects.requireNonNull(inv.getLeggings()).isEmpty()) {
+                    inv.setLeggings(inventory.getItem(38));
+                    inventory.setItem(38, null);
+                }
+                if (inv.getBoots() == null || Objects.requireNonNull(inv.getBoots()).isEmpty()) {
+                    inv.setBoots(inventory.getItem(39));
+                    inventory.setItem(39, null);
+                }
+                if (inv.getItemInOffHand().isEmpty()) {
+                    inv.setItemInOffHand(inventory.getItem(40));
+                    inventory.setItem(40, null);
+                }
                 if (grave.experience != 0) {
                     changePlayerExp(player, grave.experience);
+                    grave.experience = 0;
                 }
-                if (grave.stand != null) grave.stand.remove();
-                graves.remove(grave.id);
+                if (inventory.isEmpty()) {
+                    if (grave.stand != null) grave.stand.remove();
+                    graves.remove(grave.id);
+                }
             }
         }
     }
