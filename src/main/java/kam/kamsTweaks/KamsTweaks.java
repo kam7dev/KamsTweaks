@@ -22,6 +22,7 @@ public final class KamsTweaks extends JavaPlugin {
     Names m_names = new Names();
     TeleportationHandler m_teleportation = new TeleportationHandler();
     Graves m_graves = new Graves();
+    SlashHat m_slashHat = new SlashHat();
 
     public static KamsTweaks getInstance() {
         return m_instance;
@@ -39,10 +40,13 @@ public final class KamsTweaks extends JavaPlugin {
         m_teleportation.load();
         m_graves.loadGraves();
 
+        m_silkSpawner.setup();
+        m_seedDispenser.setup();
+        m_graves.setup();
         m_landClaims.setup();
-        m_entityClaims.init();
-        m_names.init();
-        m_teleportation.init();
+        m_entityClaims.setup();
+        m_names.setup();
+        m_teleportation.setup();
         
         getServer().getPluginManager().registerEvents(m_entityClaims, this);
         getServer().getPluginManager().registerEvents(m_seedDispenser, this);
@@ -53,7 +57,7 @@ public final class KamsTweaks extends JavaPlugin {
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             m_landClaims.registerCommands(commands);
-            new SlashHat().registerCommands(commands);
+            m_slashHat.registerCommands(commands);
             m_names.registerCommands(commands);
             m_teleportation.registerCommands(commands);
             ConfigCommand.registerCommand(commands);

@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features;
 
+import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,6 +16,10 @@ import org.bukkit.inventory.ItemStack;
 import static org.bukkit.Bukkit.getServer;
 
 public class SeedDispenser implements Listener {
+
+    public void setup() {
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("seed-dispenser.enabled", "seed-dispenser.enabled", true, "kamstweaks.configure"));
+    }
 
     public Material matForSeed(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) {

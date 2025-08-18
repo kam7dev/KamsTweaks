@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features;
 
+import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.landclaims.LandClaims;
@@ -36,6 +37,10 @@ import static org.bukkit.Bukkit.getServer;
 public class Graves implements Listener {
     Map<Integer, Grave> graves = new HashMap<>();
     static int highest = 0;
+
+    public void setup() {
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("graves.enabled", "graves.enabled", true, "kamstweaks.configure"));
+    }
 
     public Location checkLocation(Location loc) {
         if (loc.getBlockY() < loc.getWorld().getMinHeight()) {

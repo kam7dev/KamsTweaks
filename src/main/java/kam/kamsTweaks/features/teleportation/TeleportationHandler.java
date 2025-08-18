@@ -2,6 +2,7 @@ package kam.kamsTweaks.features.teleportation;
 
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -114,12 +115,34 @@ public class TeleportationHandler {
         Bukkit.getPluginManager().registerEvents(ref.listener, KamsTweaks.getInstance());
     }
 
-    public void init() {
+    public void setup() {
         setHome.init(this);
         tpa.init(this);
         warp.init(this);
         back.init(this);
         spawn.init(this);
+        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.timer", "teleportation.timer", 5, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.cooldown", "teleportation.cooldown", 30, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.homes.enabled", "teleportation.homes.enabled", true, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.spawn.enabled", "teleportation.spawn.enabled", true, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.tpa.enabled", "teleportation.tpa.enabled", true, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.warp.enabled", "teleportation.warp.enabled", true, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.back.enabled", "teleportation.back.enabled", true, "kamstweaks.configure"));
+        /*
+        teleportation:
+          # How long you stay in place before teleporting, in seconds
+          timer: 5
+          # How long you wait between teleports, in seconds
+          cooldown: 30
+          homes:
+            enabled: true
+          tpa:
+            enabled: true
+          warp:
+            enabled: true
+          back:
+            enabled: true
+         */
     }
 
     @SuppressWarnings("UnstableApiUsage")

@@ -12,6 +12,7 @@ public class Logger {
         } catch(Exception e) {
             Logger.error("Your log level seems to be invalid. Please make sure it's either 'debug', 'info', 'warn', or 'error'.");
         }
+        ConfigCommand.addConfig(new ConfigCommand.StringConfig("log-level", "log-level", "warn", new String[]{"debug", "info", "warn", "error"}));
         inited = true;
     }
 

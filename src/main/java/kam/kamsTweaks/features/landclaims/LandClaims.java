@@ -55,8 +55,9 @@ public class LandClaims implements Listener {
         getServer().getPluginManager().registerEvents(gui, KamsTweaks.getInstance());
         getServer().getPluginManager().registerEvents(this, KamsTweaks.getInstance());
 
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("landclaims.enabled", "landclaims.enabled", true, "kamstweaks.landclaims.configure"));
-
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("land-claims.enabled", "land-claims.enabled", true, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("land-claims.max-claims", "land-claims.max-claims", 30, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("land-claims.max-claim-size", "land-claims.max-claim-size", 50000, "kamstweaks.configure"));
     }
 
     public LandClaims() {
@@ -179,7 +180,7 @@ public class LandClaims implements Listener {
                             e.getPlayer().sendMessage(Component.text("You can't claim across dimensions - go back to the dimension you started in!").color(NamedTextColor.RED));
                             return;
                         }
-                        var max = KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claim-size", 27000);
+                        var max = KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claim-size", 50000);
                         var has = Math.abs(claim.m_start.x() - loc.x()) * Math.abs(claim.m_start.y() - loc.y()) * Math.abs(claim.m_start.z() - loc.z());
                         if (has > max) {
                             e.getPlayer().sendMessage(Component.text("You can't claim more than " + max + " blocks - you are trying to claim " + has + ".").color(NamedTextColor.RED));

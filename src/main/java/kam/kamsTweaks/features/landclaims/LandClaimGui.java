@@ -322,7 +322,7 @@ public class LandClaimGui implements Listener {
                 for (LandClaims.Claim claim : lc.claims) {
                     if (claim.m_owner.getUniqueId().equals(player.getUniqueId())) count++;
                 }
-                var max = KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 10);
+                var max = KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 30);
                 if (count >= max) {
                     player.sendMessage(Component.text("You already have the max number of claims! (" + count + "/" + max + ")").color(NamedTextColor.RED));
                     return;

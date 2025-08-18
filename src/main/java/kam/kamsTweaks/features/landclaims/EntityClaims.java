@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features.landclaims;
 
+import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.entity.*;
@@ -17,6 +18,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.bukkit.Bukkit.getServer;
 
@@ -59,8 +61,10 @@ public class EntityClaims implements Listener {
             player.sendMessage(Component.text("This entity is claimed by ").append(Component.text(owner).color(NamedTextColor.GOLD)).append(Component.text(".")));
     }
 
-    public void init() {
+    public void setup() {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), hasMessaged::clear, 1, 1);
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("entity-claims.enabled", "entity-claims.enabled", true, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("entity-claims.max-claims", "entity-claims.max-claims", 1000, "kamstweaks.configure"));
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -98,6 +102,15 @@ public class EntityClaims implements Listener {
                 }
                 if (!e.getPlayer().hasPermission("kamstweaks.landclaims.claim")) {
                     e.getPlayer().sendMessage(Component.text("You do not have permission to claim entities.").color(NamedTextColor.RED));
+                    return;
+                }
+                AtomicInteger count = new AtomicInteger();
+                claims.forEach((uuid, claim) -> {
+                    if (claim.m_owner.getUniqueId().equals(e.getPlayer().getUniqueId())) count.getAndIncrement();
+                });
+                var max = KamsTweaks.getInstance().getConfig().getInt("entity-claims.max-claims", 1000);
+                if (count.get() >= max) {
+                    e.getPlayer().sendMessage(Component.text("You already have the max number of claims! (" + count + "/" + max + ")").color(NamedTextColor.RED));
                     return;
                 }
                 KamsTweaks.getInstance().m_landClaims.gui.showClaimGui(e.getPlayer(), null);

@@ -6,6 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.Pair;
@@ -30,8 +31,9 @@ import java.util.UUID;
 public class Names implements Listener {
     Map<UUID, Pair<String, TextColor>> data = new HashMap<>();
 
-    public void init() {
-
+    public void setup() {
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("nicknames.enabled", "nicknames.enabled", true, "kamstweaks.configure"));
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("name-colors.enabled", "name-colors.enabled", true, "kamstweaks.configure"));
     }
 
     public void loadNames() {

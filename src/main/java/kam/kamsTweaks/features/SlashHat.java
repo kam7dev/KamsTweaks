@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features;
 
+import kam.kamsTweaks.ConfigCommand;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -18,6 +19,10 @@ import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
 
 public class SlashHat {
+    public void setup() {
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("slash-hat.enabled", "slash-hat.enabled", true, "kamstweaks.configure"));
+    }
+
 	@SuppressWarnings("UnstableApiUsage")
 	public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
 		LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("hat")

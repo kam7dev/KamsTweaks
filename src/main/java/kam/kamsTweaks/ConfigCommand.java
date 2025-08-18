@@ -10,11 +10,12 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class ConfigCommand {
-    private static List<Config> configs;
+    private static final List<Config> configs = new ArrayList<>();
 
     public static void addConfig(Config config) {
         configs.add(config);
@@ -97,7 +98,7 @@ public class ConfigCommand {
                 boolean val = KamsTweaks.getInstance().getConfig().getBoolean(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
-            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument(name, BoolArgumentType.bool()).executes(ctx -> {
+            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", BoolArgumentType.bool()).executes(ctx -> {
                 Boolean val = ctx.getArgument("value", Boolean.class);
                 KamsTweaks.getInstance().getConfig().set(configId, val);
                 KamsTweaks.getInstance().saveConfig();
@@ -130,10 +131,11 @@ public class ConfigCommand {
                 int val = KamsTweaks.getInstance().getConfig().getInt(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
-            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument(name, IntegerArgumentType.integer()).executes(ctx -> {
+            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", IntegerArgumentType.integer()).executes(ctx -> {
                 Integer val = ctx.getArgument("value", Integer.class);
                 KamsTweaks.getInstance().getConfig().set(configId, val);
                 KamsTweaks.getInstance().saveConfig();
+                ctx.getSource().getSender().sendMessage("Set value of " + name + " to " + val + ".");
                 if (callback != null) callback.accept(val);
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
@@ -145,6 +147,6 @@ public class ConfigCommand {
         for (var sub : configs) {
             command = sub.registerSubcommand(command);
         }
-        commands.registrar().register(Commands.literal("KamsTweaks").then(command).build());
+        commands.registrar().register(Commands.literal("kamstweaks").then(command).build());
     }
 }

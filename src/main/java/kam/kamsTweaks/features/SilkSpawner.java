@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features;
 
+import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.event.EventHandler;
 import net.kyori.adventure.text.Component;
@@ -20,6 +21,10 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.Collections;
 
 public class SilkSpawner implements Listener {
+    public void setup() {
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("silk-spawners.enabled", "silk-spawners.enabled", true, "kamstweaks.configure"));
+    }
+
     @EventHandler
     public void onBreak(BlockBreakEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("silk-spawners.enabled", true)) return;
