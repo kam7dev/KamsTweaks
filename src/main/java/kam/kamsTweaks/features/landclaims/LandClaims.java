@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features.landclaims;
 
 import com.mojang.brigadier.Command;
+import kam.kamsTweaks.ConfigCommand;
 import org.bukkit.event.Listener;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -53,6 +54,9 @@ public class LandClaims implements Listener {
         getServer().getPluginManager().registerEvents(prot, KamsTweaks.getInstance());
         getServer().getPluginManager().registerEvents(gui, KamsTweaks.getInstance());
         getServer().getPluginManager().registerEvents(this, KamsTweaks.getInstance());
+
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("landclaims.enabled", "landclaims.enabled", true, "kamstweaks.landclaims.configure"));
+
     }
 
     public LandClaims() {
@@ -210,83 +214,6 @@ public class LandClaims implements Listener {
     @SuppressWarnings("UnstableApiUsage")
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("claims")
-                .then(Commands.literal("config").requires(sender -> sender.getSender().hasPermission("kamstweaks.landclaims.configure"))
-                        .then(Commands.literal("enabled")
-                                .then(Commands.argument("enabled", BoolArgumentType.bool()).executes(ctx -> {
-                                    KamsTweaks.getInstance().getConfig().set("land-claims.enabled", ctx.getArgument("enabled", Boolean.class));
-                                    KamsTweaks.getInstance().saveConfig();
-                                    ctx.getSource().getSender().sendMessage("Successfully " + (ctx.getArgument("enabled", Boolean.class) == true ? "enabled" : "disabled") + " land claims.");
-                                    return Command.SINGLE_SUCCESS;
-                                }))
-                                .executes(ctx -> {
-                                    ctx.getSource().getSender().sendMessage("Land claims are currently " + KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true) + ".");
-                                    return Command.SINGLE_SUCCESS;
-                                })
-                        )
-//                        .then(Commands.literal("admin-bypass-claims")
-//                                .then(Commands.argument("enabled", BoolArgumentType.bool()).executes(ctx -> {
-//                                    KamsTweaks.getInstance().getConfig().set("land-claims.admin-bypass-claims", ctx.getArgument("enabled", Boolean.class));
-//                                    KamsTweaks.getInstance().saveConfig();
-//                                    ctx.getSource().getSender().sendMessage("Successfully " + (ctx.getArgument("enabled", Boolean.class) == true ? "enabled" : "disabled") + " admins bypassing land claims.");
-//                                    return Command.SINGLE_SUCCESS;
-//                                }))
-//                                .executes(ctx -> {
-//                                    ctx.getSource().getSender().sendMessage("Admins bypassing land claims is currently " + KamsTweaks.getInstance().getConfig().getBoolean("land-claims.admin-bypass-claims", true) + ".");
-//                                    return Command.SINGLE_SUCCESS;
-//                                })
-//                        )
-                        .then(Commands.literal("max-claims")
-                                .then(Commands.argument("claims", IntegerArgumentType.integer()).executes(ctx -> {
-                                    KamsTweaks.getInstance().getConfig().set("land-claims.max-claims", ctx.getArgument("claims", Integer.class));
-                                    KamsTweaks.getInstance().saveConfig();
-                                    ctx.getSource().getSender().sendMessage("Successfully set max claims to " + ctx.getArgument("claims", Integer.class) + ".");
-                                    return Command.SINGLE_SUCCESS;
-                                }))
-                                .executes(ctx -> {
-                                    ctx.getSource().getSender().sendMessage("Max claims is currently " + KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 10) + ".");
-                                    return Command.SINGLE_SUCCESS;
-                                })
-                        )
-                        .then(Commands.literal("max-claim-size")
-                                .then(Commands.argument("size", IntegerArgumentType.integer()).executes(ctx -> {
-                                    KamsTweaks.getInstance().getConfig().set("land-claims.max-claim-size", ctx.getArgument("size", Integer.class));
-                                    KamsTweaks.getInstance().saveConfig();
-                                    ctx.getSource().getSender().sendMessage("Successfully set max claim size to " + ctx.getArgument("size", Integer.class) + ".");
-                                    return Command.SINGLE_SUCCESS;
-                                }))
-                                .executes(ctx -> {
-                                    ctx.getSource().getSender().sendMessage("Max claim size is currently " + KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claim-size", 27000) + ".");
-                                    return Command.SINGLE_SUCCESS;
-                                })
-                        )
-                        .then(Commands.literal("log-level")
-                                .then(Commands.argument("level", StringArgumentType.word())
-                                        .suggests((ctx, builder) -> {
-                                            builder.suggest("debug");
-                                            builder.suggest("info");
-                                            builder.suggest("warn");
-                                            builder.suggest("error");
-                                            return builder.buildFuture();
-                                        })
-                                        .executes(ctx -> {
-                                            String level = ctx.getArgument("level", String.class).toLowerCase();
-                                            if (!List.of("debug", "info", "warn", "error").contains(level)) {
-                                                ctx.getSource().getSender().sendMessage("Invalid log level. Valid options are: debug, info, warn, error.");
-                                                return Command.SINGLE_SUCCESS;
-                                            }
-                                            KamsTweaks.getInstance().getConfig().set("log-level", level);
-                                            Logger.setLevel(level);
-                                            KamsTweaks.getInstance().saveConfig();
-                                            ctx.getSource().getSender().sendMessage("Successfully set log level to " + level + ".");
-                                            return Command.SINGLE_SUCCESS;
-                                        }))
-                                .executes(ctx -> {
-                                    String currentLevel = KamsTweaks.getInstance().getConfig().getString("land-claims.log-level", "info");
-                                    ctx.getSource().getSender().sendMessage("Current log level is " + currentLevel + ".");
-                                    return Command.SINGLE_SUCCESS;
-                                })
-                        )
-                )
                 .then(Commands.literal("get-tool")
                         .executes(ctx -> {
                             CommandSender sender = ctx.getSource().getSender();

@@ -56,6 +56,7 @@ public final class KamsTweaks extends JavaPlugin {
             new SlashHat().registerCommands(commands);
             m_names.registerCommands(commands);
             m_teleportation.registerCommands(commands);
+            ConfigCommand.registerCommand(commands);
         });
     }
 
