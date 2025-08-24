@@ -89,6 +89,28 @@ public class LandClaimsProtection implements Listener {
             message(player, claim.m_owner == null ? "the server"
                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
             e.setCancelled(true);
+            e.getPlayer().setCooldown(e.getBucket(), 20);
+        }
+    }
+
+    @EventHandler
+    public void onBucket2(PlayerBucketFillEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        Player player = e.getPlayer();
+        LandClaims.Claim claim = lc.getClaim(e.getBlock().getLocation());
+        if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+            // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+            //     message(player,
+            //             claim.m_owner == null ? "the server"
+            //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+            //             true);
+            //     return;
+            // }
+            message(player, claim.m_owner == null ? "the server"
+                    : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
+            e.setCancelled(true);
+            e.getPlayer().setCooldown(e.getBucket(), 20);
         }
     }
 
@@ -109,6 +131,7 @@ public class LandClaimsProtection implements Listener {
             message(player, claim.m_owner == null ? "the server"
                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
             e.setCancelled(true);
+            e.getPlayer().setCooldown(e.getItemInHand(), 20);
         }
     }
 
