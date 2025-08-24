@@ -22,6 +22,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -197,16 +198,17 @@ public class Graves implements Listener {
         if (rem.get() != -1) graves.remove(rem.get());
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onEntityHit(EntityDamageByEntityEvent e) {
-        Entity entity = e.getEntity();
-        if (entity instanceof ArmorStand stand && e.getDamager() instanceof Player player) {
+    public void openGrave(PlayerInteractEntityEvent e) {
+        Entity entity = e.getRightClicked();
+        Player player = e.getPlayer();
+        if (entity instanceof ArmorStand stand) {
             NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
             if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
             @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
+            e.setCancelled(true);
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
                 PlayerInventory inv = player.getInventory();
@@ -254,6 +256,10 @@ public class Graves implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityInteract(PlayerInteractEntityEvent e) {
         Entity entity = e.getRightClicked();
+        if (e.getPlayer().isSneaking()) {
+            openGrave(e);
+            return;
+        }
         if (entity instanceof ArmorStand stand) {
             Player player = e.getPlayer();
             NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
