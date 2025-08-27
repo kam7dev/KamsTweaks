@@ -321,6 +321,19 @@ public class Graves implements Listener {
             inv.setBoots(null);
             inventory.setItem(40, inv.getItemInOffHand());
             inv.setItemInOffHand(null);
+//            inventory.setItem(42, inv.getItem(80));
+//            inv.setItem(80, null);
+//            inventory.setItem(43, inv.getItem(81));
+//            inv.setItem(81, null);
+//            inventory.setItem(45, inv.getItem(82));
+//            inv.setItem(82, null);
+//            inventory.setItem(46, inv.getItem(83));
+//            inv.setItem(83, null);
+            inventory.setItem(41, owner.getItemOnCursor());
+            owner.setItemOnCursor(null);
+            for (var i = 0; i < inv.getSize(); i++) {
+                Logger.error(i + ": " + (inv.getItem(i) == null ? "None" : inv.getItem(i).displayName().toString()));
+            }
             this.experience = getPlayerExp(owner);
             this.id = highest;
             highest++;

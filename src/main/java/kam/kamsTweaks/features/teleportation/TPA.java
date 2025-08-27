@@ -124,8 +124,8 @@ public class TPA {
         acceptor.sendMessage(Component.text("You accepted the request from ").color(NamedTextColor.GOLD)
                 .append(requester.displayName().color(NamedTextColor.RED))
                 .append(Component.text(". " + (
-                        req.here ? (time > 0 ? "You will be teleported to them in " : "You have been teleported to them.")
-                                        : (time > 0 ? "They will be teleported to you in " : "They have been teleported to you.")
+                        req.here ? (time > 0 ? "You will be teleported to them in " : "You have been teleported to them")
+                                        : (time > 0 ? "They will be teleported to you in " : "They have been teleported to you")
                         )).color(NamedTextColor.GOLD))
                 .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
                 .append(Component.text(".").color(NamedTextColor.GOLD)));
@@ -133,8 +133,8 @@ public class TPA {
                 .append(acceptor.displayName().color(NamedTextColor.RED))
                 .append(Component.text(" was accepted.").color(NamedTextColor.GOLD))
                 .append(Component.text(". " + (
-                        req.here ? (time > 0 ? "They will be teleported to you in " : "They have been teleported to you.")
-                                : (time > 0 ? "You will be teleported to them in " : "You have been teleported to them.")
+                        req.here ? (time > 0 ? "They will be teleported to you in " : "They have been teleported to you")
+                                : (time > 0 ? "You will be teleported to them in " : "You have been teleported to them")
                 )).color(NamedTextColor.GOLD))
                 .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
                 .append(Component.text(".").color(NamedTextColor.GOLD)));

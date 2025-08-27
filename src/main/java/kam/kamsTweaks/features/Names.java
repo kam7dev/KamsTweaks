@@ -98,6 +98,7 @@ public class Names implements Listener {
             comp = comp.color(info.second);
         }
         event.getPlayer().displayName(comp);
+        event.getPlayer().playerListName(comp);
     }
 
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
@@ -145,6 +146,7 @@ public class Names implements Listener {
                     comp = comp.color(info.second);
                 }
                 player.displayName(comp);
+                player.playerListName(comp);
                 sender.sendMessage(Component.text("Your nickname is now ").append(Component.text(info.first)).append(Component.text(".")));
                 return Command.SINGLE_SUCCESS;
             }
@@ -191,6 +193,7 @@ public class Names implements Listener {
                     comp = comp.color(info.second);
                 }
                 player.displayName(comp);
+                player.playerListName(comp);
                 sender.sendMessage(Component.text("Your name is now ").append(Component.text(info.first).color(info.second)).append(Component.text(".")));
                 return Command.SINGLE_SUCCESS;
             }
