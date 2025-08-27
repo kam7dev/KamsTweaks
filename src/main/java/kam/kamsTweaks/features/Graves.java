@@ -149,7 +149,6 @@ public class Graves implements Listener {
                 case PLACE_ONE:
                 case PLACE_SOME:
                 case SWAP_WITH_CURSOR:
-                case HOTBAR_SWAP:
                 case PLACE_FROM_BUNDLE:
                 case PLACE_ALL_INTO_BUNDLE:
                 case PLACE_SOME_INTO_BUNDLE:
@@ -157,7 +156,12 @@ public class Graves implements Listener {
                         e.setCancelled(true);
                     }
                     break;
-
+                case HOTBAR_SWAP:
+                    var clicked = e.getHotbarButton() == -1 ? e.getWhoClicked().getInventory().getItemInOffHand() : e.getWhoClicked().getInventory().getItem(e.getHotbarButton());
+                    if (clickedInv != null && clickedInv.equals(grave.inventory) && clicked != null && !clicked.isEmpty()) {
+                        e.setCancelled(true);
+                    }
+                    break;
                 case MOVE_TO_OTHER_INVENTORY:
                     if (clickedInv != null && clickedInv.equals(e.getView().getBottomInventory()) && e.getView().getTopInventory().equals(grave.inventory)) {
                         e.setCancelled(true);
