@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'kam'
-version = '1.4.0'
+version = "1.5.0-${getGitHash()}"
 
 repositories {
     mavenCentral()
@@ -28,6 +28,30 @@ tasks {
         // This is the only required configuration besides applying the plugin.
         // Your plugin's jar (or shadowJar if present) will be used automatically.
         minecraftVersion("1.21.8")
+    }
+}
+
+def getGitHash() {
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--short', 'HEAD'
+            standardOutput = stdout
+        }
+        def hash = stdout.toString().trim()
+
+        def dirtyCheck = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'status', '--porcelain'
+            standardOutput = dirtyCheck
+        }
+        if (dirtyCheck.toString().trim()) {
+            hash += "-dirty"
+        }
+
+        return hash
+    } catch (Exception e) {
+        return "unknown"
     }
 }
 
