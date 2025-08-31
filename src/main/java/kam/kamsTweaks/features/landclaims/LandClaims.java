@@ -140,7 +140,7 @@ public class LandClaims implements Listener {
                 && target.getBlockZ() >= minZ && target.getBlockZ() <= maxZ;
     }
 
-    boolean hasPermission(OfflinePlayer player, Claim claim, ClaimPermission perm) {
+    public boolean hasPermission(OfflinePlayer player, Claim claim, ClaimPermission perm) {
         if (claim == null) return true;
         if (player != null && claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId()))
             return true;
@@ -148,7 +148,7 @@ public class LandClaims implements Listener {
         return claimPerm.compareTo(perm) >= 0;
     }
 
-    Claim getClaim(Location where) {
+    public Claim getClaim(Location where) {
         for (Claim claim : claims) {
             if (claim.m_start.getWorld() != where.getWorld()) continue;
             if (inBounds(where, claim.m_start, claim.m_end)) {
@@ -515,11 +515,11 @@ public class LandClaims implements Listener {
     }
 
     public static class Claim {
-        Location m_start;
-        Location m_end;
-        OfflinePlayer m_owner;
-        Map<OfflinePlayer, ClaimPermission> m_perms = new HashMap<>();
-        ClaimPermission m_default = ClaimPermission.DOORS;
+        public Location m_start;
+        public Location m_end;
+        public OfflinePlayer m_owner;
+        public Map<OfflinePlayer, ClaimPermission> m_perms = new HashMap<>();
+        public ClaimPermission m_default = ClaimPermission.DOORS;
 
         public Claim(OfflinePlayer owner, Location start, Location end) {
             m_owner = owner;

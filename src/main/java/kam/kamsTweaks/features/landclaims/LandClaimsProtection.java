@@ -2,6 +2,7 @@ package kam.kamsTweaks.features.landclaims;
 
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import org.bukkit.block.BlockState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import net.kyori.adventure.text.Component;
@@ -19,6 +20,7 @@ import org.bukkit.event.hanging.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.InventoryHolder;
 
@@ -132,6 +134,41 @@ public class LandClaimsProtection implements Listener {
                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
             e.setCancelled(true);
             e.getPlayer().setCooldown(e.getItemInHand(), 20);
+        }
+    }
+
+    @EventHandler
+    public void onDispenser(BlockDispenseEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        LandClaims.Claim claim = lc.getClaim(e.getBlock().getRelative(((Directional) e.getBlock().getBlockData()).getFacing()).getLocation());
+        LandClaims.Claim oclaim = lc.getClaim(e.getBlock().getLocation());
+        if (!lc.hasPermission(oclaim != null ? oclaim.m_owner : null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+            String lowered = e.getItem().getType().toString().toLowerCase();
+            if (lowered.contains("bucket") || lowered.contains("shulker")) {
+                e.setCancelled(true);
+            } else {
+                switch (e.getItem().getType()) {
+                    case FLINT_AND_STEEL, BONE_MEAL, CARVED_PUMPKIN, WITHER_SKELETON_SKULL, SHEARS, TNT, FIRE, ARMOR_STAND:
+                        e.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onGrow(StructureGrowEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        Block tree = event.getLocation().getBlock();
+        LandClaims.Claim claim = lc.getClaim(tree.getLocation());
+        for (BlockState state : event.getBlocks()) {
+            var block = state.getBlock();
+            LandClaims.Claim in = lc.getClaim(block.getLocation());
+            if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in, LandClaims.ClaimPermission.BLOCKS)) {
+                event.setCancelled(true);
+                return;
+            }
         }
     }
 

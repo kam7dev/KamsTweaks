@@ -193,7 +193,7 @@ public class LandClaimGui implements Listener {
             }
 
             void changeSize(int size) {
-                this.size = Math.min(54, Math.max(9, (size / 9) * 9));
+                this.size = (int) Math.min(54, Math.max(9, Math.ceil(size / 9.) * 9));
                 limit = highest > this.size ? this.size - 9 : this.size;
                 inv = createInventory(null, this.size, title);
                 updateItems();

@@ -28,7 +28,6 @@ public final class KamsTweaks extends JavaPlugin {
         return m_instance;
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     @Override
     public void onEnable() {
         m_instance = this;
@@ -60,6 +59,7 @@ public final class KamsTweaks extends JavaPlugin {
             m_slashHat.registerCommands(commands);
             m_names.registerCommands(commands);
             m_teleportation.registerCommands(commands);
+            m_graves.registerCommands(commands);
             ConfigCommand.registerCommand(commands);
         });
     }

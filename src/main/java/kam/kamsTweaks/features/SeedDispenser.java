@@ -2,7 +2,9 @@ package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.features.landclaims.LandClaims;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 import org.bukkit.Material;
@@ -38,7 +40,8 @@ public class SeedDispenser implements Listener {
         };
     }
 
-    @EventHandler
+    // compat with claims
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onDispense(BlockDispenseEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
         Block block = e.getBlock();
@@ -52,6 +55,12 @@ public class SeedDispenser implements Listener {
                     e.setCancelled(true);
                     Block toPlace = farm.getRelative(BlockFace.UP);
                     if (toPlace.getType() != Material.AIR) {
+                        return;
+                    }
+                    var lc = KamsTweaks.getInstance().m_landClaims;
+                    var claim = lc.getClaim(toPlace.getLocation());
+                    var oclaim = lc.getClaim(e.getBlock().getLocation());
+                    if (claim != null && !lc.hasPermission(oclaim != null ? oclaim.m_owner : null, claim, LandClaims.ClaimPermission.BLOCKS)) {
                         return;
                     }
                     ItemStack[] contents = container.getInventory().getContents();
@@ -70,6 +79,8 @@ public class SeedDispenser implements Listener {
                             return;
                         }
                     }
+                    // sometimes it just flat out doesnt work, so run it again next tick
+                    // no this does not repeat if it does run, because of the return in the statement
                     getServer().getScheduler().runTask(KamsTweaks.getInstance(), () -> {
                         ItemStack[] contents2 = container.getInventory().getContents();
                         for (int i = 0; i < contents2.length; i++) {

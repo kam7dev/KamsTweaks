@@ -1,34 +1,35 @@
 package kam.kamsTweaks.features;
 
+import com.mojang.brigadier.Command;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
-import kam.kamsTweaks.features.landclaims.LandClaims;
 import kam.kamsTweaks.utils.Inventories;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
-import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,11 +37,53 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.bukkit.Bukkit.getServer;
 
 public class Graves implements Listener {
-    Map<Integer, Grave> graves = new HashMap<>();
+    public Map<Integer, Grave> graves = new HashMap<>();
     static int highest = 0;
 
     public void setup() {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("graves.enabled", "graves.enabled", true, "kamstweaks.configure"));
+        Bukkit.getScheduler().runTaskTimer(KamsTweaks.getInstance(), new Runnable() {
+            long lastTime = System.currentTimeMillis();
+
+            @Override
+            public void run() {
+                long now = System.currentTimeMillis();
+                long time = now - lastTime;
+                graves.values().forEach(grave -> grave.tick(time));
+                lastTime = now;
+            }
+        }, 20L, 20L);  // 20L = 1 second in ticks
+    }
+
+    public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
+        commands.registrar().register(Commands.literal("graves")
+                .then(Commands.literal("list").executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (ctx.getSource().getExecutor() instanceof Player player) {
+                        StringBuilder claimsMsg = new StringBuilder();
+                        AtomicInteger i = new AtomicInteger();
+                        graves.forEach((id, grave) -> {
+                            if (grave.owner.equals(player)) {
+                                i.getAndIncrement();
+                                claimsMsg
+                                        .append("\nGrave ").append(i.get()).append(": ")
+                                        .append(grave.location.getBlockX())
+                                        .append(", ")
+                                        .append(grave.location.getBlockY())
+                                        .append(", ")
+                                        .append(grave.location.getBlockZ())
+                                        .append(" in ")
+                                        .append(grave.location.getWorld().getName());
+                            }
+                        });
+                        claimsMsg.insert(0, "You have " + i + " graves.");
+                        player.sendMessage(claimsMsg.toString());
+                    } else {
+                        sender.sendMessage("Only players can run this.");
+                    }
+                    return Command.SINGLE_SUCCESS;
+                }))
+                .build());
     }
 
     public Location checkLocation(Location loc) {
@@ -289,18 +332,47 @@ public class Graves implements Listener {
         onEntityInteract(e);
     }
 
-    public static class Grave {
+    public class Grave {
         OfflinePlayer owner;
         Inventory inventory;
         Location location;
         ArmorStand stand;
         int experience;
         int id;
-        public Grave(OfflinePlayer owner, Inventory inventory, Location location, int experience) {
+        long msLeft = 1000 * 60 * 20; // 20 mins
+        long offlineMsLeft = 1000 * 60 * 60 * 24 * 7; // 7 days
+        boolean wasOnlineLast = false;
+
+        public void tick(long ms) {
+            if (owner.isOnline()) {
+                this.msLeft -= ms;
+                if (msLeft <= 0) {
+                    graves.remove(this.id);
+                    this.stand.remove();
+                }
+                Logger.warn((this.msLeft / 1000) + "s left (online)");
+                this.wasOnlineLast = true;
+            } else {
+                if (this.wasOnlineLast) {
+                    offlineMsLeft = 1000 * 60 * 60 * 24 * 7; // 7 days
+                } else {
+                    this.offlineMsLeft -= ms;
+                    if (offlineMsLeft <= 0) {
+                        graves.remove(this.id);
+                        this.stand.remove();
+                    }
+                }
+                Logger.warn((this.offlineMsLeft / 1000) + "s left (offline)");
+                this.wasOnlineLast = false;
+            }
+        }
+
+        public Grave(OfflinePlayer owner, Inventory inventory, Location location, int experience, long msLeft) {
             this.owner = owner;
             this.inventory = inventory;
             this.location = location;
             this.experience = experience;
+            this.msLeft = msLeft;
         }
 
         public Grave(Player owner, Location location) {
@@ -325,19 +397,8 @@ public class Graves implements Listener {
             inv.setBoots(null);
             inventory.setItem(40, inv.getItemInOffHand());
             inv.setItemInOffHand(null);
-//            inventory.setItem(42, inv.getItem(80));
-//            inv.setItem(80, null);
-//            inventory.setItem(43, inv.getItem(81));
-//            inv.setItem(81, null);
-//            inventory.setItem(45, inv.getItem(82));
-//            inv.setItem(82, null);
-//            inventory.setItem(46, inv.getItem(83));
-//            inv.setItem(83, null);
             inventory.setItem(41, owner.getItemOnCursor());
             owner.setItemOnCursor(null);
-            for (var i = 0; i < inv.getSize(); i++) {
-                Logger.error(i + ": " + (inv.getItem(i) == null ? "None" : inv.getItem(i).displayName().toString()));
-            }
             this.experience = getPlayerExp(owner);
             this.id = highest;
             highest++;
@@ -387,6 +448,7 @@ public class Graves implements Listener {
             config.set("graves." + id + ".location", serializeLocation(grave.location));
             config.set("graves." + id + ".owner", grave.owner.getUniqueId().toString());
             config.set("graves." + id + ".xp", grave.experience);
+            config.set("graves." + id + ".timeleft", grave.msLeft);
         });
     }
 
@@ -405,7 +467,8 @@ public class Graves implements Listener {
                     Location location = checkLocation(deserializeLocation(locationStr));
                     if (location.getWorld() == null) continue;
                     Inventory inv = Inventories.loadInventory(Component.text("Grave"), 45, config, "graves." + key);
-                    Grave grave = new Grave(owner == null ? null : getServer().getOfflinePlayer(owner), inv, location, xp);
+                    long timeLeft = config.getLong("graves." + key + ".timeleft", 1000 * 60 * 20);
+                    Grave grave = new Grave(owner == null ? null : getServer().getOfflinePlayer(owner), inv, location, xp, timeLeft);
                     int id = Integer.parseInt(key);
                     if (highest < id) highest = id;
                     grave.id = id;
