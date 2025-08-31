@@ -350,7 +350,6 @@ public class Graves implements Listener {
                     graves.remove(this.id);
                     this.stand.remove();
                 }
-                Logger.warn((this.msLeft / 1000) + "s left (online)");
                 this.wasOnlineLast = true;
             } else {
                 if (this.wasOnlineLast) {
@@ -362,7 +361,6 @@ public class Graves implements Listener {
                         this.stand.remove();
                     }
                 }
-                Logger.warn((this.offlineMsLeft / 1000) + "s left (offline)");
                 this.wasOnlineLast = false;
             }
         }
