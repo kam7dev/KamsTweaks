@@ -236,7 +236,6 @@ public class Names implements Listener {
                                     if (color == null) color = TextColor.fromHexString(part.startsWith("#") ? part : "#" + part);
                                     if (color != null) colors.add(color);
                                     else {
-                                        Logger.info(part);
                                         switch(part.toLowerCase()) {
                                             case "pride": {
                                                 colors.add(NamedTextColor.RED);
@@ -245,6 +244,126 @@ public class Names implements Listener {
                                                 colors.add(NamedTextColor.GREEN);
                                                 colors.add(NamedTextColor.BLUE);
                                                 colors.add(NamedTextColor.DARK_PURPLE);
+                                                break;
+                                            }
+                                            case "lesbian": {
+                                                colors.add(TextColor.fromHexString("#D52D00"));
+                                                colors.add(TextColor.fromHexString("#EF7627"));
+                                                colors.add(TextColor.fromHexString("#FF9A56"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#D162A4"));
+                                                colors.add(TextColor.fromHexString("#B55690"));
+                                                colors.add(TextColor.fromHexString("#A30262"));
+                                                break;
+                                            }
+                                            case "gay": {
+                                                colors.add(TextColor.fromHexString("#078D70"));
+                                                colors.add(TextColor.fromHexString("#26CEAA"));
+                                                colors.add(TextColor.fromHexString("#98E8C1"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#7BADE2"));
+                                                colors.add(TextColor.fromHexString("#5049CC"));
+                                                colors.add(TextColor.fromHexString("#3D1A78"));
+                                                break;
+                                            }
+                                            case "bi", "bisexual": {
+                                                colors.add(TextColor.fromHexString("#D60270"));
+                                                colors.add(TextColor.fromHexString("#9B4F96"));
+                                                colors.add(TextColor.fromHexString("#0038A8"));
+                                                break;
+                                            }
+                                            case "trans": {
+                                                colors.add(TextColor.fromHexString("#55CDFC"));
+                                                colors.add(TextColor.fromHexString("#F7A8B8"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#F7A8B8"));
+                                                colors.add(TextColor.fromHexString("#55CDFC"));
+                                                break;
+                                            }
+                                            case "pan": {
+                                                colors.add(TextColor.fromHexString("#FF1B8D"));
+                                                colors.add(TextColor.fromHexString("#FFD800"));
+                                                colors.add(TextColor.fromHexString("#1BB3FF"));
+                                                break;
+                                            }
+                                            case "nonbinary", "nb": {
+                                                colors.add(TextColor.fromHexString("#FFF430"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#9C59D1"));
+                                                colors.add(TextColor.fromHexString("#000000"));
+                                                break;
+                                            }
+                                            case "genderfluid": {
+                                                colors.add(TextColor.fromHexString("#FF75A2"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#BE18D6"));
+                                                colors.add(TextColor.fromHexString("#000000"));
+                                                colors.add(TextColor.fromHexString("#333EBD"));
+                                                break;
+                                            }
+                                            case "genderqueer": {
+                                                colors.add(TextColor.fromHexString("#B57EDC"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#4A8123"));
+                                                break;
+                                            }
+                                            case "intersex": {
+                                                colors.add(TextColor.fromHexString("#FFD800"));
+                                                colors.add(TextColor.fromHexString("#7902AA"));
+                                                break;
+                                            }
+                                            case "asexual": {
+                                                colors.add(TextColor.fromHexString("#000000"));
+                                                colors.add(TextColor.fromHexString("#A3A3A3"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#800080"));
+                                                break;
+                                            }
+                                            case "aromantic": {
+                                                colors.add(TextColor.fromHexString("#3DA542"));
+                                                colors.add(TextColor.fromHexString("#A7D379"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#A9A9A9"));
+                                                colors.add(TextColor.fromHexString("#000000"));
+                                                break;
+                                            }
+                                            case "demisexual": {
+                                                colors.add(TextColor.fromHexString("#000000"));
+                                                colors.add(TextColor.fromHexString("#A4A4A4"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#800080"));
+                                                break;
+                                            }
+                                            case "demiboy": {
+                                                colors.add(TextColor.fromHexString("#7F7F7F"));
+                                                colors.add(TextColor.fromHexString("#9AD9EB"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#9AD9EB"));
+                                                colors.add(TextColor.fromHexString("#7F7F7F"));
+                                                break;
+                                            }
+                                            case "demigirl": {
+                                                colors.add(TextColor.fromHexString("#7F7F7F"));
+                                                colors.add(TextColor.fromHexString("#FBA9B0"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#FBA9B0"));
+                                                colors.add(TextColor.fromHexString("#7F7F7F"));
+                                                break;
+                                            }
+                                            case "polysexual": {
+                                                colors.add(TextColor.fromHexString("#F61CB9"));
+                                                colors.add(TextColor.fromHexString("#07D569"));
+                                                colors.add(TextColor.fromHexString("#1C92F6"));
+                                                break;
+                                            }
+                                            case "bigender": {
+                                                colors.add(TextColor.fromHexString("#C479A2"));
+                                                colors.add(TextColor.fromHexString("#EDA5CD"));
+                                                colors.add(TextColor.fromHexString("#D6C7E8"));
+                                                colors.add(TextColor.fromHexString("#FFFFFF"));
+                                                colors.add(TextColor.fromHexString("#D6C7E8"));
+                                                colors.add(TextColor.fromHexString("#9AC7E8"));
+                                                colors.add(TextColor.fromHexString("#6D82D1"));
                                                 break;
                                             }
                                             case "geode": {
