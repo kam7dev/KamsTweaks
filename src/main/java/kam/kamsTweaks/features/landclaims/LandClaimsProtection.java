@@ -23,10 +23,9 @@ import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class LandClaimsProtection implements Listener {
     LandClaims lc;
@@ -74,6 +73,29 @@ public class LandClaimsProtection implements Listener {
         }
     }
 
+    private void applyCooldowns(Player p) {
+        Set<Material> mats = new HashSet<>();
+
+        for (ItemStack it : p.getInventory().getContents()) {
+            if (it != null && (it.getType().isBlock() || it.getType().name().toLowerCase().contains("bucket"))) {
+                mats.add(it.getType());
+            }
+        }
+        for (ItemStack it : p.getInventory().getArmorContents()) {
+            if (it != null && (it.getType().isBlock() || it.getType().name().toLowerCase().contains("bucket"))) {
+                mats.add(it.getType());
+            }
+        }
+        ItemStack off = p.getInventory().getItemInOffHand();
+        if (off.getType().isBlock() || off.getType().name().toLowerCase().contains("bucket")) {
+            mats.add(off.getType());
+        }
+
+        for (Material m : mats) {
+            p.setCooldown(m, 20);
+        }
+    }
+
     @EventHandler
     public void onBucket(PlayerBucketEmptyEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
@@ -91,7 +113,7 @@ public class LandClaimsProtection implements Listener {
             message(player, claim.m_owner == null ? "the server"
                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
             e.setCancelled(true);
-            e.getPlayer().setCooldown(e.getBucket(), 20);
+            applyCooldowns(e.getPlayer());
         }
     }
 
@@ -112,7 +134,7 @@ public class LandClaimsProtection implements Listener {
             message(player, claim.m_owner == null ? "the server"
                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
             e.setCancelled(true);
-            e.getPlayer().setCooldown(e.getBucket(), 20);
+            applyCooldowns(e.getPlayer());
         }
     }
 
@@ -133,7 +155,7 @@ public class LandClaimsProtection implements Listener {
             message(player, claim.m_owner == null ? "the server"
                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
             e.setCancelled(true);
-            e.getPlayer().setCooldown(e.getItemInHand(), 20);
+            applyCooldowns(player);
         }
     }
 

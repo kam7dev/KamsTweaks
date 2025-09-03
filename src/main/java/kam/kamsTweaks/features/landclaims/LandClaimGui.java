@@ -320,7 +320,7 @@ public class LandClaimGui implements Listener {
                 }
                 int count = 0;
                 for (LandClaims.Claim claim : lc.claims) {
-                    if (claim.m_owner.getUniqueId().equals(player.getUniqueId())) count++;
+                    if (claim.m_owner != null && claim.m_owner.getUniqueId().equals(player.getUniqueId())) count++;
                 }
                 var max = KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 30);
                 if (count >= max) {
