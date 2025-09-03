@@ -216,9 +216,6 @@ public class Names implements Listener {
                             for (String color : NamedTextColor.NAMES.keys()) {
                                 builder.suggest(color.toLowerCase());
                             }
-                            builder.suggest("#ff0000");
-                            builder.suggest("#00ff00");
-                            builder.suggest("#0000ff");
                             return builder.buildFuture();
                         })
                         .executes(ctx -> {
@@ -233,14 +230,13 @@ public class Names implements Listener {
                                 String[] parts = raw.split("\\s+");
 
                                 List<TextColor> colors = new ArrayList<>();
+                                List<String> invalid = new ArrayList<>();
                                 for (String part : parts) {
                                     TextColor color = NamedTextColor.NAMES.value(part.toLowerCase(Locale.ROOT));
-                                    if (color == null) {
-                                        if (!part.startsWith("#")) part = "#" + part;
-                                        color = TextColor.fromHexString(part);
-                                    }
+                                    if (color == null) color = TextColor.fromHexString(part.startsWith("#") ? part : "#" + part);
                                     if (color != null) colors.add(color);
                                     else {
+                                        Logger.info(part);
                                         switch(part.toLowerCase()) {
                                             case "pride": {
                                                 colors.add(NamedTextColor.RED);
@@ -249,6 +245,7 @@ public class Names implements Listener {
                                                 colors.add(NamedTextColor.GREEN);
                                                 colors.add(NamedTextColor.BLUE);
                                                 colors.add(NamedTextColor.DARK_PURPLE);
+                                                break;
                                             }
                                             case "geode": {
                                                 colors.add(TextColor.fromHexString("#F4D48E"));
@@ -257,14 +254,18 @@ public class Names implements Listener {
                                                 colors.add(TextColor.fromHexString("#D56985"));
                                                 colors.add(TextColor.fromHexString("#AD5492"));
                                                 colors.add(TextColor.fromHexString("#714A9A"));
+                                                break;
                                             }
-                                            default: break;
+                                            default: {
+                                                invalid.add(part);
+                                                break;
+                                            }
                                         }
                                     }
                                 }
 
-                                if (colors.isEmpty()) {
-                                    sender.sendPlainMessage("Invalid color(s).");
+                                if (!invalid.isEmpty()) {
+                                    sender.sendPlainMessage("Invalid color(s): " + String.join(", ", invalid));
                                     return Command.SINGLE_SUCCESS;
                                 }
 
