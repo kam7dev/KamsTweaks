@@ -88,8 +88,9 @@ jobs:
       - name: Read version from Gradle
         id: read_version
         run: |
-          VERSION=$(./gradlew -q printVersion) # requires a "printVersion" task in build.gradle
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          VERSION=$(./gradlew -q printVersion)
+          CLEAN_VERSION=${VERSION%%-*}
+          echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
 
       - name: Get previous release tag
         id: prev_release
