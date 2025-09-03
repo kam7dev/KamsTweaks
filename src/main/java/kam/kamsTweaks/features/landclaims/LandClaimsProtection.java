@@ -2,6 +2,8 @@ package kam.kamsTweaks.features.landclaims;
 
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,6 +26,9 @@ import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockDataMeta;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 
@@ -851,6 +856,50 @@ public class LandClaimsProtection implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         if (event.getEntityType() == EntityType.SHEEP)
+            return;
+        LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
+        if (event.getEntity() instanceof Player player) {
+            if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                //     message(player,
+                //             claim.m_owner == null ? "the server"
+                //                     : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
+                //             true);
+                //     return;
+                // }
+                message(player, claim.m_owner == null ? "the server"
+                        : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
+                event.setCancelled(true);
+            }
+        } if (event.getEntity() instanceof FallingBlock fb) {
+            if (event.getTo() == Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
+                fb.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING, LandClaims.serializeLocation(fb.getLocation()));
+            } else {
+                LandClaims.Claim orig = null;
+                if (fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
+                    Location origin = LandClaims.deserializeLocation(Objects.requireNonNull(fb.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)));
+                    orig = lc.getClaim(origin);
+                }
+                if (!lc.hasPermission(orig != null ? orig.m_owner : null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                    event.setCancelled(true);
+                    ItemStack drop = new ItemStack(event.getBlockData().getMaterial());
+
+                    ItemMeta meta = drop.getItemMeta();
+                    if (meta instanceof BlockDataMeta bdMeta) {
+                        bdMeta.setBlockData(event.getBlockData());
+                        drop.setItemMeta(bdMeta);
+                    }
+
+                    fb.getWorld().dropItemNaturally(fb.getLocation(), drop);
+                    fb.remove();
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityBlockForm(EntityBlockFormEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         LandClaims.Claim claim = lc.getClaim(event.getBlock().getLocation());
         if (event.getEntity() instanceof Player player) {
