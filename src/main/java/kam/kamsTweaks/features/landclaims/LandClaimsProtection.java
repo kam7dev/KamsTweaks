@@ -2,8 +2,10 @@ package kam.kamsTweaks.features.landclaims;
 
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -649,36 +651,27 @@ public class LandClaimsProtection implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Block piston = event.getBlock();
+        Directional dir = (Directional) piston.getBlockData();
+        BlockFace face = dir.getFacing();
         LandClaims.Claim claim = lc.getClaim(piston.getLocation());
 
-        {
-            LandClaims.Claim to = lc
-                    .getClaim(piston.getRelative(((Directional) piston.getBlockData()).getFacing()).getLocation());
-            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to,
-                    LandClaims.ClaimPermission.BLOCKS)) {
-                event.setCancelled(true);
-                return;
-            }
-            LandClaims.Claim in = lc
-                    .getClaim(piston.getRelative(((Directional) piston.getBlockData()).getFacing()).getLocation());
-            if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in,
-                    LandClaims.ClaimPermission.BLOCKS)) {
-                event.setCancelled(true);
-                return;
-            }
+        Block front = piston.getRelative(face);
+        LandClaims.Claim frontClaim = lc.getClaim(front.getLocation());
+        if (frontClaim != null && !lc.hasPermission(claim == null ? null : claim.m_owner, frontClaim,
+                LandClaims.ClaimPermission.BLOCKS)) {
+            event.setCancelled(true);
+            return;
         }
-
         for (Block block : event.getBlocks()) {
-            LandClaims.Claim to = lc
-                    .getClaim(block.getRelative(((Directional) piston.getBlockData()).getFacing()).getLocation());
-            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to,
+            Block target = block.getRelative(face);
+            LandClaims.Claim in = lc.getClaim(target.getLocation());
+            if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in,
                     LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
                 return;
             }
-            LandClaims.Claim in = lc
-                    .getClaim(block.getRelative(((Directional) piston.getBlockData()).getFacing()).getLocation());
-            if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in,
+            LandClaims.Claim to = lc.getClaim(target.getLocation());
+            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to,
                     LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
                 return;
@@ -691,40 +684,27 @@ public class LandClaimsProtection implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Block piston = event.getBlock();
+        Directional dir = (Directional) piston.getBlockData();
+        BlockFace face = dir.getFacing().getOppositeFace();
+
         LandClaims.Claim claim = lc.getClaim(piston.getLocation());
-
-        {
-            LandClaims.Claim to = lc.getClaim(
-                    piston.getRelative(((Directional) piston.getBlockData()).getFacing().getOppositeFace())
-                            .getLocation());
-            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to,
-                    LandClaims.ClaimPermission.BLOCKS)) {
-                event.setCancelled(true);
-                return;
-            }
-            LandClaims.Claim in = lc.getClaim(
-                    piston.getRelative(((Directional) piston.getBlockData()).getFacing().getOppositeFace())
-                            .getLocation());
-            if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in,
-                    LandClaims.ClaimPermission.BLOCKS)) {
-                event.setCancelled(true);
-                return;
-            }
+        Block front = piston.getRelative(face);
+        LandClaims.Claim frontClaim = lc.getClaim(front.getLocation());
+        if (frontClaim != null && !lc.hasPermission(claim == null ? null : claim.m_owner, frontClaim,
+                LandClaims.ClaimPermission.BLOCKS)) {
+            event.setCancelled(true);
+            return;
         }
-
         for (Block block : event.getBlocks()) {
-            LandClaims.Claim to = lc
-                    .getClaim(block.getRelative(((Directional) piston.getBlockData()).getFacing().getOppositeFace())
-                            .getLocation());
-            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to,
+            Block target = block.getRelative(face);
+            LandClaims.Claim in = lc.getClaim(block.getLocation());
+            if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in,
                     LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
                 return;
             }
-            LandClaims.Claim in = lc
-                    .getClaim(block.getRelative(((Directional) piston.getBlockData()).getFacing().getOppositeFace())
-                            .getLocation());
-            if (in != null && !lc.hasPermission(claim == null ? null : claim.m_owner, in,
+            LandClaims.Claim to = lc.getClaim(target.getLocation());
+            if (to != null && !lc.hasPermission(claim == null ? null : claim.m_owner, to,
                     LandClaims.ClaimPermission.BLOCKS)) {
                 event.setCancelled(true);
                 return;

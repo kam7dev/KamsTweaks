@@ -9,6 +9,7 @@ import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.Inventories;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
@@ -183,10 +184,12 @@ public class Graves implements Listener {
         });
     }
 
+    PlainTextComponentSerializer plainSerializer = PlainTextComponentSerializer.plainText();
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onClick(InventoryClickEvent e) {
         var clickedInv = e.getClickedInventory();
-        graves.forEach((id, grave) -> {
+        if (plainSerializer.serialize(e.getView().title()).equals("Grave")) {
             switch (e.getAction()) {
                 case PLACE_ALL:
                 case PLACE_ONE:
@@ -195,18 +198,18 @@ public class Graves implements Listener {
                 case PLACE_FROM_BUNDLE:
                 case PLACE_ALL_INTO_BUNDLE:
                 case PLACE_SOME_INTO_BUNDLE:
-                    if (clickedInv != null && clickedInv.equals(grave.inventory)) {
+                    if (clickedInv != null && clickedInv.equals(e.getView().getTopInventory())) {
                         e.setCancelled(true);
                     }
                     break;
                 case HOTBAR_SWAP:
                     var clicked = e.getHotbarButton() == -1 ? e.getWhoClicked().getInventory().getItemInOffHand() : e.getWhoClicked().getInventory().getItem(e.getHotbarButton());
-                    if (clickedInv != null && clickedInv.equals(grave.inventory) && clicked != null && !clicked.isEmpty()) {
+                    if (clickedInv != null && clickedInv.equals(e.getView().getTopInventory()) && clicked != null && !clicked.isEmpty()) {
                         e.setCancelled(true);
                     }
                     break;
                 case MOVE_TO_OTHER_INVENTORY:
-                    if (clickedInv != null && clickedInv.equals(e.getView().getBottomInventory()) && e.getView().getTopInventory().equals(grave.inventory)) {
+                    if (clickedInv != null && clickedInv.equals(e.getView().getBottomInventory())) {
                         e.setCancelled(true);
                     }
                     break;
@@ -214,21 +217,19 @@ public class Graves implements Listener {
                 default:
                     break;
             }
-        });
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onDrag(InventoryDragEvent e) {
-        graves.forEach((id, grave) -> {
-            if (e.getInventory().equals(grave.inventory)) {
-                for (int rawSlot : e.getRawSlots()) {
-                    if (rawSlot < e.getView().getTopInventory().getSize()) {
-                        e.setCancelled(true);
-                        break;
-                    }
+        if (plainSerializer.serialize(e.getView().title()).equals("Grave")) {
+            for (int rawSlot : e.getRawSlots()) {
+                if (rawSlot < e.getView().getTopInventory().getSize()) {
+                    e.setCancelled(true);
+                    break;
                 }
             }
-        });
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
