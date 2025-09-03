@@ -279,11 +279,11 @@ public class Graves implements Listener {
         if (entity instanceof ArmorStand stand) {
             NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
             if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
+            e.setCancelled(true);
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
             @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
-            e.setCancelled(true);
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
                 PlayerInventory inv = player.getInventory();
