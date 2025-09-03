@@ -53,6 +53,10 @@ public class TPA {
             sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
             return;
         }
+        if (handler.onCooldown.contains(sender)) {
+            sender.sendMessage(Component.text("You're currently on teleportation cooldown.").color(NamedTextColor.RED));
+            return;
+        }
         if (target.equals(sender)) {
             sender.sendMessage(Component.text("You can't teleport to yourself, silly!").color(NamedTextColor.RED));
             return;
@@ -108,6 +112,17 @@ public class TPA {
     private void accept(Player acceptor, Player requester) {
         TPARequest req = tpas.get(requester);
         if (req == null) return;
+        if (req.here) {
+            if (handler.onCooldown.contains(acceptor)) {
+                acceptor.sendMessage(Component.text("You're currently on teleportation cooldown.").color(NamedTextColor.RED));
+                return;
+            }
+        } else {
+            if (handler.onCooldown.contains(requester)) {
+                acceptor.sendMessage(requester.displayName().append(Component.text(" is currently on teleportation cooldown.").color(NamedTextColor.RED)));
+                return;
+            }
+        }
 
         Bukkit.getScheduler().cancelTask(req.taskId);
         HandlerList.unregisterAll(req.listener);

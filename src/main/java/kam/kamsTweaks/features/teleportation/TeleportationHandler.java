@@ -19,23 +19,31 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TeleportationHandler {
     public Map<Player, Location> locations = new HashMap<>();
     public Map<Player, Integer> teleportations = new HashMap<>();
+    public List<Player> onCooldown = new ArrayList<>();
 
     SetHome setHome = new SetHome();
     TPA tpa = new TPA();
     Warp warp = new Warp();
     Back back = new Back();
     Spawn spawn = new Spawn();
+    RTP rtp = new RTP();
 
     public void teleport(Player player, Location location) {
+        onCooldown.add(player);
         locations.put(player, player.getLocation());
         player.teleport(location);
         teleportations.remove(player);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
+            onCooldown.remove(player);
+        }, 20 * KamsTweaks.getInstance().getConfig().getLong("teleportation.cooldown"));
     }
 
     public void scheduleTeleport(Player player, Location location, double time) {
@@ -141,6 +149,7 @@ public class TeleportationHandler {
         warp.init(this);
         back.init(this);
         spawn.init(this);
+        rtp.init(this);
         ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.timer", "teleportation.timer", 5, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.cooldown", "teleportation.cooldown", 30, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.homes.enabled", "teleportation.homes.enabled", true, "kamstweaks.configure"));
@@ -148,21 +157,7 @@ public class TeleportationHandler {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.tpa.enabled", "teleportation.tpa.enabled", true, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.warp.enabled", "teleportation.warp.enabled", true, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.back.enabled", "teleportation.back.enabled", true, "kamstweaks.configure"));
-        /*
-        teleportation:
-          # How long you stay in place before teleporting, in seconds
-          timer: 5
-          # How long you wait between teleports, in seconds
-          cooldown: 30
-          homes:
-            enabled: true
-          tpa:
-            enabled: true
-          warp:
-            enabled: true
-          back:
-            enabled: true
-         */
+        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.rtp.enabled", "teleportation.rtp.enabled", true, "kamstweaks.configure"));
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -172,6 +167,7 @@ public class TeleportationHandler {
         warp.registerCommands(commands);
         back.registerCommands(commands);
         spawn.registerCommands(commands);
+        rtp.registerCommands(commands);
     }
 
     public void save() {

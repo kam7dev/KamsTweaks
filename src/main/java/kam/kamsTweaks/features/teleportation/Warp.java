@@ -81,6 +81,10 @@ public class Warp {
                             sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
+                        if (handler.onCooldown.contains(player)) {
+                            sender.sendMessage(Component.text("You're currently on teleportation cooldown.").color(NamedTextColor.RED));
+                            return Command.SINGLE_SUCCESS;
+                        }
                         String warp = ctx.getArgument("name", String.class);
                         if (!warps.containsKey(warp)) {
                             sender.sendMessage(Component.text("Warp \"" + warp + "\" does not exist.").color(NamedTextColor.RED));

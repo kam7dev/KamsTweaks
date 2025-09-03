@@ -50,6 +50,8 @@ teleportation:
     enabled: true
   spawn:
     enabled: true
+  rtp:
+    enabled: true
 
 graves:
   enabled: true

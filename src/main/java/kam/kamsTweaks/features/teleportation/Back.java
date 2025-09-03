@@ -43,6 +43,10 @@ public class Back implements Listener {
                     sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;
                 }
+                if (handler.onCooldown.contains(player)) {
+                    sender.sendMessage(Component.text("You're currently on teleportation cooldown.").color(NamedTextColor.RED));
+                    return Command.SINGLE_SUCCESS;
+                }
                 if (!handler.locations.containsKey(player)) {
                     sender.sendMessage(Component.text("You have not teleported anywhere recently.").color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;

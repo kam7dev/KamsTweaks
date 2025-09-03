@@ -80,6 +80,10 @@ public class SetHome {
                     sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;
                 }
+                if (handler.onCooldown.contains(player)) {
+                    sender.sendMessage(Component.text("You're currently on teleportation cooldown.").color(NamedTextColor.RED));
+                    return Command.SINGLE_SUCCESS;
+                }
                 if (!homes.containsKey(player.getUniqueId())) {
                     sender.sendMessage(Component.text("You do not have a home.").color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;

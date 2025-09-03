@@ -41,6 +41,9 @@ permissions:
   kamstweaks.teleports.spawn:
     default: true
     description: "Teleport to spawn"
+  kamstweaks.teleports.rtp:
+    default: true
+    description: "Teleport to a random position within 100k blocks of spawn"
 
   kamstweaks.silkspawner:
     default: true
