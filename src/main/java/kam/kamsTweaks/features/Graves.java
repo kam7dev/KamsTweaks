@@ -22,8 +22,7 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.*;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -177,8 +176,11 @@ public class Graves implements Listener {
     @EventHandler
     public void chunkLoad(ChunkLoadEvent e) {
         graves.forEach((id, grave) -> {
-            if (List.of(e.getChunk().getEntities()).contains(grave.stand)) return;
-            if (isLocationInChunk(e.getChunk(), grave.location)) {
+            if (isLocationInChunk(e.getChunk(), grave.location) && grave.owner.isOnline()) {
+                if (grave.stand != null) {
+                    grave.stand.remove();
+                    grave.stand = null;
+                }
                 grave.createStand();
             }
         });
@@ -230,6 +232,31 @@ public class Graves implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onLeave(PlayerQuitEvent e) {
+        graves.forEach((id, grave) -> {
+            if (grave.owner.equals(e.getPlayer())) {
+                if (grave.stand != null) {
+                    grave.stand.remove();
+                    grave.stand = null;
+                }
+            }
+        });
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent e) {
+        graves.forEach((id, grave) -> {
+            if (grave.owner.equals(e.getPlayer())) {
+                if (grave.stand != null) {
+                    grave.stand.remove();
+                    grave.stand = null;
+                }
+                grave.createStand();
+            }
+        });
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -341,8 +368,6 @@ public class Graves implements Listener {
         int experience;
         int id;
         long msLeft = 1000 * 60 * 20; // 20 mins
-        long offlineMsLeft = 1000 * 60 * 60 * 24 * 7; // 7 days
-        boolean wasOnlineLast = false;
 
         public void tick(long ms) {
             if (owner.isOnline()) {
@@ -351,18 +376,6 @@ public class Graves implements Listener {
                     graves.remove(this.id);
                     this.stand.remove();
                 }
-                this.wasOnlineLast = true;
-            } else {
-                if (this.wasOnlineLast) {
-                    offlineMsLeft = 1000 * 60 * 60 * 24 * 7; // 7 days
-                } else {
-                    this.offlineMsLeft -= ms;
-                    if (offlineMsLeft <= 0) {
-                        graves.remove(this.id);
-                        this.stand.remove();
-                    }
-                }
-                this.wasOnlineLast = false;
             }
         }
 
@@ -401,7 +414,9 @@ public class Graves implements Listener {
             this.experience = getPlayerExp(owner);
             this.id = highest;
             highest++;
-            createStand();
+            if (owner.isOnline()) {
+                createStand();
+            }
         }
 
         public OfflinePlayer getOwner() {
@@ -472,7 +487,9 @@ public class Graves implements Listener {
                     if (highest < id) highest = id;
                     grave.id = id;
                     graves.put(id, grave);
-                    grave.createStand();
+                    if (grave.owner.isOnline()) {
+                        grave.createStand();
+                    }
                 } catch (Exception e) {
                     Logger.warn(e.getMessage());
                 }
