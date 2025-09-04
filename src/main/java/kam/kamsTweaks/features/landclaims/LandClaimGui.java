@@ -509,7 +509,11 @@ public class LandClaimGui implements Listener {
                     case "admin-bypass" -> ui.changeToScreen(editScreen);
                     case "admin-bypass-entity" -> ui.changeToScreen(entityEditScreen);
                     case "entity-claim" -> {
-                        KamsTweaks.getInstance().m_entityClaims.claims.put(ui.targetEntity.getUniqueId(), new EntityClaims.EntityClaim(player));
+                        if (KamsTweaks.getInstance().m_entityClaims.claims.containsKey(ui.targetEntity.getUniqueId())) {
+                            player.sendMessage(Component.text("This entity was already claimed!").color(NamedTextColor.RED));
+                        } else {
+                            KamsTweaks.getInstance().m_entityClaims.claims.put(ui.targetEntity.getUniqueId(), new EntityClaims.EntityClaim(player));
+                        }
                         ui.close(false);
                     }
                     case "unclaim" -> {

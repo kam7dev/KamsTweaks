@@ -56,6 +56,7 @@ public final class KamsTweaks extends JavaPlugin {
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             m_landClaims.registerCommands(commands);
+            m_entityClaims.registerCommands(commands);
             m_slashHat.registerCommands(commands);
             m_names.registerCommands(commands);
             m_teleportation.registerCommands(commands);

@@ -1,8 +1,16 @@
 package kam.kamsTweaks.features.landclaims;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver;
+import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import net.kyori.adventure.text.Component;
@@ -13,6 +21,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,6 +71,24 @@ public class EntityClaims implements Listener {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), hasMessaged::clear, 1, 1);
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("entity-claims.enabled", "entity-claims.enabled", true, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("entity-claims.max-claims", "entity-claims.max-claims", 1000, "kamstweaks.configure"));
+
+        // todo: dont forget to remove this test command
+        // if i forget to remove this then oops, just in case gonna lock it to km7dev tho
+    }
+
+    public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
+        LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("claim").requires(ctx -> ctx.getSender().getName().equals("km7dev"))
+                .then(Commands.argument("entity", ArgumentTypes.entity())
+                        .executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            if (sender instanceof Player player) {
+                                Entity e = ctx.getArgument("entity", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst();
+                                KamsTweaks.getInstance().m_entityClaims.claims.put(e.getUniqueId(), new EntityClaims.EntityClaim(player));
+                            }
+                            return Command.SINGLE_SUCCESS;
+                        }).requires(ctx -> ctx.getSender().getName().equals("km7dev"))
+                ).requires(ctx -> ctx.getSender().getName().equals("km7dev"));
+        commands.registrar().register(command.build());
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -180,12 +207,26 @@ public class EntityClaims implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (event.getEntity() instanceof Creature c) {
             if (c instanceof Monster) return;
-            if (hasPermission(null, c, EntityPermission.KILL)) return;
             EntityClaim claim = claims.get(c.getUniqueId());
             if (claim == null) return;
             switch (event.getCause()) {
-                case FIRE, FIRE_TICK, FALL, DROWNING, CAMPFIRE, SUFFOCATION -> event.setCancelled(true);
-                default -> {}
+                case ENTITY_ATTACK, ENTITY_EXPLOSION, ENTITY_SWEEP_ATTACK -> {
+                    if (event.getDamageSource().getCausingEntity() instanceof Player player) {
+                        if (hasPermission(player, c, EntityPermission.KILL)) return;
+                        OfflinePlayer owner = claim.m_owner;
+                        // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
+                        //     message(player, owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), true);
+                        //     return;
+                        // }
+                        message(player, owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName(), false);
+                        event.setCancelled(true);
+                    } else {
+                        if (hasPermission(null, c, EntityPermission.KILL)) return;
+                        event.setCancelled(true);
+                    }
+                    break;
+                }
+                default -> event.setCancelled(true);
             }
         }
     }
