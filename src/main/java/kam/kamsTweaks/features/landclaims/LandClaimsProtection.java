@@ -32,6 +32,7 @@ import org.bukkit.inventory.meta.BlockDataMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import javax.naming.Name;
 import java.util.*;
 
 public class LandClaimsProtection implements Listener {
@@ -310,7 +311,12 @@ public class LandClaimsProtection implements Listener {
         if (entity instanceof ItemFrame || entity instanceof ArmorStand) {
             Player player = e.getPlayer();
             LandClaims.Claim claim = lc.getClaim(entity.getLocation());
-            if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.INTERACT)) {
+            LandClaims.Claim origin = null;
+            if (entity.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "origin"))) {
+                Location loc = LandClaims.deserializeLocation(Objects.requireNonNull(entity.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING)));
+                origin = lc.getClaim(loc);
+            }
+            if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS) && !lc.hasPermission(player, origin, LandClaims.ClaimPermission.BLOCKS)) {
                 // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
                 //     message(player,
                 //             claim.m_owner == null ? "the server"
@@ -369,6 +375,8 @@ public class LandClaimsProtection implements Listener {
                                 : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(),
                         false);
                 e.setCancelled(true);
+            } else {
+                e.getEntity().getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING, LandClaims.serializeLocation(e.getEntity().getLocation()));
             }
         }
     }
@@ -437,7 +445,12 @@ public class LandClaimsProtection implements Listener {
             return;
         if (e.getDamager() instanceof Player player) {
             LandClaims.Claim claim = lc.getClaim(e.getEntity().getLocation());
-            if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+            LandClaims.Claim origin = null;
+            if (entity.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "origin"))) {
+                Location loc = LandClaims.deserializeLocation(Objects.requireNonNull(entity.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING)));
+                origin = lc.getClaim(loc);
+            }
+            if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS) && !lc.hasPermission(player, origin, LandClaims.ClaimPermission.BLOCKS)) {
                 // if (player.hasPermission("kamstweaks.landclaims.bypass")) {
                 //     message(player,
                 //             claim.m_owner == null ? "the server"
