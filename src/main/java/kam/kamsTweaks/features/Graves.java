@@ -373,7 +373,10 @@ public class Graves implements Listener {
             if (owner.isOnline()) {
                 this.msLeft -= ms;
                 if (msLeft <= 0) {
-                    graves.remove(this.id);
+                    Bukkit.getScheduler().runTask(KamsTweaks.getInstance(), () -> {
+                        // prevent exceptions
+                        graves.remove(this.id);
+                    });
                     this.stand.remove();
                 }
             }
