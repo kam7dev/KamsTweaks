@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'kam'
-version = "1.5.1-${getGitHash()}"
+version = "1.5.2-${getGitHash()}"
 
 repositories {
     mavenCentral()
