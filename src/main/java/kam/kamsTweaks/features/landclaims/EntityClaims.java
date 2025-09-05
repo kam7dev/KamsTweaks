@@ -77,18 +77,7 @@ public class EntityClaims implements Listener {
     }
 
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("claim").requires(ctx -> ctx.getSender().getName().equals("km7dev"))
-                .then(Commands.argument("entity", ArgumentTypes.entity())
-                        .executes(ctx -> {
-                            CommandSender sender = ctx.getSource().getSender();
-                            if (sender instanceof Player player) {
-                                Entity e = ctx.getArgument("entity", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst();
-                                KamsTweaks.getInstance().m_entityClaims.claims.put(e.getUniqueId(), new EntityClaims.EntityClaim(player));
-                            }
-                            return Command.SINGLE_SUCCESS;
-                        }).requires(ctx -> ctx.getSender().getName().equals("km7dev"))
-                ).requires(ctx -> ctx.getSender().getName().equals("km7dev"));
-        commands.registrar().register(command.build());
+        
     }
 
     @EventHandler(priority = EventPriority.HIGH)
