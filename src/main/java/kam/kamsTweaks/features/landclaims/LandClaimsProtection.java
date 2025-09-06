@@ -545,6 +545,77 @@ public class LandClaimsProtection implements Listener {
     }
 
     @EventHandler
+    public void onSponge(SpongeAbsorbEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        List<BlockState> toProtect = new ArrayList<>();
+        for (BlockState blockstate : e.getBlocks()) {
+            Block block = blockstate.getBlock();
+            LandClaims.Claim claim = lc.getClaim(block.getLocation());
+            if (!lc.hasPermission(null, claim, LandClaims.ClaimPermission.BLOCKS)) {
+                toProtect.add(blockstate);
+            }
+        }
+        var blocks = e.getBlocks();
+        blocks.removeAll(toProtect);
+    }
+
+    @EventHandler
+    public void onBonemeal(BlockFertilizeEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        Player player = e.getPlayer();
+        LandClaims.Claim claim = lc.getClaim(e.getBlock().getLocation());
+        List<String> who = new ArrayList<>();
+        // boolean bypass = player.hasPermission("kamstweaks.landclaims.bypass");
+        if (!lc.hasPermission(player, claim, LandClaims.ClaimPermission.BLOCKS)) {
+            var a = claim.m_owner == null ? "the server"
+                    : (claim.m_owner.getName() == null || claim.m_owner.getName().isEmpty())
+                    ? "Unknown player"
+                    : claim.m_owner.getName();
+            who.add(a);
+            e.setCancelled(true);
+            e.getBlock().getState().update(true, false);
+        }
+        // funnily enough, setCancelled doesn't affect blocks in this list
+
+        List<BlockState> toProtect = new ArrayList<>();
+        for (BlockState blockstate : e.getBlocks()) {
+            Block block = blockstate.getBlock();
+            LandClaims.Claim claim2 = lc.getClaim(block.getLocation());
+            if (claim2 == null)
+                continue;
+            if (!lc.hasPermission(player, claim2, LandClaims.ClaimPermission.BLOCKS)) {
+                var a = claim2.m_owner == null ? "the server"
+                        : (claim2.m_owner.getName() == null || claim2.m_owner.getName().isEmpty())
+                        ? "Unknown player"
+                        : claim2.m_owner.getName();
+                if (!who.contains(a))
+                    who.add(a);
+                toProtect.add(blockstate);
+            }
+        }
+
+        StringBuilder plrs = new StringBuilder();
+        for (var plr : who) {
+            if (plr.isEmpty())
+                continue;
+            if (!plrs.isEmpty())
+                plrs.append(", ");
+            plrs.append(plr);
+        }
+//        // if (bypass && !plrs.isEmpty()) {
+//        //     message(player, plrs.toString(), true);
+//        //     return;
+//        // }
+        if (player != null && !plrs.isEmpty()) message(player, plrs.toString(), false);
+        e.getBlocks().removeAll(toProtect);
+//        for (var s : toProtect) {
+//            s.update(true, false);
+//        }
+    }
+
+    @EventHandler
     public void onFlow(BlockFromToEvent event) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
@@ -864,7 +935,8 @@ public class LandClaimsProtection implements Listener {
                         : claim.m_owner.getName() == null ? "Unknown player" : claim.m_owner.getName(), false);
                 event.setCancelled(true);
             }
-        } if (event.getEntity() instanceof FallingBlock fb) {
+        }
+        if (event.getEntity() instanceof FallingBlock fb) {
             if (event.getTo() == Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
                 fb.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING, LandClaims.serializeLocation(fb.getLocation()));
             } else {
