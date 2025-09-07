@@ -24,6 +24,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.text.BreakIterator;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,22 +32,37 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Names implements Listener {
     Map<UUID, Pair<String, List<TextColor>>> data = new HashMap<>();
 
-    public Component gradientName(String name, List<TextColor> colors) {
+    private static List<String> splitGraphemes(String input) {
+        BreakIterator iter = BreakIterator.getCharacterInstance(Locale.ROOT);
+        iter.setText(input);
+        List<String> result = new ArrayList<>();
+        int start = iter.first();
+        for (int end = iter.next(); end != BreakIterator.DONE; start = end, end = iter.next()) {
+            result.add(input.substring(start, end));
+        }
+        return result;
+    }
+
+    public static Component gradientName(String name, List<TextColor> colors) {
         Component res = Component.empty();
         if (name.isEmpty() || colors.isEmpty()) {
             return Component.text(name);
         }
-        int totalSteps = name.length() - 1;
+
+        List<String> graphemes = splitGraphemes(name);
+
+        int totalSteps = graphemes.size() - 1;
         int totalColors = colors.size() - 1;
-        for (int i = 0; i < name.length(); i++) {
-            double progress = (double) i / totalSteps;
+
+        for (int i = 0; i < graphemes.size(); i++) {
+            double progress = totalSteps == 0 ? 0 : (double) i / totalSteps;
             TextColor color = getTextColor(colors, progress, totalColors);
-            res = res.append(Component.text(name.charAt(i)).color(color));
+            res = res.append(Component.text(graphemes.get(i)).color(color));
         }
         return res;
     }
 
-    private static @NotNull TextColor getTextColor(List<TextColor> colors, double progress, int totalColors) {
+    private static TextColor getTextColor(List<TextColor> colors, double progress, int totalColors) {
         double scaled = progress * totalColors;
         int idx = (int) Math.floor(scaled);
         double blend = scaled - idx;
