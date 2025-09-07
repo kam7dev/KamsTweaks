@@ -1,5 +1,8 @@
 package kam.kamsTweaks.features.landclaims;
 
+import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
+import github.scarsz.discordsrv.util.TimeUtil;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ItemManager.ItemType;
@@ -290,14 +293,13 @@ public class LandClaimGui implements Listener {
                 if (ui.claim == null) {
                     player.sendMessage(Component.text("This area isn't claimed.").color(NamedTextColor.RED));
                 } else if (ui.claim.m_owner == null || !ui.claim.m_owner.getUniqueId().equals(player.getUniqueId())) {
-                    // admin abuse made me remove :/
-                    /* if (player.hasPermission("kamstweaks.landclaims.manageall")) {
+                    if (player.hasPermission("kamstweaks.landclaims.manageall")) {
                           ui.confirmType = "admin-bypass";
                           confirmScreen.changeTitle(Component.text("Edit " + (ui.claim.m_owner == null ? "The Server" : ui.claim.m_owner.getName() == null ? "Unknown" : ui.claim.m_owner.getName()) + "'s claim?"));
                           ui.changeToScreen(confirmScreen);
-                      } else { */
+                      } else {
                         player.sendMessage(Component.text("You don't own this area.").color(NamedTextColor.RED));
-                    //}
+                    }
                 } else {
                     ui.changeToScreen(editScreen);
                 }
@@ -416,11 +418,21 @@ public class LandClaimGui implements Listener {
             }, 6);
 
             editScreen.addItem(createGuiItem(Material.LEVER, Component.text("Change Default Permission").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Change what all players can do by default.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) {
+                    player.sendMessage(Component.text("You don't own this claim, you cannot change permissions.").color(NamedTextColor.RED));
+                    ui.close(false);
+                    return;
+                }
                 permScreen.changeTitle(Component.text("Edit Default Permissions"));
                 ui.editing = null;
                 ui.changeToScreen(permScreen);
             }, 3);
             editScreen.addItem(createGuiItem(Material.PLAYER_HEAD, Component.text("Manage Player Permissions").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Give different players specific permissions.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) {
+                    player.sendMessage(Component.text("You don't own this claim, you cannot change permissions.").color(NamedTextColor.RED));
+                    ui.close(false);
+                    return;
+                }
                 playerScreen.clearItems();
                 playerScreen.changeSize(getOfflinePlayers().length);
                 int i = 0;
@@ -463,37 +475,37 @@ public class LandClaimGui implements Listener {
 
             editScreen.addItem(createGuiItem(Material.BARRIER, Component.text("Delete Claim").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), Component.text("Delete this claim.").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 ui.confirmType = "delete";
-                confirmScreen.changeTitle(Component.text("Delete this claim?"));
+                confirmScreen.changeTitle(Component.text("Delete this claim?" + (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()) ? " It will be announced to the server." : "")));
                 ui.changeToScreen(confirmScreen);
             }, 5);
 
             permScreen.addItem(createGuiItem(Material.RED_CONCRETE, Component.text("No block interaction").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
-                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
-                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to none");
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) return;
+//                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to none");
                 if (ui.editing == null) ui.claim.m_default = LandClaims.ClaimPermission.NONE;
                 else ui.claim.m_perms.put(ui.editing, LandClaims.ClaimPermission.NONE);
                 ui.close(false);
             }, 1);
 
             permScreen.addItem(createGuiItem(Material.ORANGE_CONCRETE, Component.text("Doors only").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
-                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
-                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to doors");
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) return;
+//                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to doors");
                 if (ui.editing == null) ui.claim.m_default = LandClaims.ClaimPermission.DOORS;
                 else ui.claim.m_perms.put(ui.editing, LandClaims.ClaimPermission.DOORS);
                 ui.close(false);
             }, 3);
 
             permScreen.addItem(createGuiItem(Material.PURPLE_CONCRETE, Component.text("Interact with blocks").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
-                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
-                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to interactions");
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) return;
+//                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to interactions");
                 if (ui.editing == null) ui.claim.m_default = LandClaims.ClaimPermission.INTERACT;
                 else ui.claim.m_perms.put(ui.editing, LandClaims.ClaimPermission.INTERACT);
                 ui.close(false);
             }, 5);
 
             permScreen.addItem(createGuiItem(Material.CYAN_CONCRETE, Component.text("Break/place any blocks").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
-                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId()))
-                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to blocks");
+                if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) return;
+//                    Logger.warn("[Claim management] " + player.getName() + " just edited " + ui.claim.m_owner.getName() + "'s claim: " + (ui.editing == null ? "Default" : ui.editing.getName() + "'s") + " permissions from " + ui.claim.m_default + " to blocks");
                 if (ui.editing == null) ui.claim.m_default = LandClaims.ClaimPermission.BLOCKS;
                 else ui.claim.m_perms.put(ui.editing, LandClaims.ClaimPermission.BLOCKS);
                 ui.close(false);
@@ -502,7 +514,16 @@ public class LandClaimGui implements Listener {
             confirmScreen.addItem(createGuiItem(Material.GREEN_CONCRETE, Component.text("Yes").color(NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false)), (player, inv, item) -> {
                 switch (ui.confirmType) {
                     case "delete" -> {
-                        if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) Logger.warn("[Claim management] " + player.getName() + " just deleted " + ui.claim.m_owner.getName() + "'s claim.");
+                        if (!ui.claim.m_owner.getUniqueId().equals(ui.player.getUniqueId())) {
+                            Logger.warn("[Claim management] " + player.getName() + " just deleted " + ui.claim.m_owner.getName() + "'s claim!");
+                            getServer().sendMessage(Component.text("[Land Claims] " + player.getName() + " just deleted " + ui.claim.m_owner.getName() + "'s claim!"));
+                                TextChannel channel = DiscordSRV.getPlugin().getDestinationTextChannelForGameChannelName("global");
+                                if (channel != null) {
+                                    channel.sendMessage("<t:" + System.currentTimeMillis() / 1000 + ":R> <@!1254538148755537971> @everyone @everyone @everyone @everyone @everyone @everyone ‼️" + (ui.claim.m_owner.getName() != null ? ui.claim.m_owner.getName() : "the server").toUpperCase() + "'S CLAIM WAS DELETED BY " + player.getName().toUpperCase() + ", SEND A PIPEBOMB TO THEIR DOORSTEP! ‼️ ⚠️ 🔥").queue();
+                                } else {
+                                    Logger.error("Could not find channel for DiscordSRV!");
+                                }
+                        }
                         lc.claims.remove(ui.claim);
                         ui.close(false);
                     }

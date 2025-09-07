@@ -52,3 +52,9 @@ permissions:
   kamstweaks.configure:
     default: op
     description: "Change settings for KamsTweaks"
+
+dependencies:
+  server:
+    DiscordSRV: {
+      required: true
+    }

@@ -16,10 +16,12 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven { url 'https://nexus.scarsz.me/content/groups/public/' }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    compileOnly 'com.discordsrv:discordsrv:1.28.0'
 }
 
 tasks {
