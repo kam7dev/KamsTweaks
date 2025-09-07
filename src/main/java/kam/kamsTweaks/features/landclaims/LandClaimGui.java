@@ -519,7 +519,7 @@ public class LandClaimGui implements Listener {
                             getServer().sendMessage(Component.text("[Land Claims] " + player.getName() + " just deleted " + ui.claim.m_owner.getName() + "'s claim!"));
                                 TextChannel channel = DiscordSRV.getPlugin().getDestinationTextChannelForGameChannelName("global");
                                 if (channel != null) {
-                                    channel.sendMessage("<t:" + System.currentTimeMillis() / 1000 + ":R> <@!1254538148755537971> @everyone @everyone @everyone @everyone @everyone @everyone ‼️" + (ui.claim.m_owner.getName() != null ? ui.claim.m_owner.getName() : "the server").toUpperCase() + "'S CLAIM WAS DELETED BY " + player.getName().toUpperCase() + ", SEND A PIPEBOMB TO THEIR DOORSTEP! ‼️ ⚠️ 🔥").queue();
+                                    channel.sendMessage("<t:" + System.currentTimeMillis() / 1000 + ":R> <@!1254538148755537971> ‼️" + (ui.claim.m_owner.getName() != null ? ui.claim.m_owner.getName() : "the server").toUpperCase() + "'S CLAIM WAS DELETED BY " + player.getName().toUpperCase() + ", SEND A PIPEBOMB TO THEIR DOORSTEP! ‼️ ⚠️ 🔥").queue();
                                 } else {
                                     Logger.error("Could not find channel for DiscordSRV!");
                                 }
