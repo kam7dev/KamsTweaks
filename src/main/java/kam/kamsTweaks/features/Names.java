@@ -84,8 +84,7 @@ public class Names implements Listener {
                 try {
                     UUID owner = UUID.fromString(key);
 
-                    String rawNick = config.getString("names." + key + ".nick", Bukkit.getServer().getOfflinePlayer(owner).getName());
-                    String nick = (rawNick == null ? "" : rawNick.replaceAll("[^a-zA-Z0-9\\-_. ,()\\[\\]{}:;\"'!?+&$~`/]", ""));
+                    String nick = config.getString("names." + key + ".nick", Bukkit.getServer().getOfflinePlayer(owner).getName());
 
                     List<TextColor> colors = new ArrayList<>();
                     List<String> gradientList = config.getStringList("names." + key + ".gradient");
@@ -107,10 +106,10 @@ public class Names implements Listener {
                         }
                     }
 
-                    if (nick.isBlank() && colors.isEmpty()) continue;
+                    if ((nick == null || nick.isBlank()) && colors.isEmpty()) continue;
 
                     Pair<String, List<TextColor>> info = new Pair<>(
-                            nick.isBlank() ? Bukkit.getServer().getOfflinePlayer(owner).getName() : nick,
+                            (nick == null || nick.isBlank()) ? Bukkit.getServer().getOfflinePlayer(owner).getName() : nick,
                             colors
                     );
                     data.put(owner, info);
@@ -175,10 +174,6 @@ public class Names implements Listener {
                         }
                         if (name.isBlank()) {
                             sender.sendPlainMessage("Nicknames cannot be empty.");
-                            return Command.SINGLE_SUCCESS;
-                        }
-                        if (!name.matches("[a-zA-Z0-9\\-_. ,()\\[\\]{}:;\"'!?+&$~`/]*")) {
-                            sender.sendPlainMessage("Nicknames can only contain letters, numbers, spaces, and some symbols.");
                             return Command.SINGLE_SUCCESS;
                         }
                         AtomicBoolean ret = new AtomicBoolean(false);
