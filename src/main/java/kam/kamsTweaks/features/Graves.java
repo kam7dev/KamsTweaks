@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.ConfigCommand;
@@ -66,7 +67,7 @@ public class Graves implements Listener {
                             if (grave.owner.equals(player)) {
                                 i.getAndIncrement();
                                 claimsMsg
-                                        .append("\nGrave ").append(i.get()).append(": ")
+                                        .append("\nGrave ").append(id).append(": ")
                                         .append(grave.location.getBlockX())
                                         .append(", ")
                                         .append(grave.location.getBlockY())
@@ -74,6 +75,11 @@ public class Graves implements Listener {
                                         .append(grave.location.getBlockZ())
                                         .append(" in ")
                                         .append(grave.location.getWorld().getName());
+                                if (grave.msLeft < 0) {
+                                    claimsMsg.append(" (expired)");
+                                } else {
+                                    claimsMsg.append(" (").append((int)grave.msLeft / 1000).append(" seconds left)");
+                                }
                             }
                         });
                         claimsMsg.insert(0, "You have " + i + " graves.");
@@ -82,7 +88,30 @@ public class Graves implements Listener {
                         sender.sendMessage("Only players can run this.");
                     }
                     return Command.SINGLE_SUCCESS;
-                }))
+                })).then(Commands.literal("recover").then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
+                    graves.forEach((id, grave) -> {
+                        if (grave.owner.getPlayer() == ctx.getSource().getSender() && grave.msLeft <= 0 && !grave.recovery) {
+                            builder.suggest(id);
+                        }
+                    });
+                    return builder.buildFuture();
+                }).executes(ctx -> {
+                    int id = ctx.getArgument("id", Integer.class);
+                    Grave grave = graves.getOrDefault(id, null);
+                    if (grave != null && grave.owner.getPlayer() == ctx.getSource().getSender() && !grave.recovery && grave.msLeft <= 0) {
+                        grave.recovery = true;
+                        grave.msLeft = 1000 * 60 * 10;
+                        grave.hasMessaged5 = false;
+                        grave.hasMessaged1 = false;
+                        grave.hasMessagedHalf = false;
+                        grave.hasMessagedExpire = false;
+                        ctx.getSource().getSender().sendMessage(Component.text("You have 10 minutes to recover your grave. After this, it will be gone permanently.").color(NamedTextColor.AQUA));
+                        grave.createStand();
+                        return Command.SINGLE_SUCCESS;
+                    }
+                    ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
+                    return Command.SINGLE_SUCCESS;
+                })))
                 .build());
     }
 
@@ -146,7 +175,7 @@ public class Graves implements Listener {
     void tp() {
         Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> {
             graves.forEach((id, grave) -> {
-                if (!grave.stand.getLocation().equals(grave.location)) {
+                if (grave.stand != null && !grave.stand.getLocation().equals(grave.location)) {
                     grave.stand.teleport(grave.location.clone().addRotation(90, 0).subtract(0, 1.4375, 0));
                 }
             });
@@ -181,7 +210,9 @@ public class Graves implements Listener {
                     grave.stand.remove();
                     grave.stand = null;
                 }
-                grave.createStand();
+                if (grave.msLeft > 0) {
+                    grave.createStand();
+                }
             }
         });
     }
@@ -248,15 +279,35 @@ public class Graves implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
+        AtomicInteger expired = new AtomicInteger();
+        AtomicInteger unexpired = new AtomicInteger();
         graves.forEach((id, grave) -> {
             if (grave.owner.equals(e.getPlayer())) {
                 if (grave.stand != null) {
                     grave.stand.remove();
                     grave.stand = null;
                 }
-                grave.createStand();
+                if (grave.msLeft > 0) {
+                    grave.createStand();
+                    unexpired.addAndGet(1);
+                } else {
+                    expired.addAndGet(1);
+                }
             }
         });
+        if (expired.get() > 0 || unexpired.get() > 0){
+            var msg = Component.text("You have ");
+            if (expired.get() > 0) {
+                msg = msg.append(Component.text(expired.get() + " expired grave(s)"));
+                if (unexpired.get() > 0) {
+                    msg = msg.append(Component.text(" and "));
+                }
+            }
+            if (unexpired.get() > 0) {
+                msg = msg.append(Component.text(unexpired.get() + " active grave(s)"));
+            }
+            e.getPlayer().sendMessage(msg.append(Component.text(".")).color(NamedTextColor.GOLD));
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -368,16 +419,50 @@ public class Graves implements Listener {
         int experience;
         int id;
         long msLeft = 1000 * 60 * 20; // 20 mins
+        boolean hasMessaged5 = false;
+        boolean hasMessaged1 = false;
+        boolean hasMessagedHalf = false;
+        boolean hasMessagedExpire = false;
+        boolean recovery = false;
 
         public void tick(long ms) {
             if (owner.isOnline()) {
                 this.msLeft -= ms;
                 if (msLeft <= 0) {
-                    Bukkit.getScheduler().runTask(KamsTweaks.getInstance(), () -> {
-                        // prevent exceptions
-                        graves.remove(this.id);
-                    });
-                    this.stand.remove();
+                    if (this.stand != null) {
+                        this.stand.remove();
+                        this.stand = null;
+                    }
+                    if (owner.getPlayer() != null && !hasMessagedExpire) {
+                        owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, .6f, 1.0f);
+                        owner.getPlayer().sendMessage(Component.text("Your grave (" + id + ") just expired.").color(NamedTextColor.RED));
+                        hasMessagedExpire = true;
+                    }
+                    if (recovery) {
+                        Bukkit.getScheduler().runTask(KamsTweaks.getInstance(), () -> graves.remove(this.id));
+                    }
+                } else {
+                    if (this.msLeft <= 1000 * 60 * 5 && !hasMessaged5) {
+                        hasMessaged5 = true;
+                        if (owner.getPlayer() != null) {
+                            owner.getPlayer().sendMessage(Component.text("Your grave expires in 5 minutes!").color(NamedTextColor.RED));
+                            owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.0f);
+                        }
+                    }
+                    if (this.msLeft <= 1000 * 60 && !hasMessaged1) {
+                        hasMessaged1 = true;
+                        if (owner.getPlayer() != null) {
+                            owner.getPlayer().sendMessage(Component.text("Your grave expires in 1 minute!").color(NamedTextColor.RED));
+                            owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.2f);
+                        }
+                    }
+                    if (this.msLeft <= 1000 * 30 && !hasMessagedHalf) {
+                        hasMessagedHalf = true;
+                        if (owner.getPlayer() != null) {
+                            owner.getPlayer().sendMessage(Component.text("Your grave expires in 30 seconds!").color(NamedTextColor.RED));
+                            owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, .5f, .5f);
+                        }
+                    }
                 }
             }
         }
@@ -418,7 +503,9 @@ public class Graves implements Listener {
             this.id = highest;
             highest++;
             if (owner.isOnline()) {
-                createStand();
+                if (msLeft > 0) {
+                    createStand();
+                }
             }
         }
 
@@ -466,6 +553,10 @@ public class Graves implements Listener {
             config.set("graves." + id + ".owner", grave.owner.getUniqueId().toString());
             config.set("graves." + id + ".xp", grave.experience);
             config.set("graves." + id + ".timeleft", grave.msLeft);
+            config.set("graves." + id + ".m5", grave.hasMessaged5);
+            config.set("graves." + id + ".m1", grave.hasMessaged1);
+            config.set("graves." + id + ".m30", grave.hasMessagedHalf);
+            config.set("graves." + id + ".me", grave.hasMessagedExpire);
         });
     }
 
@@ -486,12 +577,18 @@ public class Graves implements Listener {
                     Inventory inv = Inventories.loadInventory(Component.text("Grave"), 45, config, "graves." + key);
                     long timeLeft = config.getLong("graves." + key + ".timeleft", 1000 * 60 * 20);
                     Grave grave = new Grave(owner == null ? null : getServer().getOfflinePlayer(owner), inv, location, xp, timeLeft);
+                    grave.hasMessaged5 = config.getBoolean("graves." + key + ".m5", false);
+                    grave.hasMessaged1 = config.getBoolean("graves." + key + ".m1", false);
+                    grave.hasMessagedHalf = config.getBoolean("graves." + key + ".m30", false);
+                    grave.hasMessagedExpire = config.getBoolean("graves." + key + ".me", false);
                     int id = Integer.parseInt(key);
                     if (highest < id) highest = id;
                     grave.id = id;
                     graves.put(id, grave);
                     if (grave.owner.isOnline()) {
-                        grave.createStand();
+                        if (grave.msLeft > 0) {
+                            grave.createStand();
+                        }
                     }
                 } catch (Exception e) {
                     Logger.warn(e.getMessage());
