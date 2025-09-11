@@ -70,6 +70,7 @@ public class ConfigCommand {
                 KamsTweaks.getInstance().getConfig().set(configId, val);
                 KamsTweaks.getInstance().saveConfig();
                 if (callback != null) callback.accept(val);
+                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
         }
@@ -103,6 +104,7 @@ public class ConfigCommand {
                 KamsTweaks.getInstance().getConfig().set(configId, val);
                 KamsTweaks.getInstance().saveConfig();
                 if (callback != null) callback.accept(val);
+                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
         }
@@ -137,6 +139,7 @@ public class ConfigCommand {
                 KamsTweaks.getInstance().saveConfig();
                 ctx.getSource().getSender().sendMessage("Set value of " + name + " to " + val + ".");
                 if (callback != null) callback.accept(val);
+                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
         }

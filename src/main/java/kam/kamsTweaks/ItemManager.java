@@ -16,14 +16,6 @@ import java.util.Map;
 public class ItemManager {
     public enum ItemType {
         CLAIMER,
-
-        // Troll items to be removed via TrollRemover
-        FLYING_BOOTS,
-        BLINDNESS_WAND,
-        LEVITATION_SWORD,
-        KNOCKBACK_STICK,
-        FAKE_TNT,
-        PORTAL_BOW
     }
 
     private static Map<ItemType, ItemStack> items;
@@ -62,12 +54,6 @@ public class ItemManager {
                 if (data == null) return null;
                 return switch (data) {
                     case "claimer" -> ItemType.CLAIMER;
-                    case "flying_boots" -> ItemType.FLYING_BOOTS;
-                    case "blindness_wand" -> ItemType.BLINDNESS_WAND;
-                    case "levitation_sword" -> ItemType.LEVITATION_SWORD;
-                    case "knockback_stick" -> ItemType.KNOCKBACK_STICK;
-                    case "fake_tnt" -> ItemType.FAKE_TNT;
-                    case "portal_bow" -> ItemType.PORTAL_BOW;
                     default -> null;
                 };
             }

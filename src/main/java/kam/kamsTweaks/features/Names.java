@@ -7,8 +7,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.ConfigCommand;
-import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.*;
 import kam.kamsTweaks.utils.Pair;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -19,9 +18,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.BreakIterator;
@@ -29,7 +25,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class Names implements Listener {
+public class Names extends Feature {
     Map<UUID, Pair<String, List<TextColor>>> data = new HashMap<>();
 
     private static List<String> splitGraphemes(String input) {
@@ -87,90 +83,18 @@ public class Names implements Listener {
         return gradientName(info.first, info.second);
     }
 
+    @Override
     public void setup() {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("nicknames.enabled", "nicknames.enabled", true, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("name-colors.enabled", "name-colors.enabled", true, "kamstweaks.configure"));
     }
 
-    public void loadNames() {
-        data.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
-        if (config.contains("names")) {
-            for (String key : Objects.requireNonNull(config.getConfigurationSection("names")).getKeys(false)) {
-                try {
-                    UUID owner = UUID.fromString(key);
+    @Override
+    public void shutdown() {
 
-                    String nick = config.getString("names." + key + ".nick", Bukkit.getServer().getOfflinePlayer(owner).getName());
-
-                    List<TextColor> colors = new ArrayList<>();
-                    List<String> gradientList = config.getStringList("names." + key + ".gradient");
-                    if (!gradientList.isEmpty()) {
-                        for (String s : gradientList) {
-                            if (!s.startsWith("#")) s = "#" + s;
-                            TextColor col = TextColor.fromHexString(s);
-                            if (col != null) colors.add(col);
-                        }
-                    } else {
-                        String colorStr = config.getString("names." + key + ".color");
-                        if (colorStr != null) {
-                            TextColor color = NamedTextColor.NAMES.value(colorStr.toLowerCase(Locale.ROOT));
-                            if (color == null) {
-                                if (!colorStr.startsWith("#")) colorStr = "#" + colorStr;
-                                color = TextColor.fromHexString(colorStr);
-                            }
-                            if (color != null) colors.add(color);
-                        }
-                    }
-
-                    if ((nick == null || nick.isBlank()) && colors.isEmpty()) continue;
-
-                    Pair<String, List<TextColor>> info = new Pair<>(
-                            (nick == null || nick.isBlank()) ? Bukkit.getServer().getOfflinePlayer(owner).getName() : nick,
-                            colors
-                    );
-                    data.put(owner, info);
-                } catch (Exception e) {
-                    Logger.warn("Failed to load name for " + key + ": " + e.getMessage());
-                }
-            }
-        }
     }
 
-    public void saveNames() {
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
-        config.set("names", null);
-
-        data.forEach((uuid, pair) -> {
-            String path = "names." + uuid;
-            if (pair.first != null) config.set(path + ".nick", pair.first);
-            if (pair.second != null && !pair.second.isEmpty()) {
-                if (pair.second.size() == 1) {
-                    TextColor c = pair.second.getFirst();
-                    if (c instanceof NamedTextColor named) {
-                        config.set(path + ".color", named.toString());
-                    } else {
-                        config.set(path + ".color", String.format("#%06X", c.value()));
-                    }
-                } else {
-                    List<String> hexList = new ArrayList<>();
-                    for (TextColor c : pair.second) {
-                        hexList.add(String.format("#%06X", c.value()));
-                    }
-                    config.set(path + ".gradient", hexList);
-                }
-            }
-        });
-    }
-
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        if (!data.containsKey(event.getPlayer().getUniqueId())) return;
-        var info = data.get(event.getPlayer().getUniqueId());
-        Component comp = renderName(info);
-        event.getPlayer().displayName(comp);
-        event.getPlayer().playerListName(comp);
-    }
-
+    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> nickCmd = Commands.literal("nick")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.names.nick"))
@@ -443,5 +367,77 @@ public class Names implements Listener {
                     return Command.SINGLE_SUCCESS;
                 }));
         commands.registrar().register(whoIsCmd.build());
+    }
+
+    @Override
+    public void loadData() {
+        data.clear();
+        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        if (config.contains("names")) {
+            for (String key : Objects.requireNonNull(config.getConfigurationSection("names")).getKeys(false)) {
+                try {
+                    UUID owner = UUID.fromString(key);
+
+                    String nick = config.getString("names." + key + ".nick", Bukkit.getServer().getOfflinePlayer(owner).getName());
+
+                    List<TextColor> colors = new ArrayList<>();
+                    List<String> gradientList = config.getStringList("names." + key + ".gradient");
+                    if (!gradientList.isEmpty()) {
+                        for (String s : gradientList) {
+                            if (!s.startsWith("#")) s = "#" + s;
+                            TextColor col = TextColor.fromHexString(s);
+                            if (col != null) colors.add(col);
+                        }
+                    } else {
+                        String colorStr = config.getString("names." + key + ".color");
+                        if (colorStr != null) {
+                            TextColor color = NamedTextColor.NAMES.value(colorStr.toLowerCase(Locale.ROOT));
+                            if (color == null) {
+                                if (!colorStr.startsWith("#")) colorStr = "#" + colorStr;
+                                color = TextColor.fromHexString(colorStr);
+                            }
+                            if (color != null) colors.add(color);
+                        }
+                    }
+
+                    if ((nick == null || nick.isBlank()) && colors.isEmpty()) continue;
+
+                    Pair<String, List<TextColor>> info = new Pair<>(
+                            (nick == null || nick.isBlank()) ? Bukkit.getServer().getOfflinePlayer(owner).getName() : nick,
+                            colors
+                    );
+                    data.put(owner, info);
+                } catch (Exception e) {
+                    Logger.warn("Failed to load name for " + key + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    @Override
+    public void saveData() {
+        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        config.set("names", null);
+
+        data.forEach((uuid, pair) -> {
+            String path = "names." + uuid;
+            if (pair.first != null) config.set(path + ".nick", pair.first);
+            if (pair.second != null && !pair.second.isEmpty()) {
+                if (pair.second.size() == 1) {
+                    TextColor c = pair.second.getFirst();
+                    if (c instanceof NamedTextColor named) {
+                        config.set(path + ".color", named.toString());
+                    } else {
+                        config.set(path + ".color", String.format("#%06X", c.value()));
+                    }
+                } else {
+                    List<String> hexList = new ArrayList<>();
+                    for (TextColor c : pair.second) {
+                        hexList.add(String.format("#%06X", c.value()));
+                    }
+                    config.set(path + ".gradient", hexList);
+                }
+            }
+        });
     }
 }
