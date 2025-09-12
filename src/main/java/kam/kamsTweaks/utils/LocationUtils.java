@@ -2,19 +2,23 @@ package kam.kamsTweaks.utils;
 
 import org.bukkit.Location;
 
+import java.util.UUID;
+
+import static org.bukkit.Bukkit.getServer;
+
 public class LocationUtils {
-    public static boolean inBounds(Location target, Location bound1, Location bound2) {
-        if (bound1.getWorld() != target.getWorld()) return false;
+    public static String serializeBlockPos(Location loc) {
+        return loc.getWorld() == null ? "" : loc.getWorld().getUID() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ();
+    }
 
-        int minX = Math.min(bound1.getBlockX(), bound2.getBlockX());
-        int maxX = Math.max(bound1.getBlockX(), bound2.getBlockX());
-        int minY = Math.min(bound1.getBlockY(), bound2.getBlockY());
-        int maxY = Math.max(bound1.getBlockY(), bound2.getBlockY());
-        int minZ = Math.min(bound1.getBlockZ(), bound2.getBlockZ());
-        int maxZ = Math.max(bound1.getBlockZ(), bound2.getBlockZ());
-
-        return target.getBlockX() >= minX && target.getBlockX() <= maxX
-                && target.getBlockY() >= minY && target.getBlockY() <= maxY
-                && target.getBlockZ() >= minZ && target.getBlockZ() <= maxZ;
+    public static Location deserializeBlockPos(String s) {
+        String[] parts = s.split(",");
+        UUID worldUuid = UUID.fromString(parts[0]);
+        return new Location(
+                getServer().getWorld(worldUuid),
+                Double.parseDouble(parts[1]),
+                Double.parseDouble(parts[2]),
+                Double.parseDouble(parts[3])
+        );
     }
 }
