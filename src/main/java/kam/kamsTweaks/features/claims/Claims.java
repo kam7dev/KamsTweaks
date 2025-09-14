@@ -1,11 +1,9 @@
 package kam.kamsTweaks.features.claims;
 
+import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
-import kam.kamsTweaks.ConfigCommand;
-import kam.kamsTweaks.Feature;
-import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.*;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -13,8 +11,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.util.Vector;
@@ -27,8 +27,11 @@ import java.util.*;
 public class Claims extends Feature {
     public ClaimProtections protections = new ClaimProtections();
     public ClaimsDialogGui dialogGui = new ClaimsDialogGui();
+
     public List<LandClaim> landClaims = new ArrayList<>();
     public Map<Player, LandClaim> currentlyClaiming = new HashMap<>();
+
+    public Map<UUID, EntityClaim> entityClaims = new HashMap<>();
 
     @Override
     public void setup() {
@@ -47,7 +50,22 @@ public class Claims extends Feature {
 
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-
+        commands.registrar().register(Commands.literal("claims")
+                .then(Commands.literal("get-tool")
+                        .executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
+                                sender.sendPlainMessage("Land claims are disabled.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            Entity executor = ctx.getSource().getExecutor();
+                            if (!(executor instanceof Player player)) {
+                                sender.sendPlainMessage("Only players get the claim tool.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
+                            return Command.SINGLE_SUCCESS;
+                        })).build());
     }
 
     private File claimsFile;
@@ -150,6 +168,8 @@ public class Claims extends Feature {
         public List<ClaimPermission> defaults = new ArrayList<>();
         @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         public boolean hasPermission(OfflinePlayer player, ClaimPermission perm) {
+            if (player == null) return defaults.contains(perm);
+            if (owner.equals(player.getPlayer())) return true;
             if (perms.containsKey(player)) {
                 var p = perms.get(player);
                 if (p.contains(ClaimPermission.DEFAULT)) {
@@ -241,6 +261,12 @@ public class Claims extends Feature {
             return location.getBlockX() >= minX && location.getBlockX() <= maxX
                     && location.getBlockY() >= minY && location.getBlockY() <= maxY
                     && location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
+        }
+    }
+
+    public static class EntityClaim extends Claim {
+        public EntityClaim(OfflinePlayer owner) {
+            super(owner);
         }
     }
 

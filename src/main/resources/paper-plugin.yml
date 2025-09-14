@@ -58,3 +58,6 @@ dependencies:
     DiscordSRV: {
       required: true
     }
+    ViaBackwards: {
+      required: true
+    }
