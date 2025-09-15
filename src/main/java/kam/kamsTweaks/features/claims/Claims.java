@@ -15,6 +15,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.util.Vector;
@@ -78,6 +79,18 @@ public class Claims extends Feature {
             KamsTweaks.getInstance().saveResource("claims.yml", false);
         }
         claimsConfig = YamlConfiguration.loadConfiguration(claimsFile);
+    }
+
+    public boolean isClaimable(Entity e) {
+        if (!(e instanceof Mob)) return false;
+        switch(e.getType()) {
+            case ELDER_GUARDIAN, ENDER_DRAGON, WITHER, WARDEN -> {
+                return false;
+            }
+            default -> {
+                return true;
+            }
+        }
     }
 
     @Override
@@ -268,6 +281,11 @@ public class Claims extends Feature {
         public EntityClaim(OfflinePlayer owner) {
             super(owner);
         }
+        public boolean canAggro = false;
+    }
+
+    public @Nullable EntityClaim getEntityClaim(Entity entity) {
+        return entityClaims.getOrDefault(entity.getUniqueId(), null);
     }
 
     public @Nullable LandClaim getLandClaim(Location where) {

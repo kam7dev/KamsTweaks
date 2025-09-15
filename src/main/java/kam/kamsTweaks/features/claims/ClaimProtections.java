@@ -890,6 +890,29 @@ public class ClaimProtections implements Listener {
     }
 
     @EventHandler
+    public void onTarget(EntityTargetEvent event) {
+//        if (event.getTarget() instanceof Player player) {
+        if (event.getTarget() == null) return;
+        if (event.getEntity() instanceof Mob entity) {
+            var claim = claims.getEntityClaim(entity);
+            if (claim != null) {
+                if (!claim.canAggro) event.setCancelled(true);
+            }
+        }
+//        }
+    }
+
+    @EventHandler
+    public void onBurn(EntityCombustEvent event) {
+        if (event.getEntity() instanceof Mob entity) {
+            var claim = claims.getEntityClaim(entity);
+            if (claim != null) {
+                if (!claim.canAggro) event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
     public void entityDie(EntityDeathEvent e) {
         claims.entityClaims.remove(e.getEntity().getUniqueId());
     }
