@@ -55,9 +55,9 @@ permissions:
 
 dependencies:
   server:
-    DiscordSRV: {
-      required: true
-    }
-    ViaBackwards: {
-      required: true
-    }
+#    DiscordSRV: {
+#      required: true
+#    }
+#    ViaBackwards: {
+#      required: true
+#    }
