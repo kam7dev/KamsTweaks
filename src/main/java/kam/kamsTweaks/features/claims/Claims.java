@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -33,6 +34,8 @@ public class Claims extends Feature {
     public Map<Player, LandClaim> currentlyClaiming = new HashMap<>();
 
     public Map<UUID, EntityClaim> entityClaims = new HashMap<>();
+    // for stuff like dragon fight
+    public Map<World, Integer> disabledClaims = new HashMap<>();
 
     @Override
     public void setup() {
@@ -42,6 +45,19 @@ public class Claims extends Feature {
         protections.setup(this);
         dialogGui.setup(this);
         Bukkit.getServer().getPluginManager().registerEvents(protections, KamsTweaks.getInstance());
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), () -> {
+            for (var world : disabledClaims.keySet()) {
+                var val = disabledClaims.get(world) - 1;
+                if (val == 0) {
+                    disabledClaims.remove(world);
+                    for (var plr : world.getPlayers()) {
+                        plr.sendMessage(Component.text("Claims are now re-enabled in this dimension.").color(NamedTextColor.GREEN));
+                    }
+                } else {
+                    disabledClaims.put(world, val);
+                }
+            }
+        }, 20, 20);
     }
 
     @Override
@@ -289,6 +305,11 @@ public class Claims extends Feature {
     }
 
     public @Nullable LandClaim getLandClaim(Location where) {
+        return getLandClaim(where, false);
+    }
+
+    public @Nullable LandClaim getLandClaim(Location where, boolean ignoresWorldDisable) {
+        if (!ignoresWorldDisable && ((where.getWorld().getEnderDragonBattle() != null && where.getWorld().getEnderDragonBattle().getEnderDragon() != null) || disabledClaims.containsKey(where.getWorld()))) return null;
         LandClaim ret = null;
         for (var claim : landClaims) {
             if (claim.inBounds(where)) {
@@ -359,7 +380,7 @@ public class Claims extends Feature {
                     event.getPlayer().sendMessage(Component.text("Territory claimed.").color(NamedTextColor.GREEN));
                 }
             } else {
-                dialogGui.openLCPage(event.getPlayer(), getLandClaim(event.getClickedBlock().getLocation()));
+                dialogGui.openLCPage(event.getPlayer(), getLandClaim(event.getClickedBlock().getLocation(), true));
             }
         }
     }

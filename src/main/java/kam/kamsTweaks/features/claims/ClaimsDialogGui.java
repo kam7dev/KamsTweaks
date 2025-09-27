@@ -159,7 +159,7 @@ public class ClaimsDialogGui {
     }
 
     public void openLCPage(Player who) {
-        Claims.LandClaim in = claims.getLandClaim(who.getLocation());
+        Claims.LandClaim in = claims.getLandClaim(who.getLocation(), true);
         openLCPage(who, in);
     }
 

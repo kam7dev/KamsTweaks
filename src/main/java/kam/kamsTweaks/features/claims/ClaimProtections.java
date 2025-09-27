@@ -1,7 +1,9 @@
 package kam.kamsTweaks.features.claims;
 
+import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -65,7 +67,7 @@ public class ClaimProtections implements Listener {
                 if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                     return true;
                 assert e.getClickedBlock() != null;
-                Claims.LandClaim res = claims.getLandClaim(e.getClickedBlock().getLocation());
+                Claims.LandClaim res = claims.getLandClaim(e.getClickedBlock().getLocation(), true);
                 if (res == null) e.getPlayer().sendMessage(Component.text("This land isn't claimed."));
                 else if (res.owner == null)
                     e.getPlayer().sendMessage(Component.text("This claim is owned by the server."));
@@ -92,7 +94,7 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
 
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK || e.getAction() == Action.LEFT_CLICK_BLOCK) {
             assert e.getClickedBlock() != null;
             //noinspection deprecation
             if (e.getClickedBlock().getType().isInteractable()) {
@@ -161,6 +163,7 @@ public class ClaimProtections implements Listener {
                 name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
             }
             message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
+            e.setCancelled(true);
         }
     }
 
@@ -738,7 +741,7 @@ public class ClaimProtections implements Listener {
             return;
         if (event.getAction() != Action.PHYSICAL)
             return;
-        if (event.getClickedBlock() == null || event.getClickedBlock().getType() != org.bukkit.Material.FARMLAND)
+        if (event.getClickedBlock() == null)
             return;
         Player player = event.getPlayer();
         Claims.LandClaim claim = claims.getLandClaim(event.getClickedBlock().getLocation());
@@ -839,7 +842,6 @@ public class ClaimProtections implements Listener {
                 claims.dialogGui.openECPage(e.getPlayer(), e.getRightClicked());
                 return;
             }
-            if (c instanceof Monster) return;
             var claim = claims.entityClaims.get(c.getUniqueId());
             if (claim == null) return;
             if (!claim.hasPermission(e.getPlayer(), Claims.ClaimPermission.INTERACT_ENTITY)) {
@@ -883,7 +885,6 @@ public class ClaimProtections implements Listener {
                     if (claim.hasPermission(null, Claims.ClaimPermission.DAMAGE_ENTITY)) return;
                     event.setCancelled(true);
                 }
-                break;
             }
             default -> event.setCancelled(true);
         }
@@ -891,7 +892,6 @@ public class ClaimProtections implements Listener {
 
     @EventHandler
     public void onTarget(EntityTargetEvent event) {
-//        if (event.getTarget() instanceof Player player) {
         if (event.getTarget() == null) return;
         if (event.getEntity() instanceof Mob entity) {
             var claim = claims.getEntityClaim(entity);
@@ -899,7 +899,6 @@ public class ClaimProtections implements Listener {
                 if (!claim.canAggro) event.setCancelled(true);
             }
         }
-//        }
     }
 
     @EventHandler
@@ -915,5 +914,27 @@ public class ClaimProtections implements Listener {
     @EventHandler
     public void entityDie(EntityDeathEvent e) {
         claims.entityClaims.remove(e.getEntity().getUniqueId());
+        if (e.getEntity() instanceof EnderDragon dragon) {
+            claims.disabledClaims.put(e.getEntity().getWorld(), 5 * 60);
+        }
+    }
+
+    @EventHandler
+    public void onFish(PlayerFishEvent e) {
+        if (e.getCaught() instanceof Mob mob) {
+            var claim = claims.getEntityClaim(mob);
+            if (claim == null || !claim.hasPermission(e.getPlayer(), Claims.ClaimPermission.INTERACT_ENTITY)) e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onJoinWorld(EntityAddToWorldEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            if (event.getWorld().getEnderDragonBattle() != null && event.getWorld().getEnderDragonBattle().getEnderDragon() != null) {
+                player.sendMessage(Component.text("Claims are currently disabled in this world due to an ongoing dragon fight. They will be re-enabled 5 minutes after the fight.").color(NamedTextColor.YELLOW));
+            } else if (claims.disabledClaims.containsKey(event.getWorld())) {
+                player.sendMessage(Component.text("Claims are currently disabled in this world due to a recent dragon fight. They will be re-enabled in " + claims.disabledClaims.get(event.getWorld()) + " seconds.").color(NamedTextColor.YELLOW));
+            }
+        }
     }
 }

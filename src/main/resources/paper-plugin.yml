@@ -53,6 +53,10 @@ permissions:
     default: op
     description: "Change settings for KamsTweaks"
 
+  kamstweaks.save:
+    default: op
+    description: "Save data for KamsTweaks"
+
 dependencies:
   server:
 #    DiscordSRV: {

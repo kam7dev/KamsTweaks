@@ -3,6 +3,7 @@ package kam.kamsTweaks;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.claims.Claims;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -49,15 +50,21 @@ public final class KamsTweaks extends JavaPlugin {
             }
             ConfigCommand.registerCommand(commands);
         });
+
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, this::save, 300L, 300);
     }
 
     @Override
     public void onDisable() {
-        for (var feature : features) {
-            feature.saveData();
-        }
+        save();
         for (var feature : features) {
             feature.shutdown();
+        }
+    }
+
+    public void save() {
+        for (var feature : features) {
+            feature.saveData();
         }
         saveConfigs();
     }
