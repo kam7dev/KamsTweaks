@@ -372,6 +372,8 @@ public class Claims extends Feature {
                                 }
                                 event.getPlayer().sendMessage(Component.text("This land intersects a claim by ").append(name, Component.text(".")).color(NamedTextColor.RED));
                                 return;
+                            } else if (other.owner.getUniqueId().equals(event.getPlayer().getUniqueId()) && other.priority >= claim.priority) {
+                                claim.priority = other.priority + 1;
                             }
                         }
                     }

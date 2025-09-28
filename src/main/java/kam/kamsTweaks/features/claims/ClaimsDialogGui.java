@@ -1,25 +1,18 @@
 package kam.kamsTweaks.features.claims;
 
-import com.viaversion.viabackwards.protocol.v1_21_6to1_21_5.Protocol1_21_6To1_21_5;
-import com.viaversion.viabackwards.protocol.v1_21_6to1_21_5.data.Button;
-import com.viaversion.viaversion.api.connection.UserConnection;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
-import io.papermc.paper.registry.data.dialog.input.BooleanDialogInput;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.entity.*;
@@ -29,9 +22,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import com.viaversion.viabackwards.protocol.v1_21_6to1_21_5.provider.ChestDialogViewProvider;
-
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -264,18 +254,23 @@ public class ClaimsDialogGui {
         }
     }
 
-    public void openEditClaimPermissionsPage(Player who, Claims.LandClaim claim, OfflinePlayer target) {
+    public void openEditLCPermissionsPage(Player who, Claims.LandClaim claim, OfflinePlayer target) {
+        List<DialogInput> btns = new ArrayList<>(List.of(
+                DialogInput.singleOption("interactions", Component.text("Interactions"), List.of(
+                        SingleOptionDialogInput.OptionEntry.create("none", Component.text("None").color(NamedTextColor.RED), !claim.hasPermission(target, Claims.ClaimPermission.INTERACT_DOOR) && !claim.hasPermission(target, Claims.ClaimPermission.INTERACT_BLOCK)),
+                        SingleOptionDialogInput.OptionEntry.create("doors", Component.text("Doors").color(NamedTextColor.GOLD), claim.hasPermission(target, Claims.ClaimPermission.INTERACT_DOOR) && !claim.hasPermission(target, Claims.ClaimPermission.INTERACT_BLOCK)),
+                        SingleOptionDialogInput.OptionEntry.create("all", Component.text("Blocks").color(NamedTextColor.DARK_PURPLE), claim.hasPermission(target, Claims.ClaimPermission.INTERACT_BLOCK))
+                )).build(),
+                DialogInput.bool("place", Component.text("Block Place"), claim.hasPermission(target, Claims.ClaimPermission.BLOCK_PLACE), "on", "off"),
+                DialogInput.bool("break", Component.text("Block Break"), claim.hasPermission(target, Claims.ClaimPermission.BLOCK_BREAK), "on", "off")
+        ));
+        if (target != null) {
+            btns.add(DialogInput.bool("default", Component.text("Follow Default Permission (overwrites other options)"), claim.hasPermission(target, Claims.ClaimPermission.DEFAULT), "on", "off"));
+        }
+
         who.showDialog(Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(Component.text("Edit ").append(target == null ? Component.text("Default Permissions") : Component.text("Permissions for ").append(target.getPlayer() == null ? Component.text(target.getName() == null ? "Unknown Player" : target.getName()) : target.getPlayer().displayName())))
-                        .inputs(List.of(
-                                DialogInput.singleOption("interactions", Component.text("Interactions"), List.of(
-                                        SingleOptionDialogInput.OptionEntry.create("none", Component.text("None").color(NamedTextColor.RED), !claim.hasPermission(target, Claims.ClaimPermission.INTERACT_DOOR) && !claim.hasPermission(target, Claims.ClaimPermission.INTERACT_BLOCK)),
-                                        SingleOptionDialogInput.OptionEntry.create("doors", Component.text("Doors").color(NamedTextColor.GOLD), claim.hasPermission(target, Claims.ClaimPermission.INTERACT_DOOR) && !claim.hasPermission(target, Claims.ClaimPermission.INTERACT_BLOCK)),
-                                        SingleOptionDialogInput.OptionEntry.create("all", Component.text("Blocks").color(NamedTextColor.DARK_PURPLE), claim.hasPermission(target, Claims.ClaimPermission.INTERACT_BLOCK))
-                                )).build(),
-                                DialogInput.bool("place", Component.text("Block Place"), claim.hasPermission(target, Claims.ClaimPermission.BLOCK_PLACE), "on", "off"),
-                                DialogInput.bool("break", Component.text("Block Break"), claim.hasPermission(target, Claims.ClaimPermission.BLOCK_BREAK), "on", "off")
-                        )).build()
+                        .inputs(btns).build()
                 )
                 .type(DialogType.confirmation(
                         ActionButton.create(
@@ -283,19 +278,29 @@ public class ClaimsDialogGui {
                                 Component.text("Click to confirm your changes."),
                                 100,
                                 DialogAction.customClick((view, audience) -> {
-                                    List<Claims.ClaimPermission> list = target == null ? claim.defaults : claim.perms.get(target);
+                                    List<Claims.ClaimPermission> list;
+                                    if (target == null) {
+                                        list = claim.defaults;
+                                    } else {
+                                        if (!claim.perms.containsKey(target)) claim.perms.put(target, new ArrayList<>());
+                                        list = claim.perms.get(target);
+                                    }
                                     list.clear();
-                                    if (Boolean.TRUE.equals(view.getBoolean("place"))) {
-                                        list.add(Claims.ClaimPermission.BLOCK_PLACE);
-                                    }
-                                    if (Boolean.TRUE.equals(view.getBoolean("break"))) {
-                                        list.add(Claims.ClaimPermission.BLOCK_BREAK);
-                                    }
-                                    if (view.getText("interactions") != null) {
-                                        switch(view.getText("interactions")) {
-                                            case "doors" -> list.add(Claims.ClaimPermission.INTERACT_DOOR);
-                                            case "all" -> list.add(Claims.ClaimPermission.INTERACT_BLOCK);
-                                            case null, default -> {}
+                                    if (Boolean.TRUE.equals(view.getBoolean("default"))) {
+                                        list.add(Claims.ClaimPermission.DEFAULT);
+                                    } else {
+                                        if (Boolean.TRUE.equals(view.getBoolean("place"))) {
+                                            list.add(Claims.ClaimPermission.BLOCK_PLACE);
+                                        }
+                                        if (Boolean.TRUE.equals(view.getBoolean("break"))) {
+                                            list.add(Claims.ClaimPermission.BLOCK_BREAK);
+                                        }
+                                        if (view.getText("interactions") != null) {
+                                            switch(view.getText("interactions")) {
+                                                case "doors" -> list.add(Claims.ClaimPermission.INTERACT_DOOR);
+                                                case "all" -> list.add(Claims.ClaimPermission.INTERACT_BLOCK);
+                                                case null, default -> {}
+                                            }
                                         }
                                     }
                                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
@@ -310,27 +315,86 @@ public class ClaimsDialogGui {
         ));
     }
 
+    void openLCSelectTargetPage(Player who, Claims.LandClaim claim) {
+        List<ActionButton> plrs = new ArrayList<>();
+        for (var plr : Bukkit.getServer().getOfflinePlayers()) {
+            if (plr == claim.owner || plr.getName() == null) continue;
+            Component comp = Component.text(plr.getName());
+            if (plr.getPlayer() != null) {
+                comp = plr.getPlayer().displayName().append(Component.text("("), comp, Component.text(")"));
+            }
+            plrs.add(ActionButton.builder(comp).action(DialogAction.customClick((view, audience) -> {
+                if (audience instanceof Player player) {
+                    openEditLCPermissionsPage(who, claim, plr);
+                }
+            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+        }
+        Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Select a player to edit")).build()).type(DialogType.multiAction(plrs, null, 3)));
+        who.showDialog(dialog);
+    }
+
 
     public void openEditLandClaimPage(Player who, Claims.LandClaim claim) {
         List<ActionButton> btns = new ArrayList<>();
         btns.add(ActionButton.builder(Component.text("Default Permissions")).action(DialogAction.customClick((view, audience) -> {
             if (audience instanceof Player player) {
-                openEditClaimPermissionsPage(who, claim, null);
+                openEditLCPermissionsPage(who, claim, null);
             }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
         btns.add(ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> {
             if (audience instanceof Player player) {
-
+                openLCSelectTargetPage(who, claim);
             }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
         btns.add(ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> {
             if (audience instanceof Player player) {
-
+                openEditLCSettingsPage(who, claim);
+            }
+        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+        btns.add(ActionButton.builder(Component.text("Delete Claim")).action(DialogAction.customClick((view, audience) -> {
+            if (audience instanceof Player player) {
+                audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete your land claim (").append(Component.text(claim.name).color(NamedTextColor.GOLD), Component.text(")?"))).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete them!")).action(DialogAction.customClick((view2, audience2) -> {
+                    claims.landClaims.remove(claim);
+                    player.sendMessage(Component.text("Successfully deleted your land claim."));
+                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No, don't delete them!")).build()))));
             }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Land Claims")).build()).type(DialogType.multiAction(btns, null, 1)));
         who.showDialog(dialog);
+    }
+
+    public void openEditLCSettingsPage(Player who, Claims.LandClaim claim) {
+        who.showDialog(Dialog.create(builder -> builder.empty()
+                .base(DialogBase.builder(Component.text("Edit Claim Settings"))
+                        .inputs(List.of(
+                                DialogInput.text("name", Component.text("Name")).initial(claim.name).build(),
+                                DialogInput.numberRange("prio", Component.text("Priority"), -100, 100).step(1f).initial(claim.priority.floatValue()).build()
+//                                DialogInput.bool("place", Component.text("Block Place"), claim., "on", "off")
+                        )).build()
+                )
+                .type(DialogType.confirmation(
+                        ActionButton.create(
+                                Component.text("Confirm", NamedTextColor.GREEN),
+                                Component.text("Click to confirm your changes."),
+                                100,
+                                DialogAction.customClick((view, audience) -> {
+                                    claim.name = view.getText("name");
+                                    // had to do a variable cause intellij wasnt doing assert right 💀
+                                    // https://cdn.discordapp.com/attachments/1357431808421007410/1421905060543336539/image.png
+                                    var prioF = view.getFloat("prio");
+                                    assert prioF != null;
+                                    claim.priority = prioF.intValue();
+                                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
+                        ),
+                        ActionButton.create(
+                                Component.text("Discard", NamedTextColor.RED),
+                                Component.text("Click to discard your changes."),
+                                100,
+                                null
+                        )
+                ))
+        ));
     }
 }
