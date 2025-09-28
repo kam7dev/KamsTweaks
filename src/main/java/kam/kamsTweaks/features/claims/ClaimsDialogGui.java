@@ -10,6 +10,7 @@ import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.BooleanDialogInput;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
@@ -264,51 +265,49 @@ public class ClaimsDialogGui {
     }
 
     public void openEditClaimPermissionsPage(Player who, Claims.LandClaim claim, OfflinePlayer target) {
-        Dialog.create(builder -> builder.empty()
-                .base(DialogBase.builder(Component.text("Configure your new experience value"))
+        who.showDialog(Dialog.create(builder -> builder.empty()
+                .base(DialogBase.builder(Component.text("Edit ").append(target == null ? Component.text("Default Permissions") : Component.text("Permissions for ").append(target.getPlayer() == null ? Component.text(target.getName() == null ? "Unknown Player" : target.getName()) : target.getPlayer().displayName())))
                         .inputs(List.of(
-                                DialogInput.numberRange(
-                                                "level",
-                                                Component.text("Level", NamedTextColor.GREEN),
-                                                0f, 100f
-                                        )
-                                        .step(1f)
-                                        .initial(0f)
-                                        .width(300)
-                                        .build(),
-
-                                DialogInput.numberRange(
-                                                "experience",
-                                                Component.text("Experience", NamedTextColor.GREEN),
-                                                0f, 100f
-                                        )
-                                        .step(1f)
-                                        .initial(0f)
-                                        .labelFormat("%s: %s percent to the next level")
-                                        .width(300)
-                                        .build()
-                        ))
-                        .build()
+                                DialogInput.singleOption("interactions", Component.text("Interactions"), List.of(
+                                        SingleOptionDialogInput.OptionEntry.create("none", Component.text("None").color(NamedTextColor.RED), !claim.hasPermission(target, Claims.ClaimPermission.INTERACT_DOOR) && !claim.hasPermission(target, Claims.ClaimPermission.INTERACT_BLOCK)),
+                                        SingleOptionDialogInput.OptionEntry.create("doors", Component.text("Doors").color(NamedTextColor.GOLD), claim.hasPermission(target, Claims.ClaimPermission.INTERACT_DOOR) && !claim.hasPermission(target, Claims.ClaimPermission.INTERACT_BLOCK)),
+                                        SingleOptionDialogInput.OptionEntry.create("all", Component.text("Blocks").color(NamedTextColor.DARK_PURPLE), claim.hasPermission(target, Claims.ClaimPermission.INTERACT_BLOCK))
+                                )).build(),
+                                DialogInput.bool("place", Component.text("Block Place"), claim.hasPermission(target, Claims.ClaimPermission.BLOCK_PLACE), "on", "off"),
+                                DialogInput.bool("break", Component.text("Block Break"), claim.hasPermission(target, Claims.ClaimPermission.BLOCK_BREAK), "on", "off")
+                        )).build()
                 )
                 .type(DialogType.confirmation(
                         ActionButton.create(
-                                Component.text("Confirm", TextColor.color(0xAEFFC1)),
-                                Component.text("Click to confirm your input."),
+                                Component.text("Confirm", NamedTextColor.GREEN),
+                                Component.text("Click to confirm your changes."),
                                 100,
-                                DialogAction.customClick(
-                                        Key.key("papermc:user_input/confirm"),
-                                        null
-                                )
+                                DialogAction.customClick((view, audience) -> {
+                                    List<Claims.ClaimPermission> list = target == null ? claim.defaults : claim.perms.get(target);
+                                    list.clear();
+                                    if (Boolean.TRUE.equals(view.getBoolean("place"))) {
+                                        list.add(Claims.ClaimPermission.BLOCK_PLACE);
+                                    }
+                                    if (Boolean.TRUE.equals(view.getBoolean("break"))) {
+                                        list.add(Claims.ClaimPermission.BLOCK_BREAK);
+                                    }
+                                    if (view.getText("interactions") != null) {
+                                        switch(view.getText("interactions")) {
+                                            case "doors" -> list.add(Claims.ClaimPermission.INTERACT_DOOR);
+                                            case "all" -> list.add(Claims.ClaimPermission.INTERACT_BLOCK);
+                                            case null, default -> {}
+                                        }
+                                    }
+                                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                         ),
                         ActionButton.create(
-                                Component.text("Discard", TextColor.color(0xFFA0B1)),
-                                Component.text("Click to discard your input."),
+                                Component.text("Discard", NamedTextColor.RED),
+                                Component.text("Click to discard your changes."),
                                 100,
-                                null // If we set the action to null, it doesn't do anything and closes the dialog
+                                null
                         )
                 ))
-        );
-
+        ));
     }
 
 

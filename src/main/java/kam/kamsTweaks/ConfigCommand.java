@@ -13,6 +13,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -156,6 +157,6 @@ public class ConfigCommand {
             KamsTweaks.getInstance().save();
             ctx.getSource().getSender().sendMessage(Component.text("Saved KamsTweaks.").color(NamedTextColor.GREEN));
             return Command.SINGLE_SUCCESS;
-        }).requires(source -> source.getSender().hasPermission("kamstweaks.save"))).build());
+        }).requires(source -> source.getSender().hasPermission("kamstweaks.save"))).build(), List.of("kt"));
     }
 }
