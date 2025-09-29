@@ -51,7 +51,7 @@ public final class KamsTweaks extends JavaPlugin {
             ConfigCommand.registerCommand(commands);
         });
 
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, this::save, 300L, 300);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, this::save, 20 * 60 * 5, 20 * 60 * 5);
     }
 
     @Override
@@ -67,6 +67,7 @@ public final class KamsTweaks extends JavaPlugin {
             feature.saveData();
         }
         saveConfigs();
+        Logger.info("Saved KamsTweaks.");
     }
 
     private File generalFile;

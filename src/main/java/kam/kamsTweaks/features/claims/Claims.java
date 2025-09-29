@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class Claims extends Feature {
@@ -203,7 +204,32 @@ public class Claims extends Feature {
 
     @Override
     public void saveData() {
+        setupFile();
+        claimsConfig.set("claims", null);
+        int i = 0;
+        for (LandClaim claim : landClaims) {
+            String path = "claims." + i;
+            if (claim.owner != null) claimsConfig.set(path + ".owner", claim.owner.getUniqueId().toString());
+            claimsConfig.set(path + ".corner1", LocationUtils.serializeBlockPos(claim.start));
+            claimsConfig.set(path + ".corner2", LocationUtils.serializeBlockPos(claim.end));
+            {
+                List<String> permList = new ArrayList<>();
+                claim.defaults.forEach(perm -> permList.add(perm.name()));
+                claimsConfig.set(path + ".defaults", permList);
+            }
+            claim.perms.forEach((player, perms) -> {
+                List<String> permList = new ArrayList<>();
+                perms.forEach(perm -> permList.add(perm.name()));
+                claimsConfig.set(path + ".permissions." + player.getUniqueId(), permList);
+            });
+            i++;
+        }
 
+        try {
+            claimsConfig.save(claimsFile);
+        } catch (IOException e) {
+            Logger.warn(e.getMessage());
+        }
     }
 
     public static class Claim {
