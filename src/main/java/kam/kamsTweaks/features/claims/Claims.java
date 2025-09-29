@@ -163,7 +163,7 @@ public class Claims extends Feature {
                         claim.defaults.add(ClaimPermission.INTERACT_DOOR);
                     }
 
-                    if (claimsConfig.contains("claims." + key + ".permissions") {
+                    if (claimsConfig.contains("claims." + key + ".permissions")) {
                         for (String uuid : Objects.requireNonNull(claimsConfig.getString("claims." + key + ".permissions")).getKeys(false)) {
                             List<ClaimPermission> perms = new ArrayList<>();
                             for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".defaults")).getKeys(false)) {
