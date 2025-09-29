@@ -25,7 +25,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("UnstableApiUsage")
+@SuppressWarnings({"UnstableApiUsage", "CodeBlock2Expr", "ExtractMethodRecommender"})
 public class ClaimsDialogGui {
     Claims claims = null;
 
@@ -43,34 +43,27 @@ public class ClaimsDialogGui {
         if (!claims.currentlyClaiming.containsKey(who)) {
             if (totalClaims < KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims")) {
                 btns.add(ActionButton.builder(Component.text("Create a Claim")).action(DialogAction.customClick((view, audience) -> {
-                    if (audience instanceof Player player) {
-                        player.sendMessage(Component.text("Right click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(")").color(NamedTextColor.GOLD)).color(NamedTextColor.GOLD));
-                        claims.currentlyClaiming.put(player, new Claims.LandClaim(player, null, null));
-                    }
+                        who.sendMessage(Component.text("Right click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(")").color(NamedTextColor.GOLD)).color(NamedTextColor.GOLD));
+                        claims.currentlyClaiming.put(who, new Claims.LandClaim(who, null, null));
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
             }
         } else {
             btns.add(ActionButton.builder(Component.text("Cancel Claiming")).action(DialogAction.customClick((view, audience) -> {
-                if (audience instanceof Player player) {
-                    player.sendMessage(Component.text("Cancelled claiming land.").color(NamedTextColor.RED));
-                    claims.currentlyClaiming.remove(player);
-                }
+                    who.sendMessage(Component.text("Cancelled claiming land.").color(NamedTextColor.RED));
+                    claims.currentlyClaiming.remove(who);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         }
         if (target != null) {
             btns.add(ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
-                if (audience instanceof Player player) {
-                    openEditLandClaimPage(player, target);
-                }
+                openEditLandClaimPage(who, target);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         }
         btns.add(ActionButton.builder(Component.text("View All Claims")).action(DialogAction.customClick((view, audience) -> {
-            if (audience instanceof Player player) {
-                player.sendMessage(Component.text("Nearby claims are being highlighted."));
+                who.sendMessage(Component.text("Nearby claims are being highlighted."));
                 for (Claims.LandClaim claim : claims.landClaims) {
-                    if (claim.start.getWorld() != player.getWorld()) continue;
+                    if (claim.start.getWorld() != who.getWorld()) continue;
                     Color c;
-                    if (claim.owner != null && claim.owner.getUniqueId().equals(player.getUniqueId())) {
+                    if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId())) {
                         c = Color.GREEN;
                     } else {
                         c = Color.YELLOW;
@@ -81,12 +74,12 @@ public class ClaimsDialogGui {
 //                                    case BLOCKS -> Color.AQUA;
 //                                };
                     }
-                    showArea(player, claim.start, claim.end, 1, 20 * 10, c);
+                    showArea(who, claim.start, claim.end, 1, 20 * 10, c);
                     Location l = new Location(claim.start.getWorld(), (claim.start.x() + claim.end.x()) / 2, (claim.start.y() + claim.end.y()) / 2, (claim.start.z() + claim.end.z()) / 2).add(.5, .5, .5);
-                    if (l.distance(player.getLocation()) > 100) continue;
-                    TextDisplay display = player.getWorld().spawn(l, TextDisplay.class, entity -> {
+                    if (l.distance(who.getLocation()) > 100) continue;
+                    TextDisplay display = who.getWorld().spawn(l, TextDisplay.class, entity -> {
                         String s;
-                        if (claim.owner != null && claim.owner.getUniqueId().equals(player.getUniqueId())) {
+                        if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId())) {
                             s = "You own this claim.";
                         } else {
                             s = "TODO";
@@ -101,7 +94,7 @@ public class ClaimsDialogGui {
                         entity.setBillboard(Display.Billboard.CENTER);
                         entity.setPersistent(false);
                         for (Player h : Bukkit.getOnlinePlayers()) {
-                            if (!h.equals(player)) {
+                            if (!h.equals(who)) {
                                 h.hideEntity(KamsTweaks.getInstance(), entity);
                             }
                         }
@@ -110,7 +103,7 @@ public class ClaimsDialogGui {
                         @EventHandler
                         public void onPlayerJoin(PlayerJoinEvent event) {
                             Player joining = event.getPlayer();
-                            if (!joining.equals(player)) {
+                            if (!joining.equals(who)) {
                                 Bukkit.getScheduler().runTask(KamsTweaks.getInstance(), () -> joining.hideEntity(KamsTweaks.getInstance(), display));
                             }
                         }
@@ -121,28 +114,23 @@ public class ClaimsDialogGui {
                         HandlerList.unregisterAll(joinListener);
                     }, 20 * 10);
                 }
-            }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         btns.add(ActionButton.builder(Component.text("List Your Claims")).action(DialogAction.customClick((view, audience) -> {
-            if (audience instanceof Player player) {
                 Component msg = Component.empty();
                 int i = 0;
                 for (Claims.LandClaim claim : claims.landClaims) {
-                    if (player.equals(claim.owner)) {
+                    if (who.equals(claim.owner)) {
                         i++;
                         msg = msg.append(Component.text("\n"), Component.text("("), Component.text(claim.priority).color(NamedTextColor.YELLOW), Component.text(") "), Component.text(claim.name).color(NamedTextColor.AQUA), Component.text(": "), Component.text(claim.start.getBlockX() + ", " + claim.start.getBlockY() + ", " + claim.start.getBlockZ()).color(NamedTextColor.GREEN), Component.text(" to "), Component.text(claim.end.getBlockX() + ", " + claim.end.getBlockY() + ", " + claim.end.getBlockZ()).color(NamedTextColor.GREEN), Component.text(" in "), Component.text(claim.start.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE));
                     }
                 }
 
-                player.sendMessage(Component.text("You have ").append(Component.text(i).color(NamedTextColor.GOLD), Component.text(" land claims"), Component.text("."), msg));
-            }
+                who.sendMessage(Component.text("You have ").append(Component.text(i).color(NamedTextColor.GOLD), Component.text(" land claims"), Component.text("."), msg));
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         btns.add(ActionButton.builder(Component.text("Delete ALL of Your Claims")).action(DialogAction.customClick((view, audience) -> {
             audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete ALL of your land claims?")).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete them!")).action(DialogAction.customClick((view2, audience2) -> {
-                if (audience instanceof Player player) {
-                    claims.landClaims.removeIf(claim -> claim.owner.equals(player));
-                    player.sendMessage(Component.text("Successfully deleted your land claims."));
-                }
+                    claims.landClaims.removeIf(claim -> claim.owner.equals(who));
+                    who.sendMessage(Component.text("Successfully deleted your land claims."));
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No, don't delete them!")).build()))));
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Land Claims")).build()).type(DialogType.multiAction(btns, null, 1)));
@@ -157,13 +145,9 @@ public class ClaimsDialogGui {
 
     public void openMainPage(Player who) {
         Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Claims")).build()).type(DialogType.multiAction(List.of(ActionButton.builder(Component.text("Land Claims")).action(DialogAction.customClick((view, audience) -> {
-            if (audience instanceof Player player) {
-                openLCPage(player);
-            }
+            openLCPage(who);
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("Entity Claims")).action(DialogAction.customClick((view, audience) -> {
-            if (audience instanceof Player player) {
-
-            }
+            // TODO: this
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build()), null, 1)));
         who.showDialog(dialog);
     }
@@ -224,22 +208,21 @@ public class ClaimsDialogGui {
 
     public void openCreateECPage(Player who, Entity entity) {
         Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Claim ").append(entity.name(), Component.text(" ("), Component.translatable(entity.getType().translationKey()), Component.text(")?"))).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes")).action(DialogAction.customClick((view, audience) -> {
-            if (audience instanceof Player player) {
                 if (claims.entityClaims.containsKey(entity.getUniqueId())) {
-                    player.sendMessage(Component.text("Sorry! This entity is already claimed!").color(NamedTextColor.RED));
+                    who.sendMessage(Component.text("Sorry! This entity is already claimed!").color(NamedTextColor.RED));
                 } else {
-                    claims.entityClaims.put(entity.getUniqueId(), new Claims.EntityClaim(player));
+                    claims.entityClaims.put(entity.getUniqueId(), new Claims.EntityClaim(who));
                     entity.setFireTicks(0);
                     ((Mob) entity).setTarget(null);
-                    player.sendMessage(Component.text("Claimed ").append(entity.name(), Component.text(" successfully.")));
+                    who.sendMessage(Component.text("Claimed ").append(entity.name(), Component.text(" successfully.")));
                 }
-            }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No")).build())));
         who.showDialog(dialog);
     }
 
+    @SuppressWarnings("unused") // while i havent finished it yet
     public void openECPage(Player who, Claims.EntityClaim target) {
-
+        // TODO: this
     }
 
     public void openECPage(Player who) {
@@ -324,9 +307,7 @@ public class ClaimsDialogGui {
                 comp = plr.getPlayer().displayName().append(Component.text("("), comp, Component.text(")"));
             }
             plrs.add(ActionButton.builder(comp).action(DialogAction.customClick((view, audience) -> {
-                if (audience instanceof Player player) {
-                    openEditLCPermissionsPage(who, claim, plr);
-                }
+                openEditLCPermissionsPage(who, claim, plr);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         }
         Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Select a player to edit")).build()).type(DialogType.multiAction(plrs, null, 3)));
@@ -337,29 +318,21 @@ public class ClaimsDialogGui {
     public void openEditLandClaimPage(Player who, Claims.LandClaim claim) {
         List<ActionButton> btns = new ArrayList<>();
         btns.add(ActionButton.builder(Component.text("Default Permissions")).action(DialogAction.customClick((view, audience) -> {
-            if (audience instanceof Player player) {
-                openEditLCPermissionsPage(who, claim, null);
-            }
+            openEditLCPermissionsPage(who, claim, null);
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
         btns.add(ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> {
-            if (audience instanceof Player player) {
-                openLCSelectTargetPage(who, claim);
-            }
+            openLCSelectTargetPage(who, claim);
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
         btns.add(ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> {
-            if (audience instanceof Player player) {
-                openEditLCSettingsPage(who, claim);
-            }
+            openEditLCSettingsPage(who, claim);
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         btns.add(ActionButton.builder(Component.text("Delete Claim")).action(DialogAction.customClick((view, audience) -> {
-            if (audience instanceof Player player) {
                 audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete your land claim (").append(Component.text(claim.name).color(NamedTextColor.GOLD), Component.text(")?"))).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete it!")).action(DialogAction.customClick((view2, audience2) -> {
                     claims.landClaims.remove(claim);
-                    player.sendMessage(Component.text("Successfully deleted your land claim."));
+                    who.sendMessage(Component.text("Successfully deleted your land claim."));
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No, don't delete it!")).build()))));
-            }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Land Claims")).build()).type(DialogType.multiAction(btns, null, 1)));
         who.showDialog(dialog);

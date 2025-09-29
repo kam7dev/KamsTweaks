@@ -3,7 +3,6 @@ package kam.kamsTweaks.features.claims;
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -504,7 +503,6 @@ public class ClaimProtections implements Listener {
         if (e.getEntity() instanceof TNTPrimed tnt && tnt.getSource() instanceof Player player) {
             List<Component> who = new ArrayList<>();
             List<Block> toProtect = new ArrayList<>();
-            Claims.LandClaim in = claims.getLandClaim(tnt.getLocation());
             for (Block block : e.blockList()) {
                 Claims.LandClaim to = claims.getLandClaim(block.getLocation());
                 if (to == null)
@@ -568,7 +566,6 @@ public class ClaimProtections implements Listener {
                 var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
                 if (placeIn != placeTo && !placeTo) {
                     toProtect.add(block);
-                    continue;
                 }
             }
         }
@@ -599,7 +596,6 @@ public class ClaimProtections implements Listener {
                 var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
                 if (placeIn != placeTo && !placeTo) {
                     toProtect.add(blockstate);
-                    continue;
                 }
             }
         }
@@ -624,7 +620,6 @@ public class ClaimProtections implements Listener {
             var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
             if (placeIn != placeTo && !placeTo) {
                 event.setCancelled(true);
-                return;
             }
         }
     }
@@ -650,7 +645,6 @@ public class ClaimProtections implements Listener {
             var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
             if (placeIn != placeTo && !placeTo) {
                 event.setCancelled(true);
-                return;
             }
         }
     }
@@ -1067,7 +1061,7 @@ public class ClaimProtections implements Listener {
     @EventHandler
     public void entityDie(EntityDeathEvent e) {
         claims.entityClaims.remove(e.getEntity().getUniqueId());
-        if (e.getEntity() instanceof EnderDragon dragon) {
+        if (e.getEntity() instanceof EnderDragon) {
             claims.disabledClaims.put(e.getEntity().getWorld(), 5 * 60);
         }
     }
