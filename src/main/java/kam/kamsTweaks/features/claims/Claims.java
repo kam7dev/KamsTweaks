@@ -109,6 +109,7 @@ public class Claims extends Feature {
         }
     }
 
+    // TODO: test this cause i coded it on gh web
     @Override
     public void loadData() {
         setupFile();
@@ -127,6 +128,12 @@ public class Claims extends Feature {
                     Location corner2 = LocationUtils.deserializeBlockPos(corner2Str);
                     LandClaim claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), corner1, corner2);
                     claim.defaults = new ArrayList<>();
+                    if (claimsConfig.contains("claims." + key + ".name") {
+                        claim.name = claimsConfig.getString("claims." + key + ".name");
+                    }
+                    if (claimsConfig.contains("claims." + key + ".prio") {
+                        claim.priority = claimsConfig.getInt("claims." + key + ".prio");
+                    }
                     try {
                         if (claimsConfig.contains("claims." + key + ".defaults")) {
                             for (String def : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".defaults")).getKeys(false)) {
@@ -156,7 +163,15 @@ public class Claims extends Feature {
                         claim.defaults.add(ClaimPermission.INTERACT_DOOR);
                     }
 
-                    if (claimsConfig.contains("claims." + key + ".perms")) {
+                    if (claimsConfig.contains("claims." + key + ".permissions") {
+                        for (String uuid : Objects.requireNonNull(claimsConfig.getString("claims." + key + ".permissions")).getKeys(false)) {
+                            List<ClaimPermission> perms = new ArrayList<>();
+                            for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".defaults")).getKeys(false)) {
+                                perms.add(ClaimPermission.valueOf(perm));
+                            }
+                            claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
+                        }
+                    } else if (claimsConfig.contains("claims." + key + ".perms")) {
                         for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".perms")).getKeys(false)) {
                             List<ClaimPermission> perms = new ArrayList<>();
                             switch(Objects.requireNonNull(claimsConfig.getString("claims." + key + ".perms." + uuid))) {
