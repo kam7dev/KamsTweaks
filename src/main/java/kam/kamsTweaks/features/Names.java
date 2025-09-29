@@ -18,6 +18,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.BreakIterator;
@@ -439,5 +441,15 @@ public class Names extends Feature {
                 }
             }
         });
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        var player = event.getPlayer();
+        Pair<String, List<TextColor>> info =
+                data.getOrDefault(player.getUniqueId(), new Pair<>(player.getName(), new ArrayList<>()));
+        Component comp = renderName(info);
+        player.displayName(comp);
+        player.playerListName(comp);
     }
 }

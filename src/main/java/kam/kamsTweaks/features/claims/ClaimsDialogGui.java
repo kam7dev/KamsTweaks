@@ -207,6 +207,10 @@ public class ClaimsDialogGui {
 
 
     public void openCreateECPage(Player who, Entity entity) {
+        if (!claims.isClaimable(entity)) {
+            who.sendMessage(Component.text("You can't claim this!").color(NamedTextColor.RED));
+            return;
+        }
         Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Claim ").append(entity.name(), Component.text(" ("), Component.translatable(entity.getType().translationKey()), Component.text(")?"))).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes")).action(DialogAction.customClick((view, audience) -> {
                 if (claims.entityClaims.containsKey(entity.getUniqueId())) {
                     who.sendMessage(Component.text("Sorry! This entity is already claimed!").color(NamedTextColor.RED));
