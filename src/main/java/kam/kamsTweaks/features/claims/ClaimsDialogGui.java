@@ -355,10 +355,10 @@ public class ClaimsDialogGui {
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         btns.add(ActionButton.builder(Component.text("Delete Claim")).action(DialogAction.customClick((view, audience) -> {
             if (audience instanceof Player player) {
-                audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete your land claim (").append(Component.text(claim.name).color(NamedTextColor.GOLD), Component.text(")?"))).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete them!")).action(DialogAction.customClick((view2, audience2) -> {
+                audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete your land claim (").append(Component.text(claim.name).color(NamedTextColor.GOLD), Component.text(")?"))).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete it!")).action(DialogAction.customClick((view2, audience2) -> {
                     claims.landClaims.remove(claim);
                     player.sendMessage(Component.text("Successfully deleted your land claim."));
-                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No, don't delete them!")).build()))));
+                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No, don't delete it!")).build()))));
             }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Land Claims")).build()).type(DialogType.multiAction(btns, null, 1)));

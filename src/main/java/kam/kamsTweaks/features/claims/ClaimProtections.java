@@ -52,7 +52,7 @@ public class ClaimProtections implements Listener {
         if (hasMessaged.contains(player.getUniqueId()))
             return;
         hasMessaged.add(player.getUniqueId());
-        player.sendMessage(message);
+        player.sendActionBar(message);
     }
 
     boolean useClaimTool(PlayerInteractEvent e) {
@@ -182,6 +182,7 @@ public class ClaimProtections implements Listener {
             } else {
                 name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
             }
+            e.setCancelled(true);
             message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
         }
     }
@@ -200,6 +201,7 @@ public class ClaimProtections implements Listener {
             } else {
                 name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
             }
+            e.setCancelled(true);
             message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
         }
     }
@@ -208,10 +210,10 @@ public class ClaimProtections implements Listener {
     public void onDispenser(BlockDispenseEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
-        Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getRelative(((Directional) e.getBlock().getBlockData()).getFacing()).getLocation());
-        Claims.LandClaim other = claims.getLandClaim(e.getBlock().getLocation());
-        if (claim == null) return;
-        if (!claim.hasPermission(other != null ? other.owner : null, Claims.ClaimPermission.BLOCK_PLACE)) {
+        Claims.LandClaim to = claims.getLandClaim(e.getBlock().getRelative(((Directional) e.getBlock().getBlockData()).getFacing()).getLocation());
+        Claims.LandClaim in = claims.getLandClaim(e.getBlock().getLocation());
+        if (to == null) return;
+        if (!to.hasPermission(in != null ? in.owner : null, Claims.ClaimPermission.BLOCK_PLACE)) {
             String lowered = e.getItem().getType().toString().toLowerCase();
             if (lowered.contains("bucket") || lowered.contains("shulker")) {
                 e.setCancelled(true);
@@ -223,11 +225,12 @@ public class ClaimProtections implements Listener {
                 }
             }
         } else {
+
             // claim in claims check
-            if (other != null) {
-                var to = claim.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
-                var in = other.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
-                if (in != to && !to) {
+            if (in != null) {
+                var placeTo = to.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                if (placeIn != placeTo && !placeTo) {
                     String lowered = e.getItem().getType().toString().toLowerCase();
                     if (lowered.contains("bucket") || lowered.contains("shulker")) {
                         e.setCancelled(true);
@@ -248,21 +251,21 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Block tree = event.getLocation().getBlock();
-        Claims.LandClaim claim = claims.getLandClaim(tree.getLocation());
+        Claims.LandClaim in = claims.getLandClaim(tree.getLocation());
         for (BlockState state : event.getBlocks()) {
             var block = state.getBlock();
-            Claims.LandClaim in = claims.getLandClaim(block.getLocation());
-            if (in != null && !in.hasPermission(claim == null ? null : claim.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+            Claims.LandClaim to = claims.getLandClaim(block.getLocation());
+            if (to == null) continue;
+            if (!to.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
                 event.setCancelled(true);
                 return;
             }
-            // TODO: test
-            // claim in claims check
-            if (in != null && claim != null && in != claim) {
-                boolean to = claim.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
-                boolean inside = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
 
-                if (inside != to && !to) {
+            // claim in claims check
+            if (in != null) {
+                var placeTo = to.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                if (placeIn != placeTo && !placeTo) {
                     event.setCancelled(true);
                     return;
                 }
@@ -275,14 +278,14 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Player player = e.getPlayer();
-        Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
+        Claims.LandClaim in = claims.getLandClaim(e.getBlock().getLocation());
         List<Component> who = new ArrayList<>();
-        if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
+        if (in != null && !in.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
             Component name;
-            if (claim.owner.isOnline()) {
-                name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
+            if (in.owner.isOnline()) {
+                name = Objects.requireNonNull(in.owner.getPlayer()).displayName();
             } else {
-                name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
+                name = Component.text(in.owner != null ? Objects.requireNonNull(in.owner.getName()) : "the server").color(NamedTextColor.GOLD);
             }
             who.add(name);
             e.setCancelled(true);
@@ -293,36 +296,19 @@ public class ClaimProtections implements Listener {
         List<BlockState> toProtect = new ArrayList<>();
         for (BlockState blockstate : e.getBlocks()) {
             Block block = blockstate.getBlock();
-            Claims.LandClaim claim2 = claims.getLandClaim(block.getLocation());
-            if (claim2 == null)
+            Claims.LandClaim to = claims.getLandClaim(block.getLocation());
+            if (to == null)
                 continue;
-            if (!claim2.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
+            if (!to.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
                 Component name;
-                if (claim2.owner.isOnline()) {
-                    name = Objects.requireNonNull(claim2.owner.getPlayer()).displayName();
+                if (to.owner.isOnline()) {
+                    name = Objects.requireNonNull(to.owner.getPlayer()).displayName();
                 } else {
-                    name = Component.text(claim2.owner != null ? Objects.requireNonNull(claim2.owner.getName()) : "the server").color(NamedTextColor.GOLD);
+                    name = Component.text(to.owner != null ? Objects.requireNonNull(to.owner.getName()) : "the server").color(NamedTextColor.GOLD);
                 }
                 if (!who.contains(name))
                     who.add(name);
                 toProtect.add(blockstate);
-            }
-            // TODO: test
-            // claim in claims check
-            if (claim != null && claim2 != claim) {
-                boolean to = claim.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
-                boolean inside = claim2.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
-                if (inside != to && !to) {
-                    Component name;
-                    if (claim2.owner != null && claim2.owner.isOnline()) {
-                        name = Objects.requireNonNull(claim2.owner.getPlayer()).displayName();
-                    } else {
-                        name = Component.text(claim2.owner != null ? Objects.requireNonNull(claim2.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                    }
-                    if (!who.contains(name))
-                        who.add(name);
-                    toProtect.add(blockstate);
-                }
             }
         }
 
@@ -518,39 +504,21 @@ public class ClaimProtections implements Listener {
         if (e.getEntity() instanceof TNTPrimed tnt && tnt.getSource() instanceof Player player) {
             List<Component> who = new ArrayList<>();
             List<Block> toProtect = new ArrayList<>();
+            Claims.LandClaim in = claims.getLandClaim(tnt.getLocation());
             for (Block block : e.blockList()) {
-                Claims.LandClaim claim = claims.getLandClaim(block.getLocation());
-                Claims.LandClaim origin = claims.getLandClaim(tnt.getLocation());
-                if (claim == null)
+                Claims.LandClaim to = claims.getLandClaim(block.getLocation());
+                if (to == null)
                     continue;
-                if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
+                if (!to.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
                     Component name;
-                    if (claim.owner != null && claim.owner.isOnline()) {
-                        name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
+                    if (to.owner != null && to.owner.isOnline()) {
+                        name = Objects.requireNonNull(to.owner.getPlayer()).displayName();
                     } else {
-                        name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
+                        name = Component.text(to.owner != null ? Objects.requireNonNull(to.owner.getName()) : "the server").color(NamedTextColor.GOLD);
                     }
                     if (!who.contains(name))
                         who.add(name);
                     toProtect.add(block);
-                }
-                // TODO: test
-                // claim in claims check
-                if (origin != null && origin != claim) {
-                    boolean from = origin.defaults.contains(Claims.ClaimPermission.BLOCK_BREAK);
-                    boolean into = claim.defaults.contains(Claims.ClaimPermission.BLOCK_BREAK);
-                    if (into != from && !from) {
-                        Component name;
-                        if (claim.owner != null && claim.owner.isOnline()) {
-                            name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                        } else {
-                            name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server")
-                                    .color(NamedTextColor.GOLD);
-                        }
-                        if (!who.contains(name))
-                            who.add(name);
-                        toProtect.add(block);
-                    }
                 }
             }
             Component plrs = Component.empty();
@@ -568,8 +536,8 @@ public class ClaimProtections implements Listener {
         } else {
             List<Block> toProtect = new ArrayList<>();
             for (Block block : e.blockList()) {
-                Claims.LandClaim claim = claims.getLandClaim(block.getLocation());
-                if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK)) {
+                Claims.LandClaim to = claims.getLandClaim(block.getLocation());
+                if (to != null && !to.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK)) {
                     toProtect.add(block);
                 }
             }
@@ -585,10 +553,23 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         List<Block> toProtect = new ArrayList<>();
+        Claims.LandClaim in = claims.getLandClaim(e.getBlock().getLocation());
         for (Block block : e.blockList()) {
-            Claims.LandClaim claim = claims.getLandClaim(block.getLocation());
-            if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK)) {
+            Claims.LandClaim to = claims.getLandClaim(block.getLocation());
+            if (to == null) continue;
+            if (!to.hasPermission(in != null ? in.owner : null, Claims.ClaimPermission.BLOCK_BREAK)) {
                 toProtect.add(block);
+                continue;
+            }
+
+            // claim in claims check
+            if (in != null) {
+                var placeTo = to.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                if (placeIn != placeTo && !placeTo) {
+                    toProtect.add(block);
+                    continue;
+                }
             }
         }
         e.blockList().removeAll(toProtect);
@@ -597,18 +578,29 @@ public class ClaimProtections implements Listener {
         }
     }
 
-    // TODO: continue adding claim in claim check thingies
     @EventHandler
     public void onSponge(org.bukkit.event.block.SpongeAbsorbEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         List<BlockState> toProtect = new ArrayList<>();
-        Claims.LandClaim origin = claims.getLandClaim(e.getBlock().getLocation());
+        Claims.LandClaim in = claims.getLandClaim(e.getBlock().getLocation());
         for (BlockState blockstate : e.getBlocks()) {
             Block block = blockstate.getBlock();
-            Claims.LandClaim claim = claims.getLandClaim(block.getLocation());
-            if (claim != null && !claim.hasPermission(origin == null ? null : origin.owner, Claims.ClaimPermission.BLOCK_BREAK)) {
+            Claims.LandClaim to = claims.getLandClaim(block.getLocation());
+            if (to == null) continue;
+            if (!to.hasPermission(in != null ? in.owner : null, Claims.ClaimPermission.BLOCK_BREAK)) {
                 toProtect.add(blockstate);
+                continue;
+            }
+
+            // claim in claims check
+            if (in != null) {
+                var placeTo = to.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                if (placeIn != placeTo && !placeTo) {
+                    toProtect.add(blockstate);
+                    continue;
+                }
             }
         }
         e.getBlocks().removeAll(toProtect);
@@ -618,10 +610,22 @@ public class ClaimProtections implements Listener {
     public void onFlow(org.bukkit.event.block.BlockFromToEvent event) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
-        Claims.LandClaim in = claims.getLandClaim(event.getToBlock().getLocation());
-        Claims.LandClaim to = claims.getLandClaim(event.getBlock().getLocation());
-        if (in != null && !in.hasPermission(to == null ? null : to.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+        Claims.LandClaim to = claims.getLandClaim(event.getToBlock().getLocation());
+        Claims.LandClaim in = claims.getLandClaim(event.getBlock().getLocation());
+        if (to == null) return;
+        if (!to.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
             event.setCancelled(true);
+            return;
+        }
+
+        // claim in claims check
+        if (in != null) {
+            var placeTo = to.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+            var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+            if (placeIn != placeTo && !placeTo) {
+                event.setCancelled(true);
+                return;
+            }
         }
     }
 
@@ -634,41 +638,62 @@ public class ClaimProtections implements Listener {
             in = claims.getLandClaim(event.getIgnitingBlock().getLocation());
         }
         Claims.LandClaim to = claims.getLandClaim(event.getBlock().getLocation());
-        if (to != null && !to.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+        if (to == null) return;
+        if (!to.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
             event.setCancelled(true);
+            return;
+        }
+
+        // claim in claims check
+        if (in != null) {
+            var placeTo = to.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+            var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+            if (placeIn != placeTo && !placeTo) {
+                event.setCancelled(true);
+                return;
+            }
         }
     }
 
     @EventHandler
     public void onIgnite(org.bukkit.event.block.BlockIgniteEvent event) {
+        Claims.LandClaim to = claims.getLandClaim(event.getBlock().getLocation());
         switch (event.getCause()) {
             case LAVA, SPREAD -> {
                 if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                     return;
-                Claims.LandClaim in = claims.getLandClaim(event.getBlock().getLocation());
-                Claims.LandClaim to = event.getIgnitingBlock() != null ? claims.getLandClaim(event.getIgnitingBlock().getLocation()) : null;
-                if (in != null && !in.hasPermission(to == null ? null : to.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+                Claims.LandClaim in = event.getIgnitingBlock() != null ? claims.getLandClaim(event.getIgnitingBlock().getLocation()) : null;
+                if (to == null) return;
+                if (!to.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
                     event.setCancelled(true);
+                    return;
+                }
+
+                // claim in claims check
+                if (in != null) {
+                    var placeTo = to.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    if (placeIn != placeTo && !placeTo) {
+                        event.setCancelled(true);
+                    }
                 }
             }
             case LIGHTNING, ENDER_CRYSTAL, EXPLOSION -> {
-                Claims.LandClaim claim = claims.getLandClaim(event.getBlock().getLocation());
-                if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.BLOCK_PLACE)) {
+                if (to != null && !to.hasPermission(null, Claims.ClaimPermission.BLOCK_PLACE)) {
                     event.setCancelled(true);
                 }
             }
             case FIREBALL, ARROW -> {
                 if (event.getIgnitingEntity() instanceof Projectile projectile) {
                     Object shooter = projectile.getShooter();
-                    Claims.LandClaim claim = claims.getLandClaim(event.getBlock().getLocation());
                     if (shooter instanceof Player player) {
-                        if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                            Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                        if (to != null && !to.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
+                            Component name = to.owner != null ? Component.text(to.owner.getName() == null ? "Unknown player" : to.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
                             message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
                             event.setCancelled(true);
                         }
                     } else {
-                        if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.BLOCK_PLACE)) {
+                        if (to != null && !to.hasPermission(null, Claims.ClaimPermission.BLOCK_PLACE)) {
                             event.setCancelled(true);
                         }
                     }
@@ -688,15 +713,14 @@ public class ClaimProtections implements Listener {
                 }
             }
             case FLINT_AND_STEEL -> {
-                Claims.LandClaim claim = claims.getLandClaim(event.getBlock().getLocation());
                 if (event.getIgnitingEntity() instanceof Player player) {
-                    if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                        Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                    if (to != null && !to.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
+                        Component name = to.owner != null ? Component.text(to.owner.getName() == null ? "Unknown player" : to.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
                         message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
                         event.setCancelled(true);
                     }
                 } else {
-                    if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.BLOCK_PLACE)) {
+                    if (to != null && !to.hasPermission(null, Claims.ClaimPermission.BLOCK_PLACE)) {
                         event.setCancelled(true);
                     }
                 }
@@ -711,25 +735,56 @@ public class ClaimProtections implements Listener {
         Block piston = event.getBlock();
         Directional dir = (Directional) piston.getBlockData();
         BlockFace face = dir.getFacing();
-        Claims.LandClaim claim = claims.getLandClaim(piston.getLocation());
+        Claims.LandClaim in = claims.getLandClaim(piston.getLocation());
 
         Block front = piston.getRelative(face);
-        Claims.LandClaim frontClaim = claims.getLandClaim(front.getLocation());
-        if (frontClaim != null && !frontClaim.hasPermission(claim == null ? null : claim.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
-            event.setCancelled(true);
-            return;
-        }
-        for (Block block : event.getBlocks()) {
-            Block target = block.getRelative(face);
-            Claims.LandClaim in = claims.getLandClaim(target.getLocation());
-            if (in != null && !in.hasPermission(claim == null ? null : claim.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+        Claims.LandClaim to = claims.getLandClaim(front.getLocation());
+        if (to != null) {
+            if (!to.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
                 event.setCancelled(true);
                 return;
             }
-            Claims.LandClaim to = claims.getLandClaim(target.getLocation());
-            if (to != null && !to.hasPermission(claim == null ? null : claim.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
-                event.setCancelled(true);
-                return;
+
+            if (in != null) {
+                var placeTo = to.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                if (placeIn != placeTo && !placeTo) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+        for (Block block : event.getBlocks()) {
+            Block target = block.getRelative(face);
+            Claims.LandClaim bIn = claims.getLandClaim(target.getLocation());
+            if (bIn != null) {
+                if (!bIn.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+                    event.setCancelled(true);
+                    return;
+                }
+                if (in != null) {
+                    var placeTo = bIn.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    if (placeIn != placeTo && !placeTo) {
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
+            }
+            Claims.LandClaim bTo = claims.getLandClaim(target.getLocation());
+            if (bTo != null) {
+                if (!bTo.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+                    event.setCancelled(true);
+                    return;
+                }
+                if (in != null) {
+                    var placeTo = bTo.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    if (placeIn != placeTo && !placeTo) {
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
             }
         }
     }
@@ -742,24 +797,55 @@ public class ClaimProtections implements Listener {
         Directional dir = (Directional) piston.getBlockData();
         BlockFace face = dir.getFacing().getOppositeFace();
 
-        Claims.LandClaim claim = claims.getLandClaim(piston.getLocation());
+        Claims.LandClaim in = claims.getLandClaim(piston.getLocation());
         Block front = piston.getRelative(face);
-        Claims.LandClaim frontClaim = claims.getLandClaim(front.getLocation());
-        if (frontClaim != null && !frontClaim.hasPermission(claim == null ? null : claim.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
-            event.setCancelled(true);
-            return;
-        }
-        for (Block block : event.getBlocks()) {
-            Block target = block.getRelative(face);
-            Claims.LandClaim in = claims.getLandClaim(block.getLocation());
-            if (in != null && !in.hasPermission(claim == null ? null : claim.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+        Claims.LandClaim to = claims.getLandClaim(front.getLocation());
+        if (to != null) {
+            if (!to.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
                 event.setCancelled(true);
                 return;
             }
-            Claims.LandClaim to = claims.getLandClaim(target.getLocation());
-            if (to != null && !to.hasPermission(claim == null ? null : claim.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
-                event.setCancelled(true);
-                return;
+
+            if (in != null) {
+                var placeTo = to.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                if (placeIn != placeTo && !placeTo) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+        for (Block block : event.getBlocks()) {
+            Block target = block.getRelative(face);
+            Claims.LandClaim bIn = claims.getLandClaim(block.getLocation());
+            if (bIn != null) {
+                if (!bIn.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+                    event.setCancelled(true);
+                    return;
+                }
+                if (in != null) {
+                    var placeTo = bIn.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    if (placeIn != placeTo && !placeTo) {
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
+            }
+            Claims.LandClaim bTo = claims.getLandClaim(target.getLocation());
+            if (bTo != null) {
+                if (!bTo.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
+                    event.setCancelled(true);
+                    return;
+                }
+                if (in != null) {
+                    var placeTo = bTo.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
+                    if (placeIn != placeTo && !placeTo) {
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
             }
         }
     }
