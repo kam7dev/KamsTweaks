@@ -128,10 +128,10 @@ public class Claims extends Feature {
                     Location corner2 = LocationUtils.deserializeBlockPos(corner2Str);
                     LandClaim claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), corner1, corner2);
                     claim.defaults = new ArrayList<>();
-                    if (claimsConfig.contains("claims." + key + ".name") {
+                    if (claimsConfig.contains("claims." + key + ".name")) {
                         claim.name = claimsConfig.getString("claims." + key + ".name");
                     }
-                    if (claimsConfig.contains("claims." + key + ".prio") {
+                    if (claimsConfig.contains("claims." + key + ".prio")) {
                         claim.priority = claimsConfig.getInt("claims." + key + ".prio");
                     }
                     try {
