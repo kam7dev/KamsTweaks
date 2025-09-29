@@ -164,7 +164,7 @@ public class Claims extends Feature {
                     }
 
                     if (claimsConfig.contains("claims." + key + ".permissions")) {
-                        for (String uuid : Objects.requireNonNull(claimsConfig.getString("claims." + key + ".permissions")).getKeys(false)) {
+                        for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".permissions")).getKeys(false)) {
                             List<ClaimPermission> perms = new ArrayList<>();
                             for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".defaults")).getKeys(false)) {
                                 perms.add(ClaimPermission.valueOf(perm));
