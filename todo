@@ -1,12 +1,6 @@
 now:
 finish entity claims
 graves
-/sethome
-/spawn
-/tpa
-/warp
-/back
-particle colors for claim viewing
 
 eventually
 redo names for better modularity n stuff

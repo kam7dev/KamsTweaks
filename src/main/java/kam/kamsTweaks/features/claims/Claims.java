@@ -113,7 +113,6 @@ public class Claims extends Feature {
         }
     }
 
-    // TODO: test this cause i coded it on gh web
     @Override
     public void loadData() {
         setupFile();

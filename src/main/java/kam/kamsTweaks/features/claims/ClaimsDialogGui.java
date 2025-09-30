@@ -25,7 +25,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings({"UnstableApiUsage", "CodeBlock2Expr", "ExtractMethodRecommender"})
+@SuppressWarnings({"UnstableApiUsage", "CodeBlock2Expr"})
 public class ClaimsDialogGui {
     Claims claims = null;
 
@@ -66,13 +66,17 @@ public class ClaimsDialogGui {
                     if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId())) {
                         c = Color.GREEN;
                     } else {
-                        c = Color.YELLOW;
-//                                c = switch (claim.perms.getOrDefault(Bukkit.getServer().getOfflinePlayer(player.getUniqueId()), claim.m_default)) {
-//                                    case NONE -> Color.RED;
-//                                    case DOORS -> Color.ORANGE;
-//                                    case INTERACT -> Color.PURPLE;
-//                                    case BLOCKS -> Color.AQUA;
-//                                };
+                        if (claim.hasPermission(who, Claims.ClaimPermission.BLOCK_BREAK) && claim.hasPermission(who, Claims.ClaimPermission.BLOCK_PLACE) && claim.hasPermission(who, Claims.ClaimPermission.INTERACT_BLOCK)) {
+                            c = Color.AQUA;
+                        } else if (claim.hasPermission(who, Claims.ClaimPermission.BLOCK_BREAK) || claim.hasPermission(who, Claims.ClaimPermission.BLOCK_PLACE)) {
+                            c = Color.FUCHSIA;
+                        } else if (claim.hasPermission(who, Claims.ClaimPermission.INTERACT_BLOCK)) {
+                            c = Color.PURPLE;
+                        } else if (claim.hasPermission(who, Claims.ClaimPermission.INTERACT_DOOR)) {
+                            c = Color.ORANGE;
+                        } else {
+                            c = Color.RED;
+                        }
                     }
                     showArea(who, claim.start, claim.end, 1, 20 * 10, c);
                     Location l = new Location(claim.start.getWorld(), (claim.start.x() + claim.end.x()) / 2, (claim.start.y() + claim.end.y()) / 2, (claim.start.z() + claim.end.z()) / 2).add(.5, .5, .5);
@@ -82,13 +86,26 @@ public class ClaimsDialogGui {
                         if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId())) {
                             s = "You own this claim.";
                         } else {
-                            s = "TODO";
-//                                    s = switch (claim.m_perms.getOrDefault(Bukkit.getServer().getOfflinePlayer(player.getUniqueId()), claim.m_default)) {
-//                                        case NONE -> "You can only look around.";
-//                                        case DOORS -> "You can use doors.";
-//                                        case INTERACT -> "You can interact with blocks.";
-//                                        case BLOCKS -> "You can interact and manage blocks.";
-//                                    };
+                            List<String> perms = new ArrayList<>();
+                            if (claim.hasPermission(who, Claims.ClaimPermission.INTERACT_BLOCK)) {
+                                perms.add("interact with blocks");
+                            } else if (claim.hasPermission(who, Claims.ClaimPermission.INTERACT_DOOR)) {
+                                perms.add("interact with doors");
+                            } else {
+                                perms.add("not interact");
+                            }
+                            if (claim.hasPermission(who, Claims.ClaimPermission.BLOCK_BREAK)) {
+                                perms.add("break blocks");
+                            }
+                            if (claim.hasPermission(who, Claims.ClaimPermission.BLOCK_PLACE)) {
+                                perms.add("place blocks");
+                            }
+                            s = switch (perms.size()) {
+                                case 1 -> "You can " + perms.getFirst() + ".";
+                                case 2 -> "You can " + perms.getFirst() + " and " + perms.get(1) + ".";
+                                default -> "You can " + String.join(", ", perms.subList(0, perms.size() - 1))
+                                        + ", and " + perms.getLast() + ".";
+                            };
                         }
                         entity.text(Component.text("Owned by ").append(Component.text(claim.owner == null ? "the server" : claim.owner.getName() == null ? "Unknown player" : claim.owner.getName(), NamedTextColor.GOLD).appendNewline().append(Component.text(s))));
                         entity.setBillboard(Display.Billboard.CENTER);
