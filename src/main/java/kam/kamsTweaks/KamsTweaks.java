@@ -2,6 +2,9 @@ package kam.kamsTweaks;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.features.Names;
+import kam.kamsTweaks.features.SeedDispenser;
+import kam.kamsTweaks.features.SilkSpawner;
+import kam.kamsTweaks.features.SlashHat;
 import kam.kamsTweaks.features.claims.Claims;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -25,6 +28,9 @@ public final class KamsTweaks extends JavaPlugin {
     KamsTweaks() {
         features.add(new Names());
         features.add(new Claims());
+        features.add(new SlashHat());
+        features.add(new SilkSpawner());
+        features.add(new SeedDispenser());
     }
 
     @Override

@@ -38,8 +38,11 @@ public class Claims extends Feature {
     // for stuff like dragon fight
     public Map<World, Integer> disabledClaims = new HashMap<>();
 
+    private static Claims instance;
+
     @Override
     public void setup() {
+        instance = this;
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("land-claims.enabled", "land-claims.enabled", true, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("land-claims.max-claims", "land-claims.max-claims", 30, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("land-claims.max-claim-size", "land-claims.max-claim-size", 50000, "kamstweaks.configure"));
@@ -426,5 +429,9 @@ public class Claims extends Feature {
                 dialogGui.openLCPage(event.getPlayer(), getLandClaim(event.getClickedBlock().getLocation(), true));
             }
         }
+    }
+
+    public static Claims get() {
+        return instance;
     }
 }

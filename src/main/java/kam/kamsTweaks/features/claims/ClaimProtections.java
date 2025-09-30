@@ -3,6 +3,7 @@ package kam.kamsTweaks.features.claims;
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -214,7 +215,7 @@ public class ClaimProtections implements Listener {
         if (to == null) return;
         if (!to.hasPermission(in != null ? in.owner : null, Claims.ClaimPermission.BLOCK_PLACE)) {
             String lowered = e.getItem().getType().toString().toLowerCase();
-            if (lowered.contains("bucket") || lowered.contains("shulker")) {
+            if (lowered.contains("bucket") || lowered.contains("shulker") || SeedDispenser.matForSeed(e.getItem()) != null) {
                 e.setCancelled(true);
             } else {
                 switch (e.getItem().getType()) {
