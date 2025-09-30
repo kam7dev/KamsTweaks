@@ -6,6 +6,7 @@ import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.features.SilkSpawner;
 import kam.kamsTweaks.features.SlashHat;
 import kam.kamsTweaks.features.claims.Claims;
+import kam.kamsTweaks.features.tp.TeleportFeatures;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -31,6 +32,7 @@ public final class KamsTweaks extends JavaPlugin {
         features.add(new SlashHat());
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
+        features.add(new TeleportFeatures());
     }
 
     @Override

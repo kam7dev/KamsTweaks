@@ -41,7 +41,7 @@ public class ClaimsDialogGui {
             if (who.equals(claim.owner)) totalClaims++;
         }
         if (!claims.currentlyClaiming.containsKey(who)) {
-            if (totalClaims < KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims")) {
+            if (totalClaims < KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 30)) {
                 btns.add(ActionButton.builder(Component.text("Create a Claim")).action(DialogAction.customClick((view, audience) -> {
                         who.sendMessage(Component.text("Right click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(")").color(NamedTextColor.GOLD)).color(NamedTextColor.GOLD));
                         claims.currentlyClaiming.put(who, new Claims.LandClaim(who, null, null));

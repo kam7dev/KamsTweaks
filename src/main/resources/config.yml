@@ -39,7 +39,7 @@ teleportation:
   # How long you stay in place before teleporting, in seconds
   timer: 5
   # How long you wait between teleports, in seconds
-  cooldown: 30
+  cooldown: 10
   homes:
     enabled: true
   tpa:
