@@ -1038,12 +1038,16 @@ public class ClaimProtections implements Listener {
                     }
                     message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(name, Component.text(")")));
                     event.setCancelled(true);
-                } else {
+                } else if (claim != null) {
                     if (claim.hasPermission(null, Claims.ClaimPermission.DAMAGE_ENTITY)) return;
                     event.setCancelled(true);
                 }
             }
-            default -> event.setCancelled(true);
+            default -> {
+                if (claim != null) {
+                    event.setCancelled(true);
+                }
+            }
         }
     }
 

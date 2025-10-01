@@ -261,7 +261,7 @@ public class ClaimsDialogGui {
                     var entity = Bukkit.getEntity(uuid);
                     if (entity != null) {
                         ref.i++;
-                        ref.msg = ref.msg.append(Component.text("\n"), entity.name().color(NamedTextColor.AQUA), Component.text(" ("), Component.translatable(entity.getType().translationKey()), Component.text(")"));
+                        ref.msg = ref.msg.append(Component.text("\n"), entity.name().color(NamedTextColor.AQUA), Component.text(" ("), Component.translatable(entity.getType().translationKey()), Component.text("): "), Component.text(entity.getLocation().getBlockX() + ", " + entity.getLocation().getBlockY() + ", " + entity.getLocation().getBlockZ()).color(NamedTextColor.GREEN), Component.text(" in "), Component.text(entity.getLocation().getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE));
                     }
                 }
             });
