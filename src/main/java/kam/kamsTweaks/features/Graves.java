@@ -177,13 +177,11 @@ public class Graves extends Feature {
     }
 
     void tp() {
-        Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> {
-            graves.forEach((id, grave) -> {
-                if (grave.stand != null && !grave.stand.getLocation().equals(grave.location)) {
-                    grave.stand.teleport(grave.location.clone().addRotation(90, 0).subtract(0, 1.4375, 0));
-                }
-            });
-        }, 3L);
+        Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> graves.forEach((id, grave) -> {
+            if (grave.stand != null && !grave.stand.getLocation().equals(grave.location)) {
+                grave.stand.teleport(grave.location.clone().addRotation(90, 0).subtract(0, 1.4375, 0));
+            }
+        }), 3L);
     }
 
     @EventHandler
