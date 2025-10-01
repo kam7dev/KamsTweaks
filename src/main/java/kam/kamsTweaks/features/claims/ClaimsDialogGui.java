@@ -289,13 +289,11 @@ public class ClaimsDialogGui {
     public void openEditEntityClaimPage(Player who, Claims.EntityClaim claim) {
         List<ActionButton> btns = new ArrayList<>();
         btns.add(ActionButton.builder(Component.text("Default Permissions")).action(DialogAction.customClick((view, audience) -> {
-            // TODO
-//            openEditECPermissionsPage(who, claim, null);
+            openEditECPermissionsPage(who, claim, null);
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
         btns.add(ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> {
-            // TODO
-//            openECSelectTargetPage(who, claim);
+            openECSelectTargetPage(who, claim);
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
         btns.add(ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> {
@@ -307,12 +305,18 @@ public class ClaimsDialogGui {
                 who.sendMessage(Component.text("Successfully deleted your entity claim."));
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No, don't delete it!")).build()))));
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
-        Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Entity Claims: " + (Bukkit.getEntity(claim.entity) != null ? Objects.requireNonNull(Bukkit.getEntity(claim.entity)).name() : "Missing"))).build()).type(DialogType.multiAction(btns, null, 1)));
+        Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Entity Claims: ").append(Bukkit.getEntity(claim.entity) != null ? Objects.requireNonNull(Bukkit.getEntity(claim.entity)).name() : Component.text("Missing"))).build()).type(DialogType.multiAction(btns, null, 1)));
         who.showDialog(dialog);
     }
 
     public void openECPage(Player who) {
-        openECPage(who, (Claims.EntityClaim) null);
+        // TODO: figure out whats wrong
+        var entity = who.getTargetEntity(5);
+        if (entity != null && claims.entityClaims.containsKey(entity.getUniqueId())) {
+            openECPage(who, claims.entityClaims.get(entity.getUniqueId()));
+        } else {
+            openECPage(who, (Claims.EntityClaim) null);
+        }
     }
 
     public void openECPage(Player who, Entity entity) {
@@ -471,6 +475,71 @@ public class ClaimsDialogGui {
                                 100,
                                 DialogAction.customClick((view, audience) -> {
                                     claim.canAggro = Boolean.TRUE.equals(view.getBoolean("aggro"));
+                                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
+                        ),
+                        ActionButton.create(
+                                Component.text("Discard", NamedTextColor.RED),
+                                Component.text("Click to discard your changes."),
+                                100,
+                                null
+                        )
+                ))
+        ));
+    }
+
+    void openECSelectTargetPage(Player who, Claims.EntityClaim claim) {
+        List<ActionButton> plrs = new ArrayList<>();
+        for (var plr : Bukkit.getServer().getOfflinePlayers()) {
+            if (plr == claim.owner || plr.getName() == null) continue;
+            Component comp = Component.text(plr.getName());
+            if (plr.getPlayer() != null) {
+                comp = plr.getPlayer().displayName().append(Component.text("("), comp, Component.text(")"));
+            }
+            plrs.add(ActionButton.builder(comp).action(DialogAction.customClick((view, audience) -> {
+                openEditECPermissionsPage(who, claim, plr);
+            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+        }
+        Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Select a player to edit")).build()).type(DialogType.multiAction(plrs, null, 3)));
+        who.showDialog(dialog);
+    }
+
+    public void openEditECPermissionsPage(Player who, Claims.EntityClaim claim, OfflinePlayer target) {
+        List<DialogInput> btns = new ArrayList<>(List.of(
+                DialogInput.bool("interact", Component.text("Interact with Entity"), claim.hasPermission(target, Claims.ClaimPermission.INTERACT_ENTITY), "on", "off"),
+                DialogInput.bool("damage", Component.text("Damage Entity"), claim.hasPermission(target, Claims.ClaimPermission.DAMAGE_ENTITY), "on", "off")
+        ));
+        if (target != null) {
+            btns.add(DialogInput.bool("default", Component.text("Follow Default Permission (overwrites other options)"), claim.hasPermission(target, Claims.ClaimPermission.DEFAULT), "on", "off"));
+        }
+
+        who.showDialog(Dialog.create(builder -> builder.empty()
+                .base(DialogBase.builder(Component.text("Edit ").append(target == null ? Component.text("Default Permissions") : Component.text("Permissions for ").append(target.getPlayer() == null ? Component.text(target.getName() == null ? "Unknown Player" : target.getName()) : target.getPlayer().displayName())))
+                        .inputs(btns).build()
+                )
+                .type(DialogType.confirmation(
+                        ActionButton.create(
+                                Component.text("Confirm", NamedTextColor.GREEN),
+                                Component.text("Click to confirm your changes."),
+                                100,
+                                DialogAction.customClick((view, audience) -> {
+                                    List<Claims.ClaimPermission> list;
+                                    if (target == null) {
+                                        list = claim.defaults;
+                                    } else {
+                                        if (!claim.perms.containsKey(target)) claim.perms.put(target, new ArrayList<>());
+                                        list = claim.perms.get(target);
+                                    }
+                                    list.clear();
+                                    if (Boolean.TRUE.equals(view.getBoolean("default"))) {
+                                        list.add(Claims.ClaimPermission.DEFAULT);
+                                    } else {
+                                        if (Boolean.TRUE.equals(view.getBoolean("interact"))) {
+                                            list.add(Claims.ClaimPermission.INTERACT_ENTITY);
+                                        }
+                                        if (Boolean.TRUE.equals(view.getBoolean("damage"))) {
+                                            list.add(Claims.ClaimPermission.DAMAGE_ENTITY);
+                                        }
+                                    }
                                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                         ),
                         ActionButton.create(

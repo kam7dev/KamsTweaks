@@ -201,6 +201,63 @@ public class Claims extends Feature {
                     Logger.warn(e.getMessage());
                 }
             }
+
+            entityClaims.clear();
+            if (claimsConfig.contains("entities")) {
+                for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities")).getKeys(false)) {
+                    try {
+                        UUID entity = UUID.fromString(key);
+                        String ownerStr = claimsConfig.getString("entities." + key + ".owner");
+                        UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
+                        EntityClaim claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), entity);
+                        try {
+                            if (claimsConfig.contains("entities." + key + ".defaults")) {
+                                for (String def : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".defaults"))) {
+                                    claim.defaults.add(ClaimPermission.valueOf(def));
+                                }
+                            } else if (claimsConfig.contains("entities." + key + ".default")) {
+                                switch(Objects.requireNonNull(claimsConfig.getString("entities." + key + ".default"))) {
+                                    case "INTERACT":
+                                        claim.defaults.add(ClaimPermission.INTERACT_ENTITY);
+                                        break;
+                                    case "KILL":
+                                        claim.defaults.add(ClaimPermission.DAMAGE_ENTITY);
+                                        break;
+                                }
+                            }
+                        } catch(NullPointerException e) {
+                            Logger.warn(e.getMessage());
+                            claim.defaults = new ArrayList<>();
+                        }
+
+                        if (claimsConfig.contains("entities." + key + ".permissions")) {
+                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions")).getKeys(false)) {
+                                List<ClaimPermission> perms = new ArrayList<>();
+                                for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".defaults")).getKeys(false)) {
+                                    perms.add(ClaimPermission.valueOf(perm));
+                                }
+                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
+                            }
+                        } else if (claimsConfig.contains("entities." + key + ".perms")) {
+                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
+                                List<ClaimPermission> perms = new ArrayList<>();
+                                switch(Objects.requireNonNull(claimsConfig.getString("entities." + key + ".perms." + uuid))) {
+                                    case "INTERACT":
+                                        perms.add(ClaimPermission.INTERACT_ENTITY);
+                                        break;
+                                    case "KILL":
+                                        perms.add(ClaimPermission.DAMAGE_ENTITY);
+                                        break;
+                                }
+                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
+                            }
+                        }
+                        entityClaims.put(UUID.fromString(key), claim);
+                    } catch (Exception e) {
+                        Logger.warn(e.getMessage());
+                    }
+                }
+            }
         }
     }
 
@@ -214,6 +271,8 @@ public class Claims extends Feature {
             if (claim.owner != null) claimsConfig.set(path + ".owner", claim.owner.getUniqueId().toString());
             claimsConfig.set(path + ".corner1", LocationUtils.serializeBlockPos(claim.start));
             claimsConfig.set(path + ".corner2", LocationUtils.serializeBlockPos(claim.end));
+            claimsConfig.set(path + ".name", claim.name);
+            claimsConfig.set(path + ".prio", claim.priority);
             {
                 List<String> permList = new ArrayList<>();
                 claim.defaults.forEach(perm -> permList.add(perm.name()));
@@ -226,6 +285,29 @@ public class Claims extends Feature {
             });
             i++;
         }
+
+        try {
+            claimsConfig.save(claimsFile);
+        } catch (IOException e) {
+            Logger.warn(e.getMessage());
+        }
+
+        claimsConfig.set("entities", null);
+        entityClaims.forEach((uuid, claim) -> {
+            String path = "entities." + uuid;
+            if (claim.owner != null) claimsConfig.set(path + ".owner", claim.owner.getUniqueId().toString());
+            claimsConfig.set(path + ".aggro", claim.canAggro);
+            {
+                List<String> permList = new ArrayList<>();
+                claim.defaults.forEach(perm -> permList.add(perm.name()));
+                claimsConfig.set(path + ".defaults", permList);
+            }
+            claim.perms.forEach((player, perms) -> {
+                List<String> permList = new ArrayList<>();
+                perms.forEach(perm -> permList.add(perm.name()));
+                claimsConfig.set(path + ".permissions." + player.getUniqueId(), permList);
+            });
+        });
 
         try {
             claimsConfig.save(claimsFile);
