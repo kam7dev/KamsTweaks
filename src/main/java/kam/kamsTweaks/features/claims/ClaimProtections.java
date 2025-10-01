@@ -965,7 +965,7 @@ public class ClaimProtections implements Listener {
                 e.setCancelled(true);
                 if (claims.entityClaims.containsKey(e.getRightClicked().getUniqueId())) {
                     OfflinePlayer owner = claims.entityClaims.get(e.getRightClicked().getUniqueId()).owner;
-                    if (owner != null && owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
+                    if (owner != null && owner.getUniqueId().equals(e.getPlayer().getUniqueId()) || e.getPlayer().hasPermission("kamstweaks.claims.manage")) {
                         claims.dialogGui.openECPage(e.getPlayer());
                         return;
                     }
@@ -974,7 +974,7 @@ public class ClaimProtections implements Listener {
                     e.getPlayer().sendMessage(Component.text("This entity is already claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
                     return;
                 }
-                if (!e.getPlayer().hasPermission("kamstweaks.landclaims.claim")) {
+                if (!e.getPlayer().hasPermission("kamstweaks.claims.claim")) {
                     e.getPlayer().sendMessage(Component.text("You do not have permission to claim entities.").color(NamedTextColor.RED));
                     return;
                 }

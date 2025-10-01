@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'kam'
-version = "1.5.4-${getGitHash()}"
+version = "2.0.0-${getGitHash()}"
 
 repositories {
     mavenCentral()
@@ -60,6 +60,7 @@ def getGitHash() {
 
         return hash
     } catch (Exception e) {
+        e.printStackTrace()
         return "unknown"
     }
 }

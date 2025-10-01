@@ -20,8 +20,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -42,20 +44,20 @@ public class ClaimsDialogGui {
         for (var claim : claims.landClaims) {
             if (who.equals(claim.owner)) totalClaims++;
         }
-        if (!claims.currentlyClaiming.containsKey(who)) {
+        if (!claims.currentlyClaiming.containsKey(who) && who.hasPermission("kamstweaks.claims.claim")) {
             if (totalClaims < KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 30)) {
                 btns.add(ActionButton.builder(Component.text("Create a Claim")).action(DialogAction.customClick((view, audience) -> {
                     who.sendMessage(Component.text("Right click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(")").color(NamedTextColor.GOLD)).color(NamedTextColor.GOLD));
                     claims.currentlyClaiming.put(who, new Claims.LandClaim(who, null, null));
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
             }
-        } else {
+        } else if (who.hasPermission("kamstweaks.claims.claim")) {
             btns.add(ActionButton.builder(Component.text("Cancel Claiming")).action(DialogAction.customClick((view, audience) -> {
                 who.sendMessage(Component.text("Cancelled claiming land.").color(NamedTextColor.RED));
                 claims.currentlyClaiming.remove(who);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         }
-        if (target != null && target.owner.getUniqueId().equals(who.getUniqueId())) {
+        if (target != null && (target.owner.getUniqueId().equals(who.getUniqueId()) || who.hasPermission("kamstweaks.claims.manage"))) {
             btns.add(ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
                 openEditLandClaimPage(who, target);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
@@ -246,7 +248,7 @@ public class ClaimsDialogGui {
     @SuppressWarnings("unused") // while i havent finished it yet
     public void openECPage(Player who, Claims.EntityClaim target) {
         List<ActionButton> btns = new ArrayList<>();
-        if (target != null && target.owner.getUniqueId().equals(who.getUniqueId())) {
+        if (target != null && (target.owner.getUniqueId().equals(who.getUniqueId()) || who.hasPermission("kamstweaks.claims.manage"))) {
             btns.add(ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
                 openEditEntityClaimPage(who, target);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
@@ -288,19 +290,46 @@ public class ClaimsDialogGui {
 
     public void openEditEntityClaimPage(Player who, Claims.EntityClaim claim) {
         List<ActionButton> btns = new ArrayList<>();
-        btns.add(ActionButton.builder(Component.text("Default Permissions")).action(DialogAction.customClick((view, audience) -> {
-            openEditECPermissionsPage(who, claim, null);
-        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+        if (claim.owner.getUniqueId().equals(who.getUniqueId())) {
+            btns.add(ActionButton.builder(Component.text("Default Permissions")).action(DialogAction.customClick((view, audience) -> {
+                openEditECPermissionsPage(who, claim, null);
+            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
-        btns.add(ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> {
-            openECSelectTargetPage(who, claim);
-        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+            btns.add(ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> {
+                openECSelectTargetPage(who, claim);
+            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
-        btns.add(ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> {
-            openEditECSettingsPage(who, claim);
-        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+            btns.add(ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> {
+                openEditECSettingsPage(who, claim);
+            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+        }
         btns.add(ActionButton.builder(Component.text("Delete Claim")).action(DialogAction.customClick((view, audience) -> {
-            audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete your entity claim?")).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete it!")).action(DialogAction.customClick((view2, audience2) -> {
+            audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete this entity claim?")).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete it!")).action(DialogAction.customClick((view2, audience2) -> {
+                if (!who.getUniqueId().equals(claim.owner.getUniqueId())) {
+                    claims.entityClaims.remove(claim.entity);
+                    Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.owner.getName() + "'s entity claim!");
+                    Bukkit.getServer().sendMessage(Component.text("[Land Claims] " + who.getName() + " just deleted " + claim.owner.getName() + "'s entity claim!"));
+                    Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
+                    if (dsPlugin != null && dsPlugin.isEnabled()) {
+                        try {
+                            Class<?> dsClass = Class.forName("github.scarsz.discordsrv.DiscordSRV");
+                            Object dsInstance = dsClass.getMethod("getPlugin").invoke(null);
+
+                            Method getChannel = dsClass.getMethod("getDestinationTextChannelForGameChannelName", String.class);
+                            Object channel = getChannel.invoke(dsInstance, "global");
+
+                            if (channel != null) {
+                                Method sendMessage = channel.getClass().getMethod("sendMessage", CharSequence.class);
+                                Object action = sendMessage.invoke(channel, "<t:" + System.currentTimeMillis() / 1000 + ":R> <@!1254538148755537971> ‼️" + (claim.owner.getName() != null ? claim.owner.getName() : "the server").toUpperCase() + "'S ENTITY CLAIM WAS DELETED BY " + who.getName().toUpperCase() + ", SEND A PIPEBOMB TO THEIR DOORSTEP! ‼️ ⚠️ 🔥");
+                                action.getClass().getMethod("queue").invoke(action);
+                            }
+                        } catch (Exception e) {
+                            Logger.error("Failed to send message to discord: " + e.getMessage());
+                        }
+                    }
+
+                    return;
+                }
                 claims.entityClaims.remove(claim.entity);
                 who.sendMessage(Component.text("Successfully deleted your entity claim."));
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No, don't delete it!")).build()))));
@@ -406,19 +435,46 @@ public class ClaimsDialogGui {
 
     public void openEditLandClaimPage(Player who, Claims.LandClaim claim) {
         List<ActionButton> btns = new ArrayList<>();
-        btns.add(ActionButton.builder(Component.text("Default Permissions")).action(DialogAction.customClick((view, audience) -> {
-            openEditLCPermissionsPage(who, claim, null);
-        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+        if (claim.owner.getUniqueId().equals(who.getUniqueId())) {
+            btns.add(ActionButton.builder(Component.text("Default Permissions")).action(DialogAction.customClick((view, audience) -> {
+                openEditLCPermissionsPage(who, claim, null);
+            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
-        btns.add(ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> {
-            openLCSelectTargetPage(who, claim);
-        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+            btns.add(ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> {
+                openLCSelectTargetPage(who, claim);
+            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
 
-        btns.add(ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> {
-            openEditLCSettingsPage(who, claim);
-        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+            btns.add(ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> {
+                openEditLCSettingsPage(who, claim);
+            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
+        }
         btns.add(ActionButton.builder(Component.text("Delete Claim")).action(DialogAction.customClick((view, audience) -> {
                 audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete your land claim (").append(Component.text(claim.name).color(NamedTextColor.GOLD), Component.text(")?"))).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete it!")).action(DialogAction.customClick((view2, audience2) -> {
+                    if (!who.getUniqueId().equals(claim.owner.getUniqueId())) {
+                        claims.landClaims.remove(claim);
+                        Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.owner.getName() + "'s land claim!");
+                        Bukkit.getServer().sendMessage(Component.text("[Land Claims] " + who.getName() + " just deleted " + claim.owner.getName() + "'s land claim!"));
+                        Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
+                        if (dsPlugin != null && dsPlugin.isEnabled()) {
+                            try {
+                                Class<?> dsClass = Class.forName("github.scarsz.discordsrv.DiscordSRV");
+                                Object dsInstance = dsClass.getMethod("getPlugin").invoke(null);
+
+                                Method getChannel = dsClass.getMethod("getDestinationTextChannelForGameChannelName", String.class);
+                                Object channel = getChannel.invoke(dsInstance, "global");
+
+                                if (channel != null) {
+                                    Method sendMessage = channel.getClass().getMethod("sendMessage", CharSequence.class);
+                                    Object action = sendMessage.invoke(channel, "<t:" + System.currentTimeMillis() / 1000 + ":R> <@!1254538148755537971> ‼️" + (claim.owner.getName() != null ? claim.owner.getName() : "the server").toUpperCase() + "'S LAND CLAIM WAS DELETED BY " + who.getName().toUpperCase() + ", SEND A PIPEBOMB TO THEIR DOORSTEP! ‼️ ⚠️ 🔥");
+                                    action.getClass().getMethod("queue").invoke(action);
+                                }
+                            } catch (Exception e) {
+                                Logger.error("Failed to send message to discord: " + e.getMessage());
+                            }
+                        }
+
+                        return;
+                    }
                     claims.landClaims.remove(claim);
                     who.sendMessage(Component.text("Successfully deleted your land claim."));
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No, don't delete it!")).build()))));
