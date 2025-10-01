@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Names extends Feature {
     Map<UUID, Pair<String, List<TextColor>>> data = new HashMap<>();
+    static final String INVIS_REGEX = "[\\u200B-\\u200F\\uFEFF\\u2060]";
 
     private static List<String> splitGraphemes(String input) {
         BreakIterator iter = BreakIterator.getCharacterInstance(Locale.ROOT);
@@ -109,7 +110,7 @@ public class Names extends Feature {
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
                         Pair<String, List<TextColor>> info;
-                        String name = ctx.getArgument("name", String.class);
+                        String name = ctx.getArgument("name", String.class).replaceAll(INVIS_REGEX, "");
                         if (name.length() > 20) {
                             sender.sendPlainMessage("Nicknames cannot be longer than 20 characters.");
                             return Command.SINGLE_SUCCESS;
