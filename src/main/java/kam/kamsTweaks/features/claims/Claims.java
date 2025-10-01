@@ -337,9 +337,11 @@ public class Claims extends Feature {
     }
 
     public static class EntityClaim extends Claim {
-        public EntityClaim(OfflinePlayer owner) {
+        public EntityClaim(OfflinePlayer owner, UUID entity) {
             super(owner);
+            this.entity = entity;
         }
+        UUID entity;
         public boolean canAggro = false;
     }
 
