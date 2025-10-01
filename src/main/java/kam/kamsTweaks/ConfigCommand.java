@@ -8,9 +8,12 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -56,12 +59,12 @@ public class ConfigCommand {
                 String val = KamsTweaks.getInstance().getConfig().getString(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
-            }).then(Commands.argument("value", StringArgumentType.word()).suggests((ctx, builder) -> {
+            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", StringArgumentType.word()).suggests((ctx, builder) -> {
                 for (var option : options) {
                     builder.suggest(option);
                 }
                 return builder.buildFuture();
-            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).executes(ctx -> {
+            }).executes(ctx -> {
                 String val = ctx.getArgument("value", String.class).toLowerCase();
                 if (!List.of(options).contains(val) && !freeType) {
                     ctx.getSource().getSender().sendMessage("Invalid value. Valid options are " + String.join(", ", List.of(options)) + ".");
@@ -70,6 +73,7 @@ public class ConfigCommand {
                 KamsTweaks.getInstance().getConfig().set(configId, val);
                 KamsTweaks.getInstance().saveConfig();
                 if (callback != null) callback.accept(val);
+                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
         }
@@ -98,11 +102,12 @@ public class ConfigCommand {
                 boolean val = KamsTweaks.getInstance().getConfig().getBoolean(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
-            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", BoolArgumentType.bool()).executes(ctx -> {
+            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", BoolArgumentType.bool()).executes(ctx -> {
                 Boolean val = ctx.getArgument("value", Boolean.class);
                 KamsTweaks.getInstance().getConfig().set(configId, val);
                 KamsTweaks.getInstance().saveConfig();
                 if (callback != null) callback.accept(val);
+                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
         }
@@ -137,6 +142,7 @@ public class ConfigCommand {
                 KamsTweaks.getInstance().saveConfig();
                 ctx.getSource().getSender().sendMessage("Set value of " + name + " to " + val + ".");
                 if (callback != null) callback.accept(val);
+                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
         }
@@ -147,6 +153,10 @@ public class ConfigCommand {
         for (var sub : configs) {
             command = sub.registerSubcommand(command);
         }
-        commands.registrar().register(Commands.literal("kamstweaks").then(command).build());
+        commands.registrar().register(Commands.literal("kamstweaks").then(command).then(Commands.literal("save").executes(ctx -> {
+            KamsTweaks.getInstance().save();
+            ctx.getSource().getSender().sendMessage(Component.text("Saved KamsTweaks.").color(NamedTextColor.GREEN));
+            return Command.SINGLE_SUCCESS;
+        }).requires(source -> source.getSender().hasPermission("kamstweaks.save"))).build(), List.of("kt"));
     }
 }

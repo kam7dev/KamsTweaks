@@ -12,7 +12,7 @@ public class Logger {
         } catch(Exception e) {
             Logger.error("Your log level seems to be invalid. Please make sure it's either 'debug', 'info', 'warn', or 'error'.");
         }
-        var cmd = new ConfigCommand.StringConfig("log-level", "log-level", "warn", new String[]{"debug", "info", "warn", "error"});
+        var cmd = new ConfigCommand.StringConfig("log-level", "log-level", "warn", new String[]{"debug", "info", "warn", "error"}, "kamstweaks.configure");
         cmd.callback = Logger::setLevel;
         ConfigCommand.addConfig(cmd);
         inited = true;

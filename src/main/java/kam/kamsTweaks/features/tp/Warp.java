@@ -1,4 +1,4 @@
-package kam.kamsTweaks.features.teleportation;
+package kam.kamsTweaks.features.tp;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -6,8 +6,10 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
@@ -20,28 +22,28 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
-import static kam.kamsTweaks.features.landclaims.LandClaims.deserializeLocation;
-import static kam.kamsTweaks.features.landclaims.LandClaims.serializeLocation;
-
-public class Warp {
-    TeleportationHandler handler;
+public class Warp extends Feature {
     Map<String, Location> warps = new HashMap<>();
 
-    public void init(TeleportationHandler handler) {
-        this.handler = handler;
-    }
+    @Override
+    public void setup() { }
 
-    public void saveWarps() {
+    @Override
+    public void shutdown() { }
+
+
+    @Override
+    public void saveData() {
         FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
         config.set("warps", null);
         warps.forEach((name, loc) -> {
-            if (loc != null) config.set("warps." + name, serializeLocation(loc));
+            if (loc != null) config.set("warps." + name, LocationUtils.serializeLocation(loc));
         });
     }
 
-    public void loadWarps() {
+    @Override
+    public void loadData() {
         warps.clear();
         FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
         if (config.contains("warps")) {
@@ -49,7 +51,7 @@ public class Warp {
                 try {
                     String locStr = config.getString("warps." + key);
                     assert locStr != null;
-                    Location loc = deserializeLocation(locStr);
+                    Location loc = LocationUtils.deserializeLocation(locStr);
                     if (loc.getWorld() == null) continue;
                     warps.put(key, loc);
                 } catch (Exception e) {
@@ -60,7 +62,7 @@ public class Warp {
     }
 
 
-    @SuppressWarnings("UnstableApiUsage")
+    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> warpCmd = Commands.literal("warp")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.warp"))
@@ -76,13 +78,14 @@ public class Warp {
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
+                    var handler = TeleportFeatures.get();
                     if (executor instanceof Player player) {
                         if (handler.teleportations.containsKey(player)) {
                             sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
-                        if (handler.onCooldown.contains(player)) {
-                            sender.sendMessage(Component.text("You're currently on teleportation cooldown.").color(NamedTextColor.RED));
+                        if (handler.onCooldown.containsKey(player)) {
+                            sender.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(player) + " seconds.").color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         String warp = ctx.getArgument("name", String.class);
@@ -128,7 +131,7 @@ public class Warp {
                 });
         commands.registrar().register(warpsCmd.build());
 
-        LiteralArgumentBuilder<CommandSourceStack> sethome = Commands.literal("addwarp")
+        LiteralArgumentBuilder<CommandSourceStack> addwarp = Commands.literal("addwarp")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.addwarp"))
                 .then(Commands.argument("name", StringArgumentType.word()).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
@@ -148,6 +151,6 @@ public class Warp {
                     sender.sendMessage("Only players can use warps.");
                     return Command.SINGLE_SUCCESS;
                 }));
-        commands.registrar().register(sethome.build());
+        commands.registrar().register(addwarp.build());
     }
 }

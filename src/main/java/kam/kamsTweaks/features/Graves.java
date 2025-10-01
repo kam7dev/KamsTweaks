@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features;
 
+import kam.kamsTweaks.Feature;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
@@ -8,6 +9,7 @@ import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.Inventories;
+import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -18,7 +20,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -35,12 +36,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.bukkit.Bukkit.getServer;
-
-public class Graves implements Listener {
+public class Graves extends Feature {
     public Map<Integer, Grave> graves = new HashMap<>();
     static int highest = 0;
 
+    @Override
     public void setup() {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("graves.enabled", "graves.enabled", true, "kamstweaks.configure"));
         Bukkit.getScheduler().runTaskTimer(KamsTweaks.getInstance(), new Runnable() {
@@ -56,6 +56,10 @@ public class Graves implements Listener {
         }, 20L, 20L);  // 20L = 1 second in ticks
     }
 
+    @Override
+    public void shutdown() {}
+
+    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         commands.registrar().register(Commands.literal("graves")
                 .then(Commands.literal("list").executes(ctx -> {
@@ -173,13 +177,11 @@ public class Graves implements Listener {
     }
 
     void tp() {
-        Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> {
-            graves.forEach((id, grave) -> {
-                if (grave.stand != null && !grave.stand.getLocation().equals(grave.location)) {
-                    grave.stand.teleport(grave.location.clone().addRotation(90, 0).subtract(0, 1.4375, 0));
-                }
-            });
-        }, 3L);
+        Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> graves.forEach((id, grave) -> {
+            if (grave.stand != null && !grave.stand.getLocation().equals(grave.location)) {
+                grave.stand.teleport(grave.location.clone().addRotation(90, 0).subtract(0, 1.4375, 0));
+            }
+        }), 3L);
     }
 
     @EventHandler
@@ -321,6 +323,7 @@ public class Graves implements Listener {
                 }
             }
         });
+        KamsTweaks.getInstance().save();
         if (rem.get() != -1) graves.remove(rem.get());
     }
 
@@ -544,12 +547,13 @@ public class Graves implements Listener {
         }
     }
 
-    public void saveGraves() {
+    @Override
+    public void saveData() {
         FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
         config.set("graves", null);
         graves.forEach((id, grave) -> {
             Inventories.saveInventory(grave.getInventory(), config, "graves." + id);
-            config.set("graves." + id + ".location", serializeLocation(grave.location));
+            config.set("graves." + id + ".location", LocationUtils.serializeLocation(grave.location));
             config.set("graves." + id + ".owner", grave.owner.getUniqueId().toString());
             config.set("graves." + id + ".xp", grave.experience);
             config.set("graves." + id + ".timeleft", grave.msLeft);
@@ -560,7 +564,8 @@ public class Graves implements Listener {
         });
     }
 
-    public void loadGraves() {
+    @Override
+    public void loadData() {
         graves.clear();
         highest = 0;
         FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
@@ -572,11 +577,11 @@ public class Graves implements Listener {
                     String locationStr = config.getString("graves." + key + ".location");
                     int xp = (int) config.get("graves." + key + ".xp", 0);
                     assert locationStr != null;
-                    Location location = checkLocation(deserializeLocation(locationStr));
+                    Location location = checkLocation(LocationUtils.deserializeLocation(locationStr));
                     if (location.getWorld() == null) continue;
                     Inventory inv = Inventories.loadInventory(Component.text("Grave"), 45, config, "graves." + key);
                     long timeLeft = config.getLong("graves." + key + ".timeleft", 1000 * 60 * 20);
-                    Grave grave = new Grave(owner == null ? null : getServer().getOfflinePlayer(owner), inv, location, xp, timeLeft);
+                    Grave grave = new Grave(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), inv, location, xp, timeLeft);
                     grave.hasMessaged5 = config.getBoolean("graves." + key + ".m5", false);
                     grave.hasMessaged1 = config.getBoolean("graves." + key + ".m1", false);
                     grave.hasMessagedHalf = config.getBoolean("graves." + key + ".m30", false);
@@ -595,23 +600,6 @@ public class Graves implements Listener {
                 }
             }
         }
-    }
-
-    public static String serializeLocation(Location loc) {
-        return loc.getWorld() == null ? "" : loc.getWorld().getUID() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
-    }
-
-    public static Location deserializeLocation(String s) {
-        String[] parts = s.split(",");
-        UUID worldUuid = UUID.fromString(parts[0]);
-        return new Location(
-                getServer().getWorld(worldUuid),
-                Double.parseDouble(parts[1]),
-                Double.parseDouble(parts[2]),
-                Double.parseDouble(parts[3]),
-                Float.parseFloat(parts[4]),
-                Float.parseFloat(parts[5])
-        );
     }
 
     // From essentials
@@ -653,6 +641,7 @@ public class Graves implements Listener {
     }
 
     // Give or take EXP
+    @SuppressWarnings("UnusedReturnValue")
     public static int changePlayerExp(Player player, int exp){
         // Get player's current exp
         int currentExp = getPlayerExp(player);
@@ -668,5 +657,4 @@ public class Graves implements Listener {
         // Return the player's new exp amount
         return newExp;
     }
-
 }

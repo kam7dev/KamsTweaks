@@ -1,11 +1,15 @@
 package kam.kamsTweaks.features;
 
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import kam.kamsTweaks.Feature;
+import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
+
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.features.landclaims.LandClaims;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -15,15 +19,13 @@ import org.bukkit.block.data.Directional;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.inventory.ItemStack;
 
-import static org.bukkit.Bukkit.getServer;
-
-public class SeedDispenser implements Listener {
-
+public class SeedDispenser extends Feature {
+    @Override
     public void setup() {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("seed-dispenser.enabled", "seed-dispenser.enabled", true, "kamstweaks.configure"));
     }
 
-    public Material matForSeed(ItemStack item) {
+    public static Material matForSeed(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) {
             return null;
         }
@@ -41,8 +43,9 @@ public class SeedDispenser implements Listener {
     }
 
     // compat with claims
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onDispense(BlockDispenseEvent e) {
+        if (e.isCancelled()) return;
         if (!KamsTweaks.getInstance().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
         Block block = e.getBlock();
         if (block.getType() == Material.DISPENSER) {
@@ -55,12 +58,6 @@ public class SeedDispenser implements Listener {
                     e.setCancelled(true);
                     Block toPlace = farm.getRelative(BlockFace.UP);
                     if (toPlace.getType() != Material.AIR) {
-                        return;
-                    }
-                    var lc = KamsTweaks.getInstance().m_landClaims;
-                    var claim = lc.getClaim(toPlace.getLocation());
-                    var oclaim = lc.getClaim(e.getBlock().getLocation());
-                    if (claim != null && !lc.hasPermission(oclaim != null ? oclaim.m_owner : null, claim, LandClaims.ClaimPermission.BLOCKS)) {
                         return;
                     }
                     ItemStack[] contents = container.getInventory().getContents();
@@ -81,7 +78,7 @@ public class SeedDispenser implements Listener {
                     }
                     // sometimes it just flat out doesnt work, so run it again next tick
                     // no this does not repeat if it does run, because of the return in the statement
-                    getServer().getScheduler().runTask(KamsTweaks.getInstance(), () -> {
+                    Bukkit.getServer().getScheduler().runTask(KamsTweaks.getInstance(), () -> {
                         ItemStack[] contents2 = container.getInventory().getContents();
                         for (int i = 0; i < contents2.length; i++) {
                             ItemStack slot = contents2[i];
@@ -102,5 +99,26 @@ public class SeedDispenser implements Listener {
                 }
             }
         }
+    }
+
+
+    @Override
+    public void shutdown() {
+
+    }
+
+    @Override
+    public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
+
+    }
+
+    @Override
+    public void loadData() {
+
+    }
+
+    @Override
+    public void saveData() {
+
     }
 }

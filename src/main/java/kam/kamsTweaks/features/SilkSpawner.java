@@ -1,6 +1,10 @@
 package kam.kamsTweaks.features;
 
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.ConfigCommand;
+import kam.kamsTweaks.Feature;
+import org.jetbrains.annotations.NotNull;
 import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.event.EventHandler;
 import net.kyori.adventure.text.Component;
@@ -11,7 +15,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
@@ -20,7 +23,8 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Collections;
 
-public class SilkSpawner implements Listener {
+public class SilkSpawner extends Feature {
+    @Override
     public void setup() {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("silk-spawners.enabled", "silk-spawners.enabled", true, "kamstweaks.configure"));
     }
@@ -58,4 +62,16 @@ public class SilkSpawner implements Listener {
             spawner.update(true);
         }
     }
+
+    @Override
+    public void shutdown() {}
+
+    @Override
+    public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {}
+
+    @Override
+    public void loadData() {}
+
+    @Override
+    public void saveData() {}
 }

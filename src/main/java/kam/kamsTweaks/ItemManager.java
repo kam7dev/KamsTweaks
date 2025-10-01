@@ -16,14 +16,6 @@ import java.util.Map;
 public class ItemManager {
     public enum ItemType {
         CLAIMER,
-
-        // Troll items to be removed via TrollRemover
-        FLYING_BOOTS,
-        BLINDNESS_WAND,
-        LEVITATION_SWORD,
-        KNOCKBACK_STICK,
-        FAKE_TNT,
-        PORTAL_BOW
     }
 
     private static Map<ItemType, ItemStack> items;
@@ -37,7 +29,7 @@ public class ItemManager {
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 meta.displayName(
-                        Component.text("Land Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+                        Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
                 meta.addEnchant(Enchantment.PROTECTION, 5, true);
                 NamespacedKey key = new NamespacedKey("kamstweaks", "item");
                 meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "claimer");
@@ -60,14 +52,12 @@ public class ItemManager {
             if (meta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
                 String data = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
                 if (data == null) return null;
+                if (data.equals("claimer")) {
+                    meta.displayName(Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+                    item.setItemMeta(meta);
+                }
                 return switch (data) {
                     case "claimer" -> ItemType.CLAIMER;
-                    case "flying_boots" -> ItemType.FLYING_BOOTS;
-                    case "blindness_wand" -> ItemType.BLINDNESS_WAND;
-                    case "levitation_sword" -> ItemType.LEVITATION_SWORD;
-                    case "knockback_stick" -> ItemType.KNOCKBACK_STICK;
-                    case "fake_tnt" -> ItemType.FAKE_TNT;
-                    case "portal_bow" -> ItemType.PORTAL_BOW;
                     default -> null;
                 };
             }

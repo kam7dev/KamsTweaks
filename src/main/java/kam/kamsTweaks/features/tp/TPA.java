@@ -1,10 +1,11 @@
-package kam.kamsTweaks.features.teleportation;
+package kam.kamsTweaks.features.tp;
 
 import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -22,9 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class TPA {
-    private TeleportationHandler handler;
-
+public class TPA extends Feature {
     private static class TPARequest {
         Player target;
         boolean here;
@@ -40,21 +39,18 @@ public class TPA {
 
     private final Map<Player, TPARequest> tpas = new LinkedHashMap<>();
 
-    public void init(TeleportationHandler handler) {
-        this.handler = handler;
-    }
-
     private void sendRequest(Player sender, Player target, boolean here) {
         if (tpas.containsKey(sender)) {
             sender.sendMessage(Component.text("You already have an outgoing TPA request.").color(NamedTextColor.RED));
             return;
         }
+        var handler = TeleportFeatures.get();
         if (handler.teleportations.containsKey(sender)) {
             sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
             return;
         }
-        if (handler.onCooldown.contains(sender)) {
-            sender.sendMessage(Component.text("You're currently on teleportation cooldown.").color(NamedTextColor.RED));
+        if (handler.onCooldown.containsKey(sender)) {
+            sender.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(sender) + " seconds.").color(NamedTextColor.RED));
             return;
         }
         if (target.equals(sender)) {
@@ -110,15 +106,16 @@ public class TPA {
     }
 
     private void accept(Player acceptor, Player requester) {
+        var handler = TeleportFeatures.get();
         TPARequest req = tpas.get(requester);
         if (req == null) return;
         if (req.here) {
-            if (handler.onCooldown.contains(acceptor)) {
-                acceptor.sendMessage(Component.text("You're currently on teleportation cooldown.").color(NamedTextColor.RED));
+            if (handler.onCooldown.containsKey(acceptor)) {
+                acceptor.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(acceptor) + " seconds.").color(NamedTextColor.RED));
                 return;
             }
         } else {
-            if (handler.onCooldown.contains(requester)) {
+            if (handler.onCooldown.containsKey(requester)) {
                 acceptor.sendMessage(requester.displayName().append(Component.text(" is currently on teleportation cooldown.").color(NamedTextColor.RED)));
                 return;
             }
@@ -140,8 +137,8 @@ public class TPA {
                 .append(requester.displayName().color(NamedTextColor.RED))
                 .append(Component.text(". " + (
                         req.here ? (time > 0 ? "You will be teleported to them in " : "You have been teleported to them")
-                                        : (time > 0 ? "They will be teleported to you in " : "They have been teleported to you")
-                        )).color(NamedTextColor.GOLD))
+                                : (time > 0 ? "They will be teleported to you in " : "They have been teleported to you")
+                )).color(NamedTextColor.GOLD))
                 .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
                 .append(Component.text(".").color(NamedTextColor.GOLD)));
         requester.sendMessage(Component.text("Your request to ").color(NamedTextColor.GOLD)
@@ -169,7 +166,7 @@ public class TPA {
         requester.sendMessage(Component.text("Your request to ").color(NamedTextColor.GOLD)
                 .append(decliner.displayName().color(NamedTextColor.RED))
                 .append(Component.text(" was declined.").color(NamedTextColor.GOLD)));
-        handler.teleportations.remove(requester);
+        TeleportFeatures.get().teleportations.remove(requester);
     }
 
     private void cancel(Player sender, Player target, Component reason) {
@@ -180,10 +177,20 @@ public class TPA {
         target.sendMessage(Component.text("Teleport request cancelled because ").color(NamedTextColor.GOLD)
                 .append(sender.displayName().color(NamedTextColor.RED))
                 .append(reason));
-        handler.teleportations.remove(sender);
+        TeleportFeatures.get().teleportations.remove(sender);
     }
 
-    @SuppressWarnings("UnstableApiUsage")
+    @Override
+    public void setup() {
+
+    }
+
+    @Override
+    public void shutdown() {
+
+    }
+
+    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         commands.registrar().register(Commands.literal("tpa")
                 .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
@@ -242,5 +249,15 @@ public class TPA {
                     }
                     return Command.SINGLE_SUCCESS;
                 }).build());
+    }
+
+    @Override
+    public void loadData() {
+
+    }
+
+    @Override
+    public void saveData() {
+
     }
 }

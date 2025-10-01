@@ -5,9 +5,12 @@ api-version: '1.21'
 
 # i was lied to about plugin's permissions.yml
 permissions:
-  kamstweaks.landclaims.claim:
+  kamstweaks.claims.claim:
     default: true
     description: "Claim land or entities"
+  kamstweaks.claims.manage:
+    default: op
+    description: "Manage claims"
 
   kamstweaks.hat:
     default: true
@@ -41,9 +44,6 @@ permissions:
   kamstweaks.teleports.spawn:
     default: true
     description: "Teleport to spawn"
-  kamstweaks.teleports.rtp:
-    default: true
-    description: "Teleport to a random position within 100k blocks of spawn"
 
   kamstweaks.silkspawner:
     default: true
@@ -53,8 +53,15 @@ permissions:
     default: op
     description: "Change settings for KamsTweaks"
 
+  kamstweaks.save:
+    default: op
+    description: "Save data for KamsTweaks"
+
 dependencies:
   server:
     DiscordSRV: {
-      required: true
+      required: false
     }
+#    ViaBackwards: {
+#      required: true
+#    }
