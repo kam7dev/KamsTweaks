@@ -8,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.features.claims.Claims;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 
@@ -43,7 +42,6 @@ public class SeedDispenser extends Feature {
         };
     }
 
-    // TODO: fix
     // compat with claims
     @EventHandler(priority = EventPriority.HIGH)
     public void onDispense(BlockDispenseEvent e) {

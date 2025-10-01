@@ -139,7 +139,7 @@ public class Claims extends Feature {
                     }
                     try {
                         if (claimsConfig.contains("claims." + key + ".defaults")) {
-                            for (String def : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".defaults")).getKeys(false)) {
+                            for (String def : Objects.requireNonNull(claimsConfig.getStringList("claims." + key + ".defaults"))) {
                                 claim.defaults.add(ClaimPermission.valueOf(def));
                             }
                         } else if (claimsConfig.contains("claims." + key + ".default")) {

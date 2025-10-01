@@ -232,7 +232,7 @@ public class ClaimProtections implements Listener {
                 var placeIn = in.defaults.contains(Claims.ClaimPermission.BLOCK_PLACE);
                 if (placeIn != placeTo && !placeTo) {
                     String lowered = e.getItem().getType().toString().toLowerCase();
-                    if (lowered.contains("bucket") || lowered.contains("shulker")) {
+                    if (lowered.contains("bucket") || lowered.contains("shulker") || SeedDispenser.matForSeed(e.getItem()) != null) {
                         e.setCancelled(true);
                     } else {
                         switch (e.getItem().getType()) {

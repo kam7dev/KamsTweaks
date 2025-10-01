@@ -53,7 +53,7 @@ public class ClaimsDialogGui {
                     claims.currentlyClaiming.remove(who);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         }
-        if (target != null) {
+        if (target != null && target.owner == who) {
             btns.add(ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
                 openEditLandClaimPage(who, target);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
