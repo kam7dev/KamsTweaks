@@ -55,7 +55,7 @@ public class ClaimsDialogGui {
                 claims.currentlyClaiming.remove(who);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         }
-        if (target != null && target.owner == who) {
+        if (target != null && target.owner.getUniqueId().equals(who.getUniqueId())) {
             btns.add(ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
                 openEditLandClaimPage(who, target);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
@@ -246,7 +246,7 @@ public class ClaimsDialogGui {
     @SuppressWarnings("unused") // while i havent finished it yet
     public void openECPage(Player who, Claims.EntityClaim target) {
         List<ActionButton> btns = new ArrayList<>();
-        if (target != null && target.owner == who) {
+        if (target != null && target.owner.getUniqueId().equals(who.getUniqueId())) {
             btns.add(ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
                 openEditEntityClaimPage(who, target);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
@@ -257,7 +257,7 @@ public class ClaimsDialogGui {
                 int i = 0;
             };
             claims.entityClaims.forEach((uuid, claim) -> {
-                if (who.equals(claim.owner)) {
+                if (who.getUniqueId().equals(claim.owner.getUniqueId())) {
                     var entity = Bukkit.getEntity(uuid);
                     if (entity != null) {
                         ref.i++;
@@ -272,7 +272,7 @@ public class ClaimsDialogGui {
             audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete ALL of your entity claims?")).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete them!")).action(DialogAction.customClick((view2, audience2) -> {
                 List<UUID> toRem = new ArrayList<>();
                 claims.entityClaims.forEach((uuid, claim) -> {
-                    if (claim.owner == who) {
+                    if (claim.owner.getUniqueId().equals(who.getUniqueId())) {
                         toRem.add(uuid);
                     }
                 });
@@ -310,7 +310,6 @@ public class ClaimsDialogGui {
     }
 
     public void openECPage(Player who) {
-        // TODO: figure out whats wrong
         var entity = who.getTargetEntity(5);
         if (entity != null && claims.entityClaims.containsKey(entity.getUniqueId())) {
             openECPage(who, claims.entityClaims.get(entity.getUniqueId()));

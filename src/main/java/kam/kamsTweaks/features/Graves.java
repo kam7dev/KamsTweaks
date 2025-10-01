@@ -323,6 +323,7 @@ public class Graves extends Feature {
                 }
             }
         });
+        KamsTweaks.getInstance().save();
         if (rem.get() != -1) graves.remove(rem.get());
     }
 

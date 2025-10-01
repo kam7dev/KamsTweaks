@@ -1009,7 +1009,6 @@ public class ClaimProtections implements Listener {
     public void onDamage(EntityDamageEvent event) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         Claims.EntityClaim claim = claims.entityClaims.get(event.getEntity().getUniqueId());
-        if (claim == null) return;
         switch (event.getCause()) {
             case ENTITY_ATTACK, ENTITY_EXPLOSION, ENTITY_SWEEP_ATTACK -> {
                 if (event.getEntity() instanceof Mob mob) {
@@ -1020,6 +1019,16 @@ public class ClaimProtections implements Listener {
                     }
                 }
                 if (event.getDamageSource().getCausingEntity() instanceof Player player) {
+                    if (ItemManager.ItemType.CLAIMER.equals(ItemManager.getType(player.getInventory().getItemInMainHand()))) {
+                        if (claim == null) player.sendMessage(Component.text("This entity isn't claimed."));
+                        else if (claim.owner == null)
+                            player.sendMessage(Component.text("This entity is owned by the server."));
+                        else
+                            player.sendMessage(Component.text("This entity is owned by ").append(Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD)));
+                        event.setCancelled(true);
+                        return;
+                    }
+                    if (claim == null) return;
                     if (claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) return;
                     Component name;
                     if (claim.owner.isOnline()) {

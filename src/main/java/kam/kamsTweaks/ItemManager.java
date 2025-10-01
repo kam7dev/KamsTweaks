@@ -29,7 +29,7 @@ public class ItemManager {
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 meta.displayName(
-                        Component.text("Land Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+                        Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
                 meta.addEnchant(Enchantment.PROTECTION, 5, true);
                 NamespacedKey key = new NamespacedKey("kamstweaks", "item");
                 meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "claimer");
@@ -52,6 +52,10 @@ public class ItemManager {
             if (meta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
                 String data = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
                 if (data == null) return null;
+                if (data.equals("claimer")) {
+                    meta.displayName(Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+                    item.setItemMeta(meta);
+                }
                 return switch (data) {
                     case "claimer" -> ItemType.CLAIMER;
                     default -> null;
