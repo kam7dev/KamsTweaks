@@ -52,7 +52,7 @@ public class ItemManager {
             if (meta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
                 String data = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
                 if (data == null) return null;
-                if (data.equals("claimer")) {
+                if (data.equals("claimer") && meta.displayName().equals(Component.text("Land Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false))) {
                     meta.displayName(Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
                     item.setItemMeta(meta);
                 }
