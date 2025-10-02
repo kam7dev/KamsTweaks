@@ -49,7 +49,7 @@ public class SlashHat extends Feature {
                         ItemStack helmet = inv.getHelmet();
                         inv.setItemInMainHand(helmet);
                         inv.setHelmet(hand);
-                        sender.sendMessage(Component.text(executor == sender ? "You're" : (player.displayName() + " is") + " now wearing ").append(hand.displayName()).append(Component.text(".")));
+                        sender.sendMessage(Component.text((executor == sender ? "You're" : player.displayName() + " is") + " now wearing ").append(hand.displayName()).append(Component.text(".")));
                         return Command.SINGLE_SUCCESS;
                     }
                     sender.sendMessage("Only players can use /hat.");
