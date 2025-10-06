@@ -12,6 +12,7 @@ import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -47,6 +48,11 @@ public class SlashHat extends Feature {
                             return Command.SINGLE_SUCCESS;
                         }
                         ItemStack helmet = inv.getHelmet();
+                        // no cheat
+                        if (helmet != null && helmet.containsEnchantment(Enchantment.BINDING_CURSE)) {
+                            sender.sendMessage("You can't take this item off.");
+                            return Command.SINGLE_SUCCESS;
+                        }
                         inv.setItemInMainHand(helmet);
                         inv.setHelmet(hand);
                         sender.sendMessage(Component.text((executor == sender ? "You're" : player.displayName() + " is") + " now wearing ").append(hand.displayName()).append(Component.text(".")));

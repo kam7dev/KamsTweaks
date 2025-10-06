@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.type.Farmland;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
@@ -123,7 +124,7 @@ public class ClaimProtections implements Listener {
                         } else {
                             name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
                         }
-                        message(player, Component.text("You don't have interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
+                        message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
                         e.setCancelled(true);
                     }
                 }
@@ -346,7 +347,7 @@ public class ClaimProtections implements Listener {
                 } else {
                     name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
                 }
-                message(player, Component.text("You don't have interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
+                message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -373,7 +374,7 @@ public class ClaimProtections implements Listener {
                 } else {
                     name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
                 }
-                message(player, Component.text("You don't have interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
+                message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -899,10 +900,18 @@ public class ClaimProtections implements Listener {
             return;
         Player player = event.getPlayer();
         Claims.LandClaim claim = claims.getLandClaim(event.getClickedBlock().getLocation());
-        if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
-            Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
-            message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
-            event.setCancelled(true);
+        if (event.getClickedBlock() instanceof Farmland) {
+            if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
+                Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
+                event.setCancelled(true);
+            }
+        } else {
+            if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
+                Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
+                event.setCancelled(true);
+            }
         }
     }
 
