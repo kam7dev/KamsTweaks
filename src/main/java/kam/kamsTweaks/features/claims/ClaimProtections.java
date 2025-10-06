@@ -7,10 +7,8 @@ import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
+import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -18,6 +16,7 @@ import org.bukkit.block.data.Directional;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -25,11 +24,14 @@ import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -152,6 +154,10 @@ public class ClaimProtections implements Listener {
     public void onPlace(BlockPlaceEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
+        if (ItemManager.ItemType.CLAIMER.equals(ItemManager.getType(e.getItemInHand()))) {
+            e.setCancelled(true);
+            return;
+        }
         Player player = e.getPlayer();
         Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
         if (claim == null) return;
@@ -329,7 +335,7 @@ public class ClaimProtections implements Listener {
             return;
 
         InventoryHolder entity = e.getInventory().getHolder();
-        if (entity instanceof AbstractHorse || entity instanceof ChestBoat || entity instanceof StorageMinecart) {
+        if (entity instanceof ChestBoat || entity instanceof StorageMinecart) {
             Player player = (Player) e.getPlayer();
             Claims.LandClaim claim = claims.getLandClaim(((Entity) entity).getLocation());
             if (claim == null) return;
@@ -956,6 +962,17 @@ public class ClaimProtections implements Listener {
         }
     }
 
+    @EventHandler
+    public void onGrindstone(InventoryClickEvent event) {
+        if (event.getInventory().getType() == InventoryType.GRINDSTONE) {
+            ItemStack result = event.getInventory().getItem(2);
+            if (result != null && ItemManager.getType(result) == ItemManager.ItemType.CLAIMER) {
+                event.setCancelled(true);
+                event.getWhoClicked().sendMessage(Component.text("You cannot disenchant this item.").color(NamedTextColor.RED));
+            }
+        }
+    }
+
     /// Entity Claims
     @EventHandler(priority = EventPriority.HIGH)
     public void EConEntityInteract(PlayerInteractEntityEvent e) {
@@ -1010,6 +1027,7 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         Claims.EntityClaim claim = claims.entityClaims.get(event.getEntity().getUniqueId());
         switch (event.getCause()) {
+            case VOID, KILL -> event.setCancelled(true);
             case ENTITY_ATTACK, ENTITY_EXPLOSION, ENTITY_SWEEP_ATTACK -> {
                 if (event.getEntity() instanceof Mob mob) {
                     if (mob.getTarget() != null) {
@@ -1096,6 +1114,25 @@ public class ClaimProtections implements Listener {
             } else if (claims.disabledClaims.containsKey(event.getWorld())) {
                 player.sendMessage(Component.text("Claims are currently disabled in this world due to a recent dragon fight. They will be re-enabled in " + claims.disabledClaims.get(event.getWorld()) + " seconds.").color(NamedTextColor.YELLOW));
             }
+        }
+    }
+
+    @EventHandler
+    public void onSleep(PlayerBedEnterEvent event) {
+        if (event.getBedEnterResult() != PlayerBedEnterEvent.BedEnterResult.NOT_SAFE)
+            return;
+
+        Block block = event.getBed();
+
+        Block head = ((Bed) block.getBlockData()).getPart().equals(Bed.Part.HEAD) ? block : block.getRelative(((Directional) block).getFacing());
+
+        boolean unsafe = block.getWorld().getNearbyEntities(head.getLocation(), 8, 5, 8)
+                .stream()
+                .filter(e -> e instanceof Monster)
+                .anyMatch(type -> !claims.entityClaims.containsKey(type.getUniqueId()));
+        if (!unsafe) {
+            event.setUseBed(Event.Result.ALLOW);
+            event.setCancelled(false);
         }
     }
 }

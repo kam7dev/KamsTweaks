@@ -463,7 +463,7 @@ public class Claims extends Feature {
                                 if (c.owner == null) {
                                     name = Component.text("the server").color(NamedTextColor.GOLD);
                                 } else if (c.owner.isOnline()) {
-                                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
+                                    name = Objects.requireNonNull(c.owner.getPlayer()).displayName();
                                 } else {
                                     name = Component.text(Objects.requireNonNull(c.owner.getName())).color(NamedTextColor.GOLD);
                                 }
