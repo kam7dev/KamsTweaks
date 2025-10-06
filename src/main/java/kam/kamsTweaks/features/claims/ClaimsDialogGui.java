@@ -239,6 +239,7 @@ public class ClaimsDialogGui {
                     claims.entityClaims.put(entity.getUniqueId(), new Claims.EntityClaim(who, entity.getUniqueId()));
                     entity.setFireTicks(0);
                     ((Mob) entity).setTarget(null);
+                    entity.setPersistent(true);
                     who.sendMessage(Component.text("Claimed ").append(entity.name(), Component.text(" successfully.")));
                 }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No")).build())));
