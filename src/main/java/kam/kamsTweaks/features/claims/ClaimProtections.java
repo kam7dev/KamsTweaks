@@ -1037,9 +1037,7 @@ public class ClaimProtections implements Listener {
         Claims.EntityClaim claim = claims.entityClaims.get(event.getEntity().getUniqueId());
         switch (event.getCause()) {
             case VOID, KILL -> {
-                if (claim != null) {
-                    event.setCancelled(true);
-                }
+                return;
             }
             case ENTITY_ATTACK, ENTITY_EXPLOSION, ENTITY_SWEEP_ATTACK -> {
                 if (event.getEntity() instanceof Mob mob) {
