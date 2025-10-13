@@ -1036,7 +1036,11 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         Claims.EntityClaim claim = claims.entityClaims.get(event.getEntity().getUniqueId());
         switch (event.getCause()) {
-            case VOID, KILL -> event.setCancelled(true);
+            case VOID, KILL -> {
+                if (claim != null) {
+                    event.setCancelled(true);
+                }
+            }
             case ENTITY_ATTACK, ENTITY_EXPLOSION, ENTITY_SWEEP_ATTACK -> {
                 if (event.getEntity() instanceof Mob mob) {
                     if (mob.getTarget() != null) {

@@ -482,7 +482,7 @@ public class Graves extends Feature {
             this.owner = owner;
             this.location = location;
             PlayerInventory inv = owner.getInventory();
-            this.inventory = Bukkit.createInventory(null, 45, Component.text("Grave"));
+            this.inventory = Bukkit.createInventory(null, 54, Component.text("Grave"));
             for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
                 if (item != null && !item.isEmpty()) {
@@ -502,6 +502,18 @@ public class Graves extends Feature {
             inv.setItemInOffHand(null);
             inventory.setItem(41, owner.getItemOnCursor());
             owner.setItemOnCursor(null);
+
+            Inventory topInv = owner.getOpenInventory().getTopInventory();
+            if (topInv.getType() == InventoryType.CRAFTING && !(topInv.getSize() > 5)) {
+                for (int i = 1; i < 5; i++) { // Slot 0 is the result so ignore it
+                    ItemStack item = topInv.getItem(i);
+                    if (item != null && !item.isEmpty()) {
+                        inventory.setItem(44+i, item);
+                        topInv.setItem(i, null);
+                    }
+                }
+            }
+
             this.experience = getPlayerExp(owner);
             this.id = highest;
             highest++;
