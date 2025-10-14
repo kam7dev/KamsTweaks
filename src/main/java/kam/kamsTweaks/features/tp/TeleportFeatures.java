@@ -94,18 +94,6 @@ public class TeleportFeatures extends Feature {
     public void teleport(Player player, Location location) {
         onCooldown.put(player, KamsTweaks.getInstance().getConfig().getInt("teleportation.cooldown"));
         locations.put(player, player.getLocation());
-        Entity vehicle = player.getVehicle();
-
-        if (vehicle != null) {
-            player.leaveVehicle();
-            vehicle.teleport(location);
-            player.teleport(location);
-            Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> {
-                vehicle.addPassenger(player);
-            }, 1L);
-        } else {
-            player.teleport(location);
-        }
         teleportations.remove(player);
         var r = new Runnable() {
             int id = 0;
@@ -120,6 +108,19 @@ public class TeleportFeatures extends Feature {
                 onCooldown.put(player, val);
             }
         };
+
+        Entity vehicle = player.getVehicle();
+        if (vehicle != null) {
+            player.leaveVehicle();
+            vehicle.teleport(location);
+            player.teleport(location);
+            Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> {
+                vehicle.addPassenger(player);
+            }, 1L);
+        } else {
+            player.teleport(location);
+        }
+
         r.id = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), r, 20, 20);
     }
 
@@ -163,7 +164,7 @@ public class TeleportFeatures extends Feature {
             @EventHandler
             public void onTeleport(PlayerTeleportEvent event) {
                 if (event.getPlayer().equals(player)) {
-                    player.sendMessage(Component.text("Teleport cancelled because you died.").color(NamedTextColor.GOLD));
+                    player.sendMessage(Component.text("Teleport cancelled because you teleported.").color(NamedTextColor.GOLD));
                     cancel();
                 }
             }

@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Graves extends Feature {
+    public static int GRAVE_SIZE = 54;
     public Map<Integer, Grave> graves = new HashMap<>();
     static int highest = 0;
 
@@ -320,10 +321,10 @@ public class Graves extends Feature {
                 if (grave.getInventory().isEmpty()) {
                     if (grave.stand != null) grave.stand.remove();
                     rem.set(id);
+                    KamsTweaks.getInstance().save();
                 }
             }
         });
-        KamsTweaks.getInstance().save();
         if (rem.get() != -1) graves.remove(rem.get());
     }
 
@@ -482,7 +483,7 @@ public class Graves extends Feature {
             this.owner = owner;
             this.location = location;
             PlayerInventory inv = owner.getInventory();
-            this.inventory = Bukkit.createInventory(null, 54, Component.text("Grave"));
+            this.inventory = Bukkit.createInventory(null, GRAVE_SIZE, Component.text("Grave"));
             for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
                 if (item != null && !item.isEmpty()) {
@@ -591,7 +592,7 @@ public class Graves extends Feature {
                     assert locationStr != null;
                     Location location = checkLocation(LocationUtils.deserializeLocation(locationStr));
                     if (location.getWorld() == null) continue;
-                    Inventory inv = Inventories.loadInventory(Component.text("Grave"), 45, config, "graves." + key);
+                    Inventory inv = Inventories.loadInventory(Component.text("Grave"), GRAVE_SIZE, config, "graves." + key);
                     long timeLeft = config.getLong("graves." + key + ".timeleft", 1000 * 60 * 20);
                     Grave grave = new Grave(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), inv, location, xp, timeLeft);
                     grave.hasMessaged5 = config.getBoolean("graves." + key + ".m5", false);

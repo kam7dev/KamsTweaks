@@ -34,6 +34,7 @@ import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.projectiles.BlockProjectileSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -687,11 +688,16 @@ public class ClaimProtections implements Listener {
             }
             case FIREBALL, ARROW -> {
                 if (event.getIgnitingEntity() instanceof Projectile projectile) {
-                    Object shooter = projectile.getShooter();
+                    var shooter = projectile.getShooter();
                     if (shooter instanceof Player player) {
                         if (to != null && !to.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
                             Component name = to.owner != null ? Component.text(to.owner.getName() == null ? "Unknown player" : to.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
                             message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
+                            event.setCancelled(true);
+                        }
+                    } else if (shooter instanceof BlockProjectileSource block) {
+                        var in = claims.getLandClaim(block.getBlock().getLocation());
+                        if (to != null && !to.hasPermission(in == null ? null : in.owner, Claims.ClaimPermission.BLOCK_PLACE)) {
                             event.setCancelled(true);
                         }
                     } else {
