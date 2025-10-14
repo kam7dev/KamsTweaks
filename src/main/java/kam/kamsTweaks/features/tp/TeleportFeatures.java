@@ -130,8 +130,8 @@ public class TeleportFeatures extends Feature {
         };
 
         int task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
-            teleport(player, location);
             HandlerList.unregisterAll(ref.listener);
+            teleport(player, location);
         }, (long) time * 20);
         teleportations.put(player, task);
 
@@ -185,8 +185,8 @@ public class TeleportFeatures extends Feature {
         };
 
         int task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
-            teleport(player, target.getLocation());
             HandlerList.unregisterAll(ref.listener);
+            teleport(player, target.getLocation());
         }, (long) time * 20);
         teleportations.put(player, task);
 
