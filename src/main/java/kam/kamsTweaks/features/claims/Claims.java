@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Claims extends Feature {
     public ClaimProtections protections = new ClaimProtections();
@@ -288,12 +289,17 @@ public class Claims extends Feature {
 
         try {
             claimsConfig.save(claimsFile);
+            Logger.debug("Saved " + i + " land claims.");
         } catch (IOException e) {
             Logger.warn(e.getMessage());
+            Logger.debug("Failed to save " + i + " land claims.");
         }
 
         claimsConfig.set("entities", null);
+
+        AtomicInteger j = new AtomicInteger();
         entityClaims.forEach((uuid, claim) -> {
+            j.getAndIncrement();
             String path = "entities." + uuid;
             if (claim.owner != null) claimsConfig.set(path + ".owner", claim.owner.getUniqueId().toString());
             claimsConfig.set(path + ".aggro", claim.canAggro);
@@ -311,8 +317,10 @@ public class Claims extends Feature {
 
         try {
             claimsConfig.save(claimsFile);
+            Logger.debug("Saved " + j.get() + " entity claims.");
         } catch (IOException e) {
             Logger.warn(e.getMessage());
+            Logger.debug("Failed to save " + j.get() + " entity claims.");
         }
     }
 

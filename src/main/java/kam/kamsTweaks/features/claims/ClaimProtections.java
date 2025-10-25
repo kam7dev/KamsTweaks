@@ -506,7 +506,7 @@ public class ClaimProtections implements Listener {
     }
 
     @EventHandler
-    public void onKaboom(EntityExplodeEvent e) {
+    public void onEntityKaboom(EntityExplodeEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         if (e.getEntity() instanceof TNTPrimed tnt && tnt.getSource() instanceof Player player) {
@@ -540,6 +540,37 @@ public class ClaimProtections implements Listener {
             for (Block block : toProtect) {
                 block.getState().update(true, false);
             }
+        } else if (e.getEntity() instanceof WindCharge charge && charge.getShooter() instanceof Player player) {
+            List<Component> who = new ArrayList<>();
+            List<Block> toProtect = new ArrayList<>();
+            for (Block block : e.blockList()) {
+                Claims.LandClaim to = claims.getLandClaim(block.getLocation());
+                if (to == null)
+                    continue;
+                if (!to.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
+                    Component name;
+                    if (to.owner != null && to.owner.isOnline()) {
+                        name = Objects.requireNonNull(to.owner.getPlayer()).displayName();
+                    } else {
+                        name = Component.text(to.owner != null ? Objects.requireNonNull(to.owner.getName()) : "the server").color(NamedTextColor.GOLD);
+                    }
+                    if (!who.contains(name))
+                        who.add(name);
+                    toProtect.add(block);
+                }
+            }
+            Component plrs = Component.empty();
+            for (var plr : who) {
+                if (!plrs.children().isEmpty())
+                    plrs = plrs.append(Component.text(", "));
+                plrs = plrs.append(plr);
+            }
+            if (!plrs.children().isEmpty())
+                message(player, Component.text("You don't have block interact permissions here! (Claim(s) owned by ").append(plrs, Component.text(")")));
+            e.blockList().removeAll(toProtect);
+            for (Block block : toProtect) {
+                block.getState().update(true, false);
+            }
         } else {
             List<Block> toProtect = new ArrayList<>();
             for (Block block : e.blockList()) {
@@ -556,7 +587,7 @@ public class ClaimProtections implements Listener {
     }
 
     @EventHandler
-    public void onKaboom(org.bukkit.event.block.BlockExplodeEvent e) {
+    public void onBlockKaboom(org.bukkit.event.block.BlockExplodeEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         List<Block> toProtect = new ArrayList<>();
