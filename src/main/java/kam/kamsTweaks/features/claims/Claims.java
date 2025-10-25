@@ -162,6 +162,7 @@ public class Claims extends Feature {
                             }
                         }
                     } catch(NullPointerException e) {
+                        Logger.excs.add(e);
                         Logger.warn(e.getMessage());
                         claim.defaults = new ArrayList<>();
                         claim.defaults.add(ClaimPermission.INTERACT_DOOR);
@@ -199,6 +200,7 @@ public class Claims extends Feature {
                     }
                     landClaims.add(claim);
                 } catch (Exception e) {
+                    Logger.excs.add(e);
                     Logger.warn(e.getMessage());
                 }
             }
@@ -227,6 +229,7 @@ public class Claims extends Feature {
                                 }
                             }
                         } catch(NullPointerException e) {
+                            Logger.excs.add(e);
                             Logger.warn(e.getMessage());
                             claim.defaults = new ArrayList<>();
                         }
@@ -255,6 +258,7 @@ public class Claims extends Feature {
                         }
                         entityClaims.put(UUID.fromString(key), claim);
                     } catch (Exception e) {
+                        Logger.excs.add(e);
                         Logger.warn(e.getMessage());
                     }
                 }
@@ -291,6 +295,7 @@ public class Claims extends Feature {
             claimsConfig.save(claimsFile);
             Logger.debug("Saved " + i + " land claims.");
         } catch (IOException e) {
+            Logger.excs.add(e);
             Logger.warn(e.getMessage());
             Logger.debug("Failed to save " + i + " land claims.");
         }
@@ -320,6 +325,7 @@ public class Claims extends Feature {
             Logger.debug("Saved " + j.get() + " entity claims.");
         } catch (IOException e) {
             Logger.warn(e.getMessage());
+            Logger.excs.add(e);
             Logger.debug("Failed to save " + j.get() + " entity claims.");
         }
     }

@@ -55,6 +55,7 @@ public class Warp extends Feature {
                     if (loc.getWorld() == null) continue;
                     warps.put(key, loc);
                 } catch (Exception e) {
+                    Logger.excs.add(e);
                     Logger.warn(e.getMessage());
                 }
             }

@@ -220,6 +220,7 @@ public class ClaimsDialogGui {
                         }
                     }
                 } catch (Exception exception) {
+                    Logger.excs.add(exception);
                     Logger.error(exception.getMessage());
                 }
             }
@@ -325,6 +326,7 @@ public class ClaimsDialogGui {
                                 action.getClass().getMethod("queue").invoke(action);
                             }
                         } catch (Exception e) {
+                            Logger.excs.add(e);
                             Logger.error("Failed to send message to discord: " + e.getMessage());
                         }
                     }
@@ -470,6 +472,7 @@ public class ClaimsDialogGui {
                                     action.getClass().getMethod("queue").invoke(action);
                                 }
                             } catch (Exception e) {
+                                Logger.excs.add(e);
                                 Logger.error("Failed to send message to discord: " + e.getMessage());
                             }
                         }

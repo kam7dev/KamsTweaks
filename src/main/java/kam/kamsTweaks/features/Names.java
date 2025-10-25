@@ -411,6 +411,7 @@ public class Names extends Feature {
                     );
                     data.put(owner, info);
                 } catch (Exception e) {
+                    Logger.excs.add(e);
                     Logger.warn("Failed to load name for " + key + ": " + e.getMessage());
                 }
             }

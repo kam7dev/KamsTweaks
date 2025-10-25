@@ -56,6 +56,7 @@ public class Home extends Feature {
                     if (loc.getWorld() == null) continue;
                     homes.put(owner, loc);
                 } catch (Exception e) {
+                    Logger.excs.add(e);
                     Logger.warn(e.getMessage());
                 }
             }

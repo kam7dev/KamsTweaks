@@ -53,6 +53,10 @@ permissions:
     default: op
     description: "Change settings for KamsTweaks"
 
+  kamstweaks.logger:
+    default: op
+    description: "Interact with the logger (basic)"
+
   kamstweaks.save:
     default: op
     description: "Save data for KamsTweaks"

@@ -91,6 +91,7 @@ public final class KamsTweaks extends JavaPlugin {
             generalConfig.save(generalFile);
         } catch (IOException e) {
             Logger.warn(e.getMessage());
+            Logger.excs.add(e);
         }
 
         // Default Config

@@ -609,6 +609,7 @@ public class Graves extends Feature {
                         }
                     }
                 } catch (Exception e) {
+                    Logger.excs.add(e);
                     Logger.warn(e.getMessage());
                 }
             }

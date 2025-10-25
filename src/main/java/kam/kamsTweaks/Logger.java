@@ -1,9 +1,14 @@
 package kam.kamsTweaks;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Logger {
     static boolean inited = false;
 
     static LogLevel logLevel = LogLevel.WARN;
+
+    public static List<Exception> excs = new ArrayList<>();
 
     public static void init() {
         if (inited) return;
