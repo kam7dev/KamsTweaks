@@ -171,10 +171,12 @@ public class Claims extends Feature {
                     if (claimsConfig.contains("claims." + key + ".permissions")) {
                         for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".permissions")).getKeys(false)) {
                             List<ClaimPermission> perms = new ArrayList<>();
-                            for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".defaults")).getKeys(false)) {
-                                perms.add(ClaimPermission.valueOf(perm));
+                            if (claimsConfig.contains("claims." + key + ".permissions." + uuid)) {
+                                for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".permissions." + uuid)).getKeys(false)) {
+                                    perms.add(ClaimPermission.valueOf(perm));
+                                }
+                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                             }
-                            claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                         }
                     } else if (claimsConfig.contains("claims." + key + ".perms")) {
                         for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".perms")).getKeys(false)) {
@@ -237,10 +239,12 @@ public class Claims extends Feature {
                         if (claimsConfig.contains("entities." + key + ".permissions")) {
                             for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions")).getKeys(false)) {
                                 List<ClaimPermission> perms = new ArrayList<>();
-                                for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".defaults")).getKeys(false)) {
-                                    perms.add(ClaimPermission.valueOf(perm));
+                                if (claimsConfig.contains("entities." + key + ".permissions." + uuid)) {
+                                    for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions." + uuid)).getKeys(false)) {
+                                        perms.add(ClaimPermission.valueOf(perm));
+                                    }
+                                    claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                                 }
-                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                             }
                         } else if (claimsConfig.contains("entities." + key + ".perms")) {
                             for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
