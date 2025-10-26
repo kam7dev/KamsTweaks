@@ -168,37 +168,40 @@ public class Claims extends Feature {
                         claim.defaults.add(ClaimPermission.INTERACT_DOOR);
                     }
 
-                    if (claimsConfig.contains("claims." + key + ".permissions")) {
-                        for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".permissions")).getKeys(false)) {
-                            List<ClaimPermission> perms = new ArrayList<>();
-                            if (claimsConfig.contains("claims." + key + ".permissions." + uuid)) {
-                                for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".permissions." + uuid)).getKeys(false)) {
+                    try {
+                        if (claimsConfig.contains("claims." + key + ".permissions")) {
+                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".permissions")).getKeys(false)) {
+                                List<ClaimPermission> perms = new ArrayList<>();
+                                for (String perm : Objects.requireNonNull(claimsConfig.getStringList("claims." + key + ".permissions." + uuid))) {
                                     perms.add(ClaimPermission.valueOf(perm));
                                 }
                                 claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                             }
-                        }
-                    } else if (claimsConfig.contains("claims." + key + ".perms")) {
-                        for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".perms")).getKeys(false)) {
-                            List<ClaimPermission> perms = new ArrayList<>();
-                            switch(Objects.requireNonNull(claimsConfig.getString("claims." + key + ".perms." + uuid))) {
-                                case "BLOCKS":
-                                    perms.add(ClaimPermission.BLOCK_PLACE);
-                                    perms.add(ClaimPermission.BLOCK_BREAK);
-                                    perms.add(ClaimPermission.INTERACT_BLOCK);
-                                    break;
-                                case "INTERACT":
-                                    perms.add(ClaimPermission.INTERACT_BLOCK);
-                                    break;
-                                case "NONE":
-                                    break;
-                                // doors is also done here
-                                default:
-                                    perms.add(ClaimPermission.INTERACT_DOOR);
-                                    break;
+                        } else if (claimsConfig.contains("claims." + key + ".perms")) {
+                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".perms")).getKeys(false)) {
+                                List<ClaimPermission> perms = new ArrayList<>();
+                                switch (Objects.requireNonNull(claimsConfig.getString("claims." + key + ".perms." + uuid))) {
+                                    case "BLOCKS":
+                                        perms.add(ClaimPermission.BLOCK_PLACE);
+                                        perms.add(ClaimPermission.BLOCK_BREAK);
+                                        perms.add(ClaimPermission.INTERACT_BLOCK);
+                                        break;
+                                    case "INTERACT":
+                                        perms.add(ClaimPermission.INTERACT_BLOCK);
+                                        break;
+                                    case "NONE":
+                                        break;
+                                    // doors is also done here
+                                    default:
+                                        perms.add(ClaimPermission.INTERACT_DOOR);
+                                        break;
+                                }
+                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                             }
-                            claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                         }
+                    } catch(Exception e) {
+                        Logger.excs.add(e);
+                        Logger.warn(e.getMessage());
                     }
                     landClaims.add(claim);
                 } catch (Exception e) {
@@ -236,29 +239,32 @@ public class Claims extends Feature {
                             claim.defaults = new ArrayList<>();
                         }
 
-                        if (claimsConfig.contains("entities." + key + ".permissions")) {
-                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions")).getKeys(false)) {
-                                List<ClaimPermission> perms = new ArrayList<>();
-                                if (claimsConfig.contains("entities." + key + ".permissions." + uuid)) {
-                                    for (String perm : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions." + uuid)).getKeys(false)) {
+                        try {
+                            if (claimsConfig.contains("entities." + key + ".permissions")) {
+                                for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions")).getKeys(false)) {
+                                    List<ClaimPermission> perms = new ArrayList<>();
+                                    for (String perm : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".permissions." + uuid))) {
                                         perms.add(ClaimPermission.valueOf(perm));
                                     }
                                     claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                                 }
-                            }
-                        } else if (claimsConfig.contains("entities." + key + ".perms")) {
-                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
-                                List<ClaimPermission> perms = new ArrayList<>();
-                                switch(Objects.requireNonNull(claimsConfig.getString("entities." + key + ".perms." + uuid))) {
-                                    case "INTERACT":
-                                        perms.add(ClaimPermission.INTERACT_ENTITY);
-                                        break;
-                                    case "KILL":
-                                        perms.add(ClaimPermission.DAMAGE_ENTITY);
-                                        break;
+                            } else if (claimsConfig.contains("entities." + key + ".perms")) {
+                                for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
+                                    List<ClaimPermission> perms = new ArrayList<>();
+                                    switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".perms." + uuid))) {
+                                        case "INTERACT":
+                                            perms.add(ClaimPermission.INTERACT_ENTITY);
+                                            break;
+                                        case "KILL":
+                                            perms.add(ClaimPermission.DAMAGE_ENTITY);
+                                            break;
+                                    }
+                                    claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                                 }
-                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                             }
+                        } catch (Exception e) {
+                            Logger.excs.add(e);
+                            Logger.warn(e.getMessage());
                         }
                         entityClaims.put(UUID.fromString(key), claim);
                     } catch (Exception e) {
