@@ -545,6 +545,7 @@ public class Graves extends Feature {
             stand.setBasePlate(false);
             stand.setRemoveWhenFarAway(false);
             stand.setPersistent(false);
+            stand.setRemoveWhenFarAway(true);
             stand.setInvisible(true);
             stand.setInvulnerable(true);
             stand.customName(Component.text(owner.getName() == null ? "Unknown" : owner.getName()).color(NamedTextColor.GOLD).append(Component.text("'s Grave").color(NamedTextColor.WHITE)));

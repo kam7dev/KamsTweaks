@@ -114,6 +114,7 @@ public class ClaimsDialogGui {
                     entity.text(Component.text("Owned by ").append(Component.text(claim.owner == null ? "the server" : claim.owner.getName() == null ? "Unknown player" : claim.owner.getName(), NamedTextColor.GOLD).appendNewline().append(Component.text(s))));
                     entity.setBillboard(Display.Billboard.CENTER);
                     entity.setPersistent(false);
+                    ((LivingEntity) entity).setRemoveWhenFarAway(true);
                     for (Player h : Bukkit.getOnlinePlayers()) {
                         if (!h.equals(who)) {
                             h.hideEntity(KamsTweaks.getInstance(), entity);
@@ -241,6 +242,7 @@ public class ClaimsDialogGui {
                     entity.setFireTicks(0);
                     ((Mob) entity).setTarget(null);
                     entity.setPersistent(true);
+                    ((LivingEntity) entity).setRemoveWhenFarAway(false);
                     who.sendMessage(Component.text("Claimed ").append(entity.name(), Component.text(" successfully.")));
                 }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No")).build())));
