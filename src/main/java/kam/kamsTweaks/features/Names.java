@@ -31,6 +31,12 @@ public class Names extends Feature {
     Map<UUID, Pair<String, List<TextColor>>> data = new HashMap<>();
     static final String INVIS_REGEX = "[\\u200B-\\u200F\\uFEFF\\u2060]";
 
+    public static Names instance;
+
+    public Names() {
+        instance = this;
+    }
+
     private static List<String> splitGraphemes(String input) {
         BreakIterator iter = BreakIterator.getCharacterInstance(Locale.ROOT);
         iter.setText(input);
@@ -76,7 +82,7 @@ public class Names extends Feature {
         return TextColor.color(r, g, bCol);
     }
 
-    private Component renderName(Pair<String, List<TextColor>> info) {
+    public Component renderName(Pair<String, List<TextColor>> info) {
         if (info.second == null || info.second.isEmpty()) {
             return Component.text(info.first);
         }
@@ -453,5 +459,9 @@ public class Names extends Feature {
         Component comp = renderName(info);
         player.displayName(comp);
         player.playerListName(comp);
+    }
+
+    public Component getRenderedName(OfflinePlayer player) {
+        return renderName(data.getOrDefault(player.getUniqueId(), new Pair<>(player.getName(), new ArrayList<>())));
     }
 }

@@ -63,9 +63,9 @@ permissions:
 
 dependencies:
   server:
-    DiscordSRV: {
+    DiscordSRV:
+      load: BEFORE
       required: false
-    }
-#    ViaBackwards: {
-#      required: true
-#    }
+    PlaceholderAPI:
+      load: BEFORE
+      required: false

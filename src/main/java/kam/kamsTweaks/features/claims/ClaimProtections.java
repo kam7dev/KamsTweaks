@@ -3,6 +3,7 @@ package kam.kamsTweaks.features.claims;
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
@@ -36,10 +37,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.projectiles.BlockProjectileSource;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class ClaimProtections implements Listener {
     Claims claims = null;
@@ -60,6 +58,10 @@ public class ClaimProtections implements Listener {
     }
 
     boolean useClaimTool(PlayerInteractEvent e) {
+        if (e.getItem().getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "yummy"))) {
+            if (e.getAction() != Action.RIGHT_CLICK_AIR) e.setCancelled(true);
+            return true;
+        }
         if (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             if (KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
                 claims.handleItem(e);
@@ -76,7 +78,7 @@ public class ClaimProtections implements Listener {
                 else if (res.owner == null)
                     e.getPlayer().sendMessage(Component.text("This claim is owned by the server."));
                 else
-                    e.getPlayer().sendMessage(Component.text("This claim is owned by ").append(Component.text(res.owner.getName() == null ? "Unknown player" : res.owner.getName()).color(NamedTextColor.GOLD)));
+                    e.getPlayer().sendMessage(Component.text("This claim is owned by ").append(Names.instance.getRenderedName(res.owner)));
             }
             e.setCancelled(true);
             return true;
@@ -87,10 +89,33 @@ public class ClaimProtections implements Listener {
         return false;
     }
 
+    private void applyCooldowns(Player p) {
+        Set<Material> mats = new HashSet<>();
+
+        for (ItemStack it : p.getInventory().getContents()) {
+            if (it != null && (it.getType().isBlock() || it.getType().name().toLowerCase().contains("bucket"))) {
+                mats.add(it.getType());
+            }
+        }
+        for (ItemStack it : p.getInventory().getArmorContents()) {
+            if (it != null && (it.getType().isBlock() || it.getType().name().toLowerCase().contains("bucket"))) {
+                mats.add(it.getType());
+            }
+        }
+        ItemStack off = p.getInventory().getItemInOffHand();
+        if (off.getType().isBlock() || off.getType().name().toLowerCase().contains("bucket")) {
+            mats.add(off.getType());
+        }
+
+        for (Material m : mats) {
+            p.setCooldown(m, 20);
+        }
+    }
+
     /// Land Claims
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
-        if (e.getPlayer().getTargetEntity(5) instanceof Creature)
+        if (e.getPlayer().getTargetEntity(5) instanceof Creature creature && e.getPlayer().getVehicle() != creature)
             return;
         if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIMER) {
             if (useClaimTool(e)) return;
@@ -108,24 +133,12 @@ public class ClaimProtections implements Listener {
                 if (claim == null) return;
                 if (e.getClickedBlock().getType().toString().contains("DOOR")) {
                     if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_DOOR) && !claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
-                        Component name;
-                        if (claim.owner.isOnline()) {
-                            name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                        } else {
-                            name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                        }
-                        message(player, Component.text("You don't have door permissions here! (Claim owned by ").append(name, Component.text(")")));
+                        message(player, Component.text("You don't have door permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                         e.setCancelled(true);
                     }
                 } else {
                     if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
-                        Component name;
-                        if (claim.owner.isOnline()) {
-                            name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                        } else {
-                            name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                        }
-                        message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
+                        message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                         e.setCancelled(true);
                     }
                 }
@@ -141,13 +154,7 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
         if (claim == null) return;
         if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
-            Component name;
-            if (claim.owner.isOnline()) {
-                name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-            } else {
-                name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-            }
-            message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
+            message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
             e.setCancelled(true);
         }
     }
@@ -164,14 +171,9 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
         if (claim == null) return;
         if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-            Component name;
-            if (claim.owner.isOnline()) {
-                name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-            } else {
-                name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-            }
-            message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
+            message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
             e.setCancelled(true);
+            applyCooldowns(player);
         }
     }
 
@@ -184,14 +186,9 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
         if (claim == null) return;
         if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-            Component name;
-            if (claim.owner.isOnline()) {
-                name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-            } else {
-                name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-            }
             e.setCancelled(true);
-            message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
+            message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+            applyCooldowns(player);
         }
     }
 
@@ -203,14 +200,8 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
         if (claim == null) return;
         if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
-            Component name;
-            if (claim.owner.isOnline()) {
-                name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-            } else {
-                name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-            }
             e.setCancelled(true);
-            message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
+            message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
         }
     }
 
@@ -289,13 +280,7 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim in = claims.getLandClaim(e.getBlock().getLocation());
         List<Component> who = new ArrayList<>();
         if (in != null && !in.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-            Component name;
-            if (in.owner.isOnline()) {
-                name = Objects.requireNonNull(in.owner.getPlayer()).displayName();
-            } else {
-                name = Component.text(in.owner != null ? Objects.requireNonNull(in.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-            }
-            who.add(name);
+            who.add(Names.instance.getRenderedName(in.owner));
             e.setCancelled(true);
             e.getBlock().getState().update(true, false);
         }
@@ -308,12 +293,7 @@ public class ClaimProtections implements Listener {
             if (to == null)
                 continue;
             if (!to.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                Component name;
-                if (to.owner.isOnline()) {
-                    name = Objects.requireNonNull(to.owner.getPlayer()).displayName();
-                } else {
-                    name = Component.text(to.owner != null ? Objects.requireNonNull(to.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                }
+                Component name = Names.instance.getRenderedName(to.owner);
                 if (!who.contains(name))
                     who.add(name);
                 toProtect.add(blockstate);
@@ -342,13 +322,7 @@ public class ClaimProtections implements Listener {
             Claims.LandClaim claim = claims.getLandClaim(((Entity) entity).getLocation());
             if (claim == null) return;
             if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
-                Component name;
-                if (claim.owner.isOnline()) {
-                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                } else {
-                    name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                }
-                message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
+                message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -369,13 +343,7 @@ public class ClaimProtections implements Listener {
             }
             if (claim == null) return;
             if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK) && (origin != null && !origin.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK))) {
-                Component name;
-                if (claim.owner.isOnline()) {
-                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                } else {
-                    name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                }
-                message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
+                message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -389,13 +357,7 @@ public class ClaimProtections implements Listener {
             Claims.LandClaim claim = claims.getLandClaim(e.getEntity().getLocation());
             if (claim == null) return;
             if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                Component name;
-                if (claim.owner.isOnline()) {
-                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                } else {
-                    name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                }
-                message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
+                message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -409,13 +371,7 @@ public class ClaimProtections implements Listener {
             Claims.LandClaim claim = claims.getLandClaim(e.getEntity().getLocation());
             if (claim == null) return;
             if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                Component name;
-                if (claim.owner.isOnline()) {
-                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                } else {
-                    name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                }
-                message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
+                message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -429,13 +385,7 @@ public class ClaimProtections implements Listener {
             Claims.LandClaim claim = claims.getLandClaim(e.getEntity().getLocation());
             if (claim == null) return;
             if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                Component name;
-                if (claim.owner.isOnline()) {
-                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                } else {
-                    name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                }
-                message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
+                message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             } else {
                 e.getEntity().getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING, LocationUtils.serializeBlockPos(e.getEntity().getLocation()));
@@ -454,13 +404,7 @@ public class ClaimProtections implements Listener {
         if (claim == null) return;
         if (e.getAttacker() instanceof Player player) {
             if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
-                Component name;
-                if (claim.owner.isOnline()) {
-                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                } else {
-                    name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                }
-                message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
+                message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
         } else {
@@ -487,13 +431,7 @@ public class ClaimProtections implements Listener {
                 origin = claims.getLandClaim(loc);
             }
             if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK) && (origin != null && !origin.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE))) {
-                Component name;
-                if (claim.owner.isOnline()) {
-                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                } else {
-                    name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                }
-                message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
+                message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -517,12 +455,7 @@ public class ClaimProtections implements Listener {
                 if (to == null)
                     continue;
                 if (!to.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
-                    Component name;
-                    if (to.owner != null && to.owner.isOnline()) {
-                        name = Objects.requireNonNull(to.owner.getPlayer()).displayName();
-                    } else {
-                        name = Component.text(to.owner != null ? Objects.requireNonNull(to.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                    }
+                    Component name = Names.instance.getRenderedName(to.owner);
                     if (!who.contains(name))
                         who.add(name);
                     toProtect.add(block);
@@ -548,12 +481,7 @@ public class ClaimProtections implements Listener {
                 if (to == null)
                     continue;
                 if (!to.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
-                    Component name;
-                    if (to.owner != null && to.owner.isOnline()) {
-                        name = Objects.requireNonNull(to.owner.getPlayer()).displayName();
-                    } else {
-                        name = Component.text(to.owner != null ? Objects.requireNonNull(to.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                    }
+                    Component name = Names.instance.getRenderedName(to.owner);
                     if (!who.contains(name))
                         who.add(name);
                     toProtect.add(block);
@@ -722,7 +650,7 @@ public class ClaimProtections implements Listener {
                     var shooter = projectile.getShooter();
                     if (shooter instanceof Player player) {
                         if (to != null && !to.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                            Component name = to.owner != null ? Component.text(to.owner.getName() == null ? "Unknown player" : to.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                            Component name = to.owner != null ? Names.instance.getRenderedName(to.owner) : Component.text("the server").color(NamedTextColor.GOLD);
                             message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
                             event.setCancelled(true);
                         }
@@ -740,7 +668,7 @@ public class ClaimProtections implements Listener {
                     Claims.LandClaim claim = claims.getLandClaim(event.getBlock().getLocation());
                     if (event.getIgnitingEntity() instanceof Player player) {
                         if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                            Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                            Component name = claim.owner != null ? Names.instance.getRenderedName(claim.owner) : Component.text("the server").color(NamedTextColor.GOLD);
                             message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
                             event.setCancelled(true);
                         }
@@ -754,7 +682,7 @@ public class ClaimProtections implements Listener {
             case FLINT_AND_STEEL -> {
                 if (event.getIgnitingEntity() instanceof Player player) {
                     if (to != null && !to.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                        Component name = to.owner != null ? Component.text(to.owner.getName() == null ? "Unknown player" : to.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                        Component name = to.owner != null ? Names.instance.getRenderedName(to.owner) : Component.text("the server").color(NamedTextColor.GOLD);
                         message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
                         event.setCancelled(true);
                     }
@@ -939,13 +867,13 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim claim = claims.getLandClaim(event.getClickedBlock().getLocation());
         if (event.getClickedBlock() instanceof Farmland) {
             if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
-                Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                Component name = claim.owner != null ? Names.instance.getRenderedName(claim.owner) : Component.text("the server").color(NamedTextColor.GOLD);
                 message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
                 event.setCancelled(true);
             }
         } else {
             if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
-                Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                Component name = claim.owner != null ? Names.instance.getRenderedName(claim.owner) : Component.text("the server").color(NamedTextColor.GOLD);
                 message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(name, Component.text(")")));
                 event.setCancelled(true);
             }
@@ -961,7 +889,7 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim claim = claims.getLandClaim(event.getBlock().getLocation());
         if (event.getEntity() instanceof Player player) {
             if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
-                Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                Component name = claim.owner != null ? Names.instance.getRenderedName(claim.owner): Component.text("the server").color(NamedTextColor.GOLD);
                 message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
                 event.setCancelled(true);
             }
@@ -997,7 +925,7 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim claim = claims.getLandClaim(event.getBlock().getLocation());
         if (event.getEntity() instanceof Player player) {
             if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                Component name = claim.owner != null ? Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD) : Component.text("the server").color(NamedTextColor.GOLD);
+                Component name = claim.owner != null ? Names.instance.getRenderedName(claim.owner) : Component.text("the server").color(NamedTextColor.GOLD);
                 message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(name, Component.text(")")));
                 event.setCancelled(true);
             }
@@ -1034,7 +962,7 @@ public class ClaimProtections implements Listener {
                     }
                     if (hasMessaged.contains(e.getPlayer().getUniqueId())) return;
                     hasMessaged.add(e.getPlayer().getUniqueId());
-                    e.getPlayer().sendMessage(Component.text("This entity is already claimed by ").append(Component.text(owner == null ? "the server" : owner.getName() == null ? "Unknown player" : owner.getName()).color(NamedTextColor.GOLD)).append(Component.text(".")));
+                    e.getPlayer().sendMessage(Component.text("This entity is already claimed by ").append(owner == null ? Component.text("the server") : Names.instance.getRenderedName(owner),Component.text(".")));
                     return;
                 }
                 if (!e.getPlayer().hasPermission("kamstweaks.claims.claim")) {
@@ -1056,13 +984,7 @@ public class ClaimProtections implements Listener {
             var claim = claims.entityClaims.get(c.getUniqueId());
             if (claim == null) return;
             if (!claim.hasPermission(e.getPlayer(), Claims.ClaimPermission.INTERACT_ENTITY)) {
-                Component name;
-                if (claim.owner.isOnline()) {
-                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                } else {
-                    name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
-                }
-                message(e.getPlayer(), Component.text("You don't have permission to interact with this entity! (Entity claimed by ").append(name, Component.text(")")));
+                message(e.getPlayer(), Component.text("You don't have permission to interact with this entity! (Entity claimed by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -1090,7 +1012,7 @@ public class ClaimProtections implements Listener {
                         else if (claim.owner == null)
                             player.sendMessage(Component.text("This entity is owned by the server."));
                         else
-                            player.sendMessage(Component.text("This entity is owned by ").append(Component.text(claim.owner.getName() == null ? "Unknown player" : claim.owner.getName()).color(NamedTextColor.GOLD)));
+                            player.sendMessage(Component.text("This entity is owned by ").append(Names.instance.getRenderedName(claim.owner)));
                         event.setCancelled(true);
                         return;
                     }
@@ -1100,7 +1022,7 @@ public class ClaimProtections implements Listener {
                     if (claim.owner.isOnline()) {
                         name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
                     } else {
-                        name = Component.text(claim.owner != null ? Objects.requireNonNull(claim.owner.getName()) : "the server").color(NamedTextColor.GOLD);
+                        name = claim.owner == null ? Component.text("the server").color(NamedTextColor.GOLD) : Names.instance.getRenderedName(claim.owner);
                     }
                     message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(name, Component.text(")")));
                     event.setCancelled(true);

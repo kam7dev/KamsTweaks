@@ -111,9 +111,14 @@ public class TeleportFeatures extends Feature {
 
         Entity vehicle = player.getVehicle();
         if (vehicle != null) {
-            player.leaveVehicle();
+            var passengers = vehicle.getPassengers();
+            for (var passenger : passengers) {
+                passenger.leaveVehicle();
+            }
             vehicle.teleport(location);
-            player.teleport(location);
+            for (var passenger : passengers) {
+                vehicle.addPassenger(passenger);
+            }
             Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> {
                 vehicle.addPassenger(player);
             }, 1L);

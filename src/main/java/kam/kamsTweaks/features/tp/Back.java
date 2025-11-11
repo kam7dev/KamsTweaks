@@ -8,6 +8,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.features.Graves;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
@@ -82,7 +83,7 @@ public class Back extends Feature {
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
         Player player = e.getPlayer();
-        TeleportFeatures.get().locations.put(player, player.getLocation());
+        TeleportFeatures.get().locations.put(player, Graves.checkLocation(player.getLocation()));
         player.sendMessage(Component.text("Return to your death location with /back.").color(NamedTextColor.GOLD));
     }
 }

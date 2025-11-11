@@ -4,6 +4,7 @@ import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
+import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -486,10 +487,8 @@ public class Claims extends Feature {
                                 Component name;
                                 if (c.owner == null) {
                                     name = Component.text("the server").color(NamedTextColor.GOLD);
-                                } else if (c.owner.isOnline()) {
-                                    name = Objects.requireNonNull(c.owner.getPlayer()).displayName();
                                 } else {
-                                    name = Component.text(Objects.requireNonNull(c.owner.getName())).color(NamedTextColor.GOLD);
+                                    name = Names.instance.getRenderedName(c.owner);
                                 }
                                 event.getPlayer().sendMessage(Component.text("This land is already claimed by ").append(name, Component.text(".")).color(NamedTextColor.RED));
                                 return;
@@ -516,10 +515,8 @@ public class Claims extends Feature {
                                 Component name;
                                 if (other.owner == null) {
                                     name = Component.text("the server").color(NamedTextColor.GOLD);
-                                } else if (other.owner.isOnline()) {
-                                    name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
                                 } else {
-                                    name = Component.text(Objects.requireNonNull(other.owner.getName())).color(NamedTextColor.GOLD);
+                                    name = Names.instance.getRenderedName(other.owner);
                                 }
                                 event.getPlayer().sendMessage(Component.text("This land intersects a claim by ").append(name, Component.text(".")).color(NamedTextColor.RED));
                                 return;

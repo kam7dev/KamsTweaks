@@ -144,7 +144,7 @@ public class TPA extends Feature {
                 .append(Component.text(".").color(NamedTextColor.GOLD)));
         requester.sendMessage(Component.text("Your request to ").color(NamedTextColor.GOLD)
                 .append(acceptor.displayName().color(NamedTextColor.RED))
-                .append(Component.text(" was accepted.").color(NamedTextColor.GOLD))
+                .append(Component.text(" was accepted").color(NamedTextColor.GOLD))
                 .append(Component.text(". " + (
                         req.here ? (time > 0 ? "They will be teleported to you in " : "They have been teleported to you")
                                 : (time > 0 ? "You will be teleported to them in " : "You have been teleported to them")
@@ -176,7 +176,6 @@ public class TPA extends Feature {
         Bukkit.getScheduler().cancelTask(req.taskId);
         HandlerList.unregisterAll(req.listener);
         target.sendMessage(Component.text("Teleport request cancelled because ").color(NamedTextColor.GOLD)
-                .append(sender.displayName().color(NamedTextColor.RED))
                 .append(reason));
         TeleportFeatures.get().teleportations.remove(sender);
     }
@@ -245,8 +244,12 @@ public class TPA extends Feature {
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
                         TPARequest req = tpas.get(p);
-                        if (req != null) cancel(p, req.target, p.displayName().color(NamedTextColor.RED).append(Component.text(" cancelled it").color(NamedTextColor.GOLD)));
-                        else p.sendMessage(Component.text("No outgoing requests.").color(NamedTextColor.RED));
+                        if (req != null)  {
+                            cancel(p, req.target, p.displayName().color(NamedTextColor.RED).append(Component.text(" cancelled it").color(NamedTextColor.GOLD)));
+                            p.sendMessage(Component.text("Teleport request cancelled.").color(NamedTextColor.GOLD));
+                        } else {
+                            p.sendMessage(Component.text("No outgoing requests.").color(NamedTextColor.RED));
+                        }
                     }
                     return Command.SINGLE_SUCCESS;
                 }).build());

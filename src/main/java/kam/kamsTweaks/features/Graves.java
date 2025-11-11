@@ -120,7 +120,7 @@ public class Graves extends Feature {
                 .build());
     }
 
-    public Location checkLocation(Location loc) {
+    public static Location checkLocation(Location loc) {
         if (loc.getBlockY() < loc.getWorld().getMinHeight()) {
             var block = loc.getWorld().getHighestBlockAt(loc);
             if (block.getType().isAir()) {

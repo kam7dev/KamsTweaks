@@ -4,6 +4,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.features.*;
 import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.tp.TeleportFeatures;
+import kam.kamsTweaks.utils.KamsTweaksPlaceholder;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -50,6 +51,7 @@ public final class KamsTweaks extends JavaPlugin {
         for (var feature : features) {
             getServer().getPluginManager().registerEvents(feature, this);
         }
+        getServer().getPluginManager().registerEvents(new ItemManager(), this);
         
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             for (var feature : features) {
@@ -59,6 +61,11 @@ public final class KamsTweaks extends JavaPlugin {
         });
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, this::save, 20 * 60 * 5, 20 * 60 * 5);
+
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) { //
+                new KamsTweaksPlaceholder().register();
+        }
+
     }
 
     @Override

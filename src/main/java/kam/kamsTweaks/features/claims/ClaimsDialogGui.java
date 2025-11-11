@@ -9,6 +9,7 @@ import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.features.Names;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -111,10 +112,9 @@ public class ClaimsDialogGui {
                                     + ", and " + perms.getLast() + ".";
                         };
                     }
-                    entity.text(Component.text("Owned by ").append(Component.text(claim.owner == null ? "the server" : claim.owner.getName() == null ? "Unknown player" : claim.owner.getName(), NamedTextColor.GOLD).appendNewline().append(Component.text(s))));
+                    entity.text(Component.text("Owned by ").append(claim.owner == null ? Component.text("the server", NamedTextColor.GOLD) : Names.instance.getRenderedName(claim.owner)).appendNewline().append(Component.text(s)));
                     entity.setBillboard(Display.Billboard.CENTER);
                     entity.setPersistent(false);
-                    ((LivingEntity) entity).setRemoveWhenFarAway(true);
                     for (Player h : Bukkit.getOnlinePlayers()) {
                         if (!h.equals(who)) {
                             h.hideEntity(KamsTweaks.getInstance(), entity);
@@ -375,7 +375,7 @@ public class ClaimsDialogGui {
         }
 
         who.showDialog(Dialog.create(builder -> builder.empty()
-                .base(DialogBase.builder(Component.text("Edit ").append(target == null ? Component.text("Default Permissions") : Component.text("Permissions for ").append(target.getPlayer() == null ? Component.text(target.getName() == null ? "Unknown Player" : target.getName()) : target.getPlayer().displayName())))
+                .base(DialogBase.builder(Component.text("Edit ").append(target == null ? Component.text("Default Permissions") : Component.text("Permissions for ").append(Names.instance.getRenderedName(target))))
                         .inputs(btns).build()
                 )
                 .type(DialogType.confirmation(
@@ -574,7 +574,7 @@ public class ClaimsDialogGui {
         }
 
         who.showDialog(Dialog.create(builder -> builder.empty()
-                .base(DialogBase.builder(Component.text("Edit ").append(target == null ? Component.text("Default Permissions") : Component.text("Permissions for ").append(target.getPlayer() == null ? Component.text(target.getName() == null ? "Unknown Player" : target.getName()) : target.getPlayer().displayName())))
+                .base(DialogBase.builder(Component.text("Edit ").append(target == null ? Component.text("Default Permissions") : Component.text("Permissions for ").append(Names.instance.getRenderedName(target))))
                         .inputs(btns).build()
                 )
                 .type(DialogType.confirmation(
