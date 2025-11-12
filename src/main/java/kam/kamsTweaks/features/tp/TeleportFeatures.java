@@ -117,6 +117,7 @@ public class TeleportFeatures extends Feature {
             }
             vehicle.teleport(location);
             for (var passenger : passengers) {
+                passenger.teleport(location);
                 vehicle.addPassenger(passenger);
             }
             Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> {
