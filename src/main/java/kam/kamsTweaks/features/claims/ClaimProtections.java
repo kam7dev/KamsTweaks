@@ -58,6 +58,7 @@ public class ClaimProtections implements Listener {
     }
 
     boolean useClaimTool(PlayerInteractEvent e) {
+        assert e.getItem() != null;
         if (e.getItem().getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "yummy"))) {
             if (e.getAction() != Action.RIGHT_CLICK_AIR) e.setCancelled(true);
             return true;
@@ -333,17 +334,23 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Entity entity = e.getRightClicked();
-        if (entity instanceof ItemFrame || entity instanceof ArmorStand) {
-            Player player = e.getPlayer();
-            Claims.LandClaim claim = claims.getLandClaim(entity.getLocation());
-            Claims.LandClaim origin = null;
-            if (entity.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "origin"))) {
-                Location loc = LocationUtils.deserializeBlockPos(Objects.requireNonNull(entity.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING)));
-                origin = claims.getLandClaim(loc);
-            }
-            if (claim == null) return;
-            if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK) && (origin != null && !origin.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK))) {
+        if (!(entity instanceof ArmorStand) && !(entity instanceof ItemFrame)) return;
+        Player player = e.getPlayer();
+        Claims.LandClaim claim = claims.getLandClaim(entity.getLocation());
+        Claims.LandClaim origin = null;
+        if (entity.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "origin"))) {
+            Location loc = LocationUtils.deserializeBlockPos(Objects.requireNonNull(entity.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING)));
+            origin = claims.getLandClaim(loc);
+        }
+        if (claim == null) return;
+        if (entity instanceof ArmorStand) {
+            if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK) && (origin == null || !origin.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK))) {
                 message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+                e.setCancelled(true);
+            }
+        } else {
+            if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE) && (origin == null || !origin.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK))) {
+                message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -370,8 +377,8 @@ public class ClaimProtections implements Listener {
         if (e.getRemover() instanceof Player player) {
             Claims.LandClaim claim = claims.getLandClaim(e.getEntity().getLocation());
             if (claim == null) return;
-            if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-                message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+            if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
+                message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -430,7 +437,7 @@ public class ClaimProtections implements Listener {
                 Location loc = LocationUtils.deserializeBlockPos(Objects.requireNonNull(entity.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING)));
                 origin = claims.getLandClaim(loc);
             }
-            if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK) && (origin != null && !origin.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE))) {
+            if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK) && (origin == null || !origin.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE))) {
                 message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
@@ -894,6 +901,11 @@ public class ClaimProtections implements Listener {
                 event.setCancelled(true);
             }
         }
+        if (event.getEntityType() == EntityType.ENDERMAN) {
+            if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK)) {
+                event.setCancelled(true);
+            }
+        }
         if (event.getEntity() instanceof FallingBlock fb) {
             if (event.getTo() == org.bukkit.Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
                 fb.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING, LocationUtils.serializeBlockPos(fb.getLocation()));
@@ -995,9 +1007,7 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         Claims.EntityClaim claim = claims.entityClaims.get(event.getEntity().getUniqueId());
         switch (event.getCause()) {
-            case VOID, KILL -> {
-                return;
-            }
+            case VOID, KILL -> {}
             case ENTITY_ATTACK, ENTITY_EXPLOSION, ENTITY_SWEEP_ATTACK -> {
                 if (event.getEntity() instanceof Mob mob) {
                     if (mob.getTarget() != null) {
@@ -1046,6 +1056,18 @@ public class ClaimProtections implements Listener {
             var claim = claims.getEntityClaim(entity);
             if (claim != null) {
                 if (!claim.canAggro) event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onTransform(EntityTransformEvent e) {
+        if (e.getTransformReason() == EntityTransformEvent.TransformReason.LIGHTNING) {
+            if (e.getEntity() instanceof Mob entity) {
+                var claim = claims.getEntityClaim(entity);
+                if (claim != null) {
+                    if (!claim.canAggro) e.setCancelled(true);
+                }
             }
         }
     }
