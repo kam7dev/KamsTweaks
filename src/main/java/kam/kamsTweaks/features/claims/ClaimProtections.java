@@ -427,7 +427,7 @@ public class ClaimProtections implements Listener {
             return;
         Entity entity = e.getEntity();
         if (!(entity instanceof ItemFrame || entity instanceof ArmorStand || entity instanceof AbstractHorse
-                || entity instanceof ChestBoat || entity instanceof StorageMinecart))
+                || entity instanceof Boat || entity instanceof Minecart))
             return;
         if (e.getDamager() instanceof Player player) {
             Claims.LandClaim claim = claims.getLandClaim(e.getEntity().getLocation());
