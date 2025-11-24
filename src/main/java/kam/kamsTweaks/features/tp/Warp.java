@@ -5,6 +5,9 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver;
+import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
@@ -12,6 +15,9 @@ import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -119,16 +125,16 @@ public class Warp extends Feature {
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
-                    if (executor instanceof Player) {
+                    //if (executor instanceof Player) {
                         Component c = Component.text("The server has the following warps:").color(NamedTextColor.GOLD);
                         for (var warp : warps.keySet()) {
                             c = c.appendNewline().append(Component.text(warp).color(NamedTextColor.WHITE));
                         }
                         sender.sendMessage(c);
                         return Command.SINGLE_SUCCESS;
-                    }
-                    sender.sendMessage("Only players can use warps.");
-                    return Command.SINGLE_SUCCESS;
+                    //}
+                    //sender.sendMessage("Only players can use warps.");
+                    //return Command.SINGLE_SUCCESS;
                 });
         commands.registrar().register(warpsCmd.build());
 
@@ -151,7 +157,34 @@ public class Warp extends Feature {
                     }
                     sender.sendMessage("Only players can use warps.");
                     return Command.SINGLE_SUCCESS;
-                }));
+                }).then(Commands.argument("location", ArgumentTypes.blockPosition()).executes(ctx -> {
+		 CommandSender sender = ctx.getSource().getSender();
+                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
+                        sender.sendPlainMessage("Warps are disabled.");
+                        return Command.SINGLE_SUCCESS;
+                    }
+                        String warp = ctx.getArgument("name", String.class);
+			BlockPosition pos = ctx.getArgument("location", BlockPositionResolver.class).resolve(ctx.getSource()); 
+                        warps.put(warp, pos.toLocation(Bukkit.getWorlds().get(0)));
+                        sender.sendMessage(Component.text("Successfully created the warp ").color(NamedTextColor.GOLD)
+                                .append(Component.text(warp).color(NamedTextColor.RED))
+                                .append(Component.text(".").color(NamedTextColor.GOLD)));
+                    return Command.SINGLE_SUCCESS;
+	}).then(Commands.argument("world", ArgumentTypes.world()).executes(ctx -> {
+		 CommandSender sender = ctx.getSource().getSender();
+                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
+                        sender.sendPlainMessage("Warps are disabled.");
+                        return Command.SINGLE_SUCCESS;
+                    }
+                        String warp = ctx.getArgument("name", String.class);
+			BlockPosition pos = ctx.getArgument("location", BlockPositionResolver.class).resolve(ctx.getSource());
+			World world = ctx.getArgument("world", World.class);
+                        warps.put(warp, pos.toLocation(world));
+                        sender.sendMessage(Component.text("Successfully created the warp ").color(NamedTextColor.GOLD)
+                                .append(Component.text(warp).color(NamedTextColor.RED))
+                                .append(Component.text(".").color(NamedTextColor.GOLD)));
+                    return Command.SINGLE_SUCCESS;
+	}))));
         commands.registrar().register(addwarp.build());
     }
 }
