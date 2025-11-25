@@ -3,7 +3,6 @@ package kam.kamsTweaks.features.claims;
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.utils.LocationUtils;
@@ -138,7 +137,6 @@ public class ClaimProtections implements Listener {
     /// Land Claims
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
-        Logger.info("Test");
 //        if (e.getPlayer().getTargetEntity(5) instanceof Creature creature && e.getPlayer().getVehicle() != creature)
 //            return;
         if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIMER) {

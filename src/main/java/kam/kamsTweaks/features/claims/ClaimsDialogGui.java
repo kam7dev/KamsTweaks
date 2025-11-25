@@ -536,6 +536,7 @@ public class ClaimsDialogGui {
                                 100,
                                 DialogAction.customClick((view, audience) -> {
                                     claim.canAggro = Boolean.TRUE.equals(view.getBoolean("aggro"));
+                                    if (!claim.canAggro && Bukkit.getEntity(claim.entity) instanceof Mob mob) (mob).setTarget(null);
                                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                         ),
                         ActionButton.create(
