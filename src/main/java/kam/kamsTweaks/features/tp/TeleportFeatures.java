@@ -7,7 +7,9 @@ import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.claims.Claims;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -102,7 +104,7 @@ public class TeleportFeatures extends Feature {
                 if (Claims.get().entityClaims.containsKey(passenger.getUniqueId())) {
                     var claim = Claims.get().entityClaims.get(passenger.getUniqueId());
                     if (!claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) {
-                        player.sendMessage("Cancelled teleport because you don't have permission to damage the entity in this vehicle.");
+                        player.sendMessage(Component.text("Cancelled teleport because you don't have permission to ").append(Component.text("kill").color(NamedTextColor.AQUA).decorate(TextDecoration.UNDERLINED).clickEvent(ClickEvent.callback(audience -> audience.sendMessage(Component.text("It requires the damage permission because teleporting the mob would allow a method of killing a claimed entity.")))), Component.text(" an entity in this vehicle.")));
                         return;
                     }
                 }
