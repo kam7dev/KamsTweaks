@@ -53,3 +53,6 @@ teleportation:
 
 graves:
   enabled: true
+
+zombify:
+  enabled: true

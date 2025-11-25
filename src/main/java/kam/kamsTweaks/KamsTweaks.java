@@ -33,6 +33,7 @@ public final class KamsTweaks extends JavaPlugin {
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
         features.add(new TeleportFeatures());
+        features.add(new Zombify());
     }
 
     @Override
