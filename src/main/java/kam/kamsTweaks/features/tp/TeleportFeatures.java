@@ -5,6 +5,7 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.features.claims.Claims;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -92,9 +93,23 @@ public class TeleportFeatures extends Feature {
     }
 
     public void teleport(Player player, Location location) {
+        teleportations.remove(player);
+
+        Entity vehicle = player.getVehicle();
+        if (vehicle != null) {
+            var passengers = vehicle.getPassengers();
+            for (var passenger : passengers) {
+                if (Claims.get().entityClaims.containsKey(passenger.getUniqueId())) {
+                    var claim = Claims.get().entityClaims.get(passenger.getUniqueId());
+                    if (!claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) {
+                        player.sendMessage("Cancelled teleport because you don't have permission to damage the entity in this vehicle.");
+                        return;
+                    }
+                }
+            }
+        }
         onCooldown.put(player, KamsTweaks.getInstance().getConfig().getInt("teleportation.cooldown"));
         locations.put(player, player.getLocation());
-        teleportations.remove(player);
         var r = new Runnable() {
             int id = 0;
             @Override
@@ -108,8 +123,6 @@ public class TeleportFeatures extends Feature {
                 onCooldown.put(player, val);
             }
         };
-
-        Entity vehicle = player.getVehicle();
         if (vehicle != null) {
             var passengers = vehicle.getPassengers();
             for (var passenger : passengers) {
@@ -120,9 +133,7 @@ public class TeleportFeatures extends Feature {
                 passenger.teleport(location);
                 vehicle.addPassenger(passenger);
             }
-            Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> {
-                vehicle.addPassenger(player);
-            }, 1L);
+            Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> vehicle.addPassenger(player), 1L);
         } else {
             player.teleport(location);
         }
