@@ -3,6 +3,7 @@ package kam.kamsTweaks.features.claims;
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.utils.LocationUtils;
@@ -74,7 +75,29 @@ public class ClaimProtections implements Listener {
                 if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
                     return true;
                 assert e.getClickedBlock() != null;
-                Claims.LandClaim res = claims.getLandClaim(e.getClickedBlock().getLocation(), true);
+                var loc = e.getClickedBlock().getLocation();
+                if (claims.currentlyClaiming.containsKey(e.getPlayer())) {
+                    var claim = claims.currentlyClaiming.get(e.getPlayer());
+                    if (claim.start != null) {
+                        var col = Color.GREEN;
+                        for (var other : claims.landClaims) {
+                            // TODO: use different intersect logic because claim.end == null
+                            if (other.intersects(claim.start, loc)) {
+                                if (other.owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
+                                    if(col != Color.RED) {
+                                        col = Color.AQUA;
+                                    }
+                                    claims.dialogGui.showArea(e.getPlayer(), other.start, other.end, 1, 20, Color.PURPLE);
+                                } else {
+                                    col = Color.RED;
+                                    claims.dialogGui.showArea(e.getPlayer(), other.start, other.end, 1, 20, Color.ORANGE);
+                                }
+                            }
+                        }
+                        claims.dialogGui.showArea(e.getPlayer(), claim.start, loc, 1, 100, col);
+                    }
+                }
+                Claims.LandClaim res = claims.getLandClaim(loc, true);
                 if (res == null) e.getPlayer().sendMessage(Component.text("This land isn't claimed."));
                 else if (res.owner == null)
                     e.getPlayer().sendMessage(Component.text("This claim is owned by the server."));
@@ -116,8 +139,9 @@ public class ClaimProtections implements Listener {
     /// Land Claims
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
-        if (e.getPlayer().getTargetEntity(5) instanceof Creature creature && e.getPlayer().getVehicle() != creature)
-            return;
+        Logger.info("Test");
+//        if (e.getPlayer().getTargetEntity(5) instanceof Creature creature && e.getPlayer().getVehicle() != creature)
+//            return;
         if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIMER) {
             if (useClaimTool(e)) return;
         }

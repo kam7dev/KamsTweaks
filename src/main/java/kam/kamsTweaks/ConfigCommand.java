@@ -155,6 +155,10 @@ public class ConfigCommand {
         }
         commands.registrar().register(
                 Commands.literal("kamstweaks").then(command)
+                        .then(Commands.literal("version").executes(ctx -> {
+                            ctx.getSource().getSender().sendMessage("KamsTweaks is on version " + KamsTweaks.getInstance().getPluginMeta().getVersion());
+                            return Command.SINGLE_SUCCESS;
+                        }))
                         .then(Commands.literal("save").executes(ctx -> {
                             KamsTweaks.getInstance().save();
                             ctx.getSource().getSender().sendMessage(Component.text("Saved KamsTweaks.").color(NamedTextColor.GREEN));
@@ -164,6 +168,7 @@ public class ConfigCommand {
                             ctx.getSource().getSender().sendMessage("There are " + Logger.excs.size() + " exceptions.");
                             return Command.SINGLE_SUCCESS;
                         }).then(Commands.argument("id", IntegerArgumentType.integer(0, Logger.excs.size() - 1)).executes(ctx -> {
+                            //noinspection CallToPrintStackTrace
                             Logger.excs.get(ctx.getArgument("id", Integer.class)).printStackTrace();
                             ctx.getSource().getSender().sendMessage("Printed to console.");
                             return Command.SINGLE_SUCCESS;

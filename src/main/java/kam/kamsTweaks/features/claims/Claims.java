@@ -427,6 +427,40 @@ public class Claims extends Feature {
             return false;
         }
 
+        boolean intersects(Location oStart, Location oEnd) {
+            if (start.getWorld() != oStart.getWorld()) return false;
+
+            Set<Vector> a = new HashSet<>();
+            Set<Vector> b = new HashSet<>();
+            for (int x = Math.min(start.getBlockX(), end.getBlockX()); x <= Math.max(start.getBlockX(), end.getBlockX()); x++) {
+                for (int y = Math.min(start.getBlockY(), end.getBlockY()); y <= Math.max(start.getBlockY(), end.getBlockY()); y++) {
+                    for (int z = Math.min(start.getBlockZ(), end.getBlockZ()); z <= Math.max(start.getBlockZ(), end.getBlockZ()); z++) {
+                        a.add(new Vector(x, y, z));
+                    }
+                }
+            }
+
+            for (int x = Math.min(oStart.getBlockX(), oEnd.getBlockX()); x <= Math.max(oStart.getBlockX(), oEnd.getBlockX()); x++) {
+                for (int y = Math.min(oStart.getBlockY(), oEnd.getBlockY()); y <= Math.max(oStart.getBlockY(), oEnd.getBlockY()); y++) {
+                    for (int z = Math.min(oStart.getBlockZ(), oEnd.getBlockZ()); z <= Math.max(oStart.getBlockZ(), oEnd.getBlockZ()); z++) {
+                        b.add(new Vector(x, y, z));
+                    }
+                }
+            }
+
+            if (a.size() > b.size()) {
+                for (Vector block : b) {
+                    if (a.contains(block)) return true;
+                }
+            } else {
+                for (Vector block : a) {
+                    if (b.contains(block)) return true;
+                }
+            }
+
+            return false;
+        }
+
         public boolean inBounds(Location location) {
             if (start.getWorld() != location.getWorld()) return false;
 
