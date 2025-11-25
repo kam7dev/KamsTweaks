@@ -81,7 +81,6 @@ public class ClaimProtections implements Listener {
                     if (claim.start != null) {
                         var col = Color.GREEN;
                         for (var other : claims.landClaims) {
-                            // TODO: use different intersect logic because claim.end == null
                             if (other.intersects(claim.start, loc)) {
                                 if (other.owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
                                     if(col != Color.RED) {
