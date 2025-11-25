@@ -16,7 +16,7 @@ on:
       - "**"
 jobs:
   build:
-    if: {{ !(github.event_name == 'push' && startsWith(github.event.head_commit.message, '[nobuild]')) }}
+    if: ${{ !(github.event_name == 'push' && startsWith(github.event.head_commit.message, '[nobuild]') ) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
