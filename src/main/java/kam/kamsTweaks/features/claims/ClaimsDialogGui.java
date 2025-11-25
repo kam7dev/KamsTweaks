@@ -143,7 +143,7 @@ public class ClaimsDialogGui {
             for (Claims.LandClaim claim : claims.landClaims) {
                 if (who.equals(claim.owner)) {
                     i++;
-                    msg = msg.append(Component.text("\n"), Component.text("("), Component.text(claim.priority).color(NamedTextColor.YELLOW), Component.text(") "), Component.text(claim.name).color(NamedTextColor.AQUA), Component.text(": "), Component.text(claim.start.getBlockX() + ", " + claim.start.getBlockY() + ", " + claim.start.getBlockZ()).color(NamedTextColor.GREEN), Component.text(" to "), Component.text(claim.end.getBlockX() + ", " + claim.end.getBlockY() + ", " + claim.end.getBlockZ()).color(NamedTextColor.GREEN), Component.text(" in "), Component.text(claim.start.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE));
+                    msg = msg.append(Component.text("\n"), Component.text("("), Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(") "), Component.text(claim.name).color(NamedTextColor.AQUA), Component.text(" (priority "), Component.text(claim.priority).color(NamedTextColor.YELLOW), Component.text("): "), Component.text(claim.start.getBlockX() + ", " + claim.start.getBlockY() + ", " + claim.start.getBlockZ()).color(NamedTextColor.GREEN), Component.text(" to "), Component.text(claim.end.getBlockX() + ", " + claim.end.getBlockY() + ", " + claim.end.getBlockZ()).color(NamedTextColor.GREEN), Component.text(" in "), Component.text(claim.start.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE));
                 }
             }
 
@@ -238,18 +238,18 @@ public class ClaimsDialogGui {
                 if (claims.entityClaims.containsKey(entity.getUniqueId())) {
                     who.sendMessage(Component.text("Sorry! This entity is already claimed!").color(NamedTextColor.RED));
                 } else {
-                    claims.entityClaims.put(entity.getUniqueId(), new Claims.EntityClaim(who, entity.getUniqueId()));
+                    var claim = new Claims.EntityClaim(who, entity.getUniqueId());
+                    claims.entityClaims.put(entity.getUniqueId(), claim);
                     entity.setFireTicks(0);
                     ((Mob) entity).setTarget(null);
                     entity.setPersistent(true);
                     ((LivingEntity) entity).setRemoveWhenFarAway(false);
-                    who.sendMessage(Component.text("Claimed ").append(entity.name(), Component.text(" successfully.")));
+                    who.sendMessage(Component.text("Claimed ").append(entity.name(), Component.text(" successfully ("), Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(")")));
                 }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No")).build())));
         who.showDialog(dialog);
     }
 
-    @SuppressWarnings("unused") // while i havent finished it yet
     public void openECPage(Player who, Claims.EntityClaim target) {
         List<ActionButton> btns = new ArrayList<>();
         if (target != null && (target.owner.getUniqueId().equals(who.getUniqueId()) || who.hasPermission("kamstweaks.claims.manage"))) {
@@ -267,7 +267,7 @@ public class ClaimsDialogGui {
                     var entity = Bukkit.getEntity(uuid);
                     if (entity != null) {
                         ref.i++;
-                        ref.msg = ref.msg.append(Component.text("\n"), entity.name().color(NamedTextColor.AQUA), Component.text(" ("), Component.translatable(entity.getType().translationKey()), Component.text("): "), Component.text(entity.getLocation().getBlockX() + ", " + entity.getLocation().getBlockY() + ", " + entity.getLocation().getBlockZ()).color(NamedTextColor.GREEN), Component.text(" in "), Component.text(entity.getLocation().getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE));
+                        ref.msg = ref.msg.append(Component.text("\n"), Component.text("("), Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(") "), entity.name().color(NamedTextColor.AQUA), Component.text(" ("), Component.translatable(entity.getType().translationKey()), Component.text("): "), Component.text(entity.getLocation().getBlockX() + ", " + entity.getLocation().getBlockY() + ", " + entity.getLocation().getBlockZ()).color(NamedTextColor.GREEN), Component.text(" in "), Component.text(entity.getLocation().getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE));
                     }
                 }
             });

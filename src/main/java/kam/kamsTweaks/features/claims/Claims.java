@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features.claims;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
@@ -39,6 +40,7 @@ public class Claims extends Feature {
     public Map<UUID, EntityClaim> entityClaims = new HashMap<>();
     // for stuff like dragon fight
     public Map<World, Integer> disabledClaims = new HashMap<>();
+    public static int nextId = 0;
 
     private static Claims instance;
 
@@ -88,7 +90,38 @@ public class Claims extends Feature {
                             }
                             player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
                             return Command.SINGLE_SUCCESS;
-                        })).build());
+                        })).then(Commands.literal("delete").then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
+                            landClaims.forEach(claim -> {
+                                if (claim.owner.getPlayer() == ctx.getSource().getSender()) {
+                                    builder.suggest(claim.id);
+                                }
+                            });
+                            entityClaims.forEach((uuid, claim) -> {
+                                if (claim.owner.getPlayer() == ctx.getSource().getSender()) {
+                                    builder.suggest(claim.id);
+                                }
+                            });
+                            return builder.buildFuture();
+                        }).executes(ctx -> {
+                            int id = ctx.getArgument("id", Integer.class);
+                            for (var claim : landClaims) {
+                                if (claim.owner.getPlayer() == ctx.getSource().getSender() && claim.id == id) {
+                                    landClaims.remove(claim);
+                                    ctx.getSource().getSender().sendMessage(Component.text("Successfully deleted your land claim."));
+                                    return Command.SINGLE_SUCCESS;
+                                }
+                            }
+                            for (var uuid : entityClaims.keySet()) {
+                                var claim = entityClaims.get(uuid);
+                                if (claim.owner.getPlayer() == ctx.getSource().getSender() && claim.id == id) {
+                                    entityClaims.remove(uuid);
+                                    ctx.getSource().getSender().sendMessage(Component.text("Successfully deleted your entity claim."));
+                                    return Command.SINGLE_SUCCESS;
+                                }
+                            }
+                            ctx.getSource().getSender().sendMessage(Component.text("You don't have a claim with that ID."));
+                            return Command.SINGLE_SUCCESS;
+                        }))).build());
     }
 
     private File claimsFile;
@@ -131,7 +164,12 @@ public class Claims extends Feature {
                     String corner2Str = claimsConfig.getString("claims." + key + ".corner2");
                     assert corner2Str != null;
                     Location corner2 = LocationUtils.deserializeBlockPos(corner2Str);
-                    LandClaim claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), corner1, corner2);
+                    LandClaim claim;
+                    if (claimsConfig.contains("claims." + key + ".id")) {
+                        claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), claimsConfig.getInt("claims." + key + ".id"), corner1, corner2);
+                    } else {
+                        claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), corner1, corner2);
+                    }
                     claim.defaults = new ArrayList<>();
                     if (claimsConfig.contains("claims." + key + ".name")) {
                         claim.name = claimsConfig.getString("claims." + key + ".name");
@@ -218,7 +256,12 @@ public class Claims extends Feature {
                         UUID entity = UUID.fromString(key);
                         String ownerStr = claimsConfig.getString("entities." + key + ".owner");
                         UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
-                        EntityClaim claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), entity);
+                        EntityClaim claim;
+                        if (claimsConfig.contains("entities." + key + ".id")) {
+                            claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), claimsConfig.getInt("entities." + key + ".id"), entity);
+                        } else {
+                            claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), entity);
+                        }
                         try {
                             if (claimsConfig.contains("entities." + key + ".defaults")) {
                                 for (String def : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".defaults"))) {
@@ -285,6 +328,7 @@ public class Claims extends Feature {
         for (LandClaim claim : landClaims) {
             String path = "claims." + i;
             if (claim.owner != null) claimsConfig.set(path + ".owner", claim.owner.getUniqueId().toString());
+            claimsConfig.set(path + ".id", claim.id);
             claimsConfig.set(path + ".corner1", LocationUtils.serializeBlockPos(claim.start));
             claimsConfig.set(path + ".corner2", LocationUtils.serializeBlockPos(claim.end));
             claimsConfig.set(path + ".name", claim.name);
@@ -318,6 +362,7 @@ public class Claims extends Feature {
             j.getAndIncrement();
             String path = "entities." + uuid;
             if (claim.owner != null) claimsConfig.set(path + ".owner", claim.owner.getUniqueId().toString());
+            claimsConfig.set(path + ".id", claim.id);
             claimsConfig.set(path + ".aggro", claim.canAggro);
             {
                 List<String> permList = new ArrayList<>();
@@ -345,6 +390,7 @@ public class Claims extends Feature {
         public OfflinePlayer owner;
         public Map<OfflinePlayer, List<ClaimPermission>> perms = new HashMap<>();
         public List<ClaimPermission> defaults = new ArrayList<>();
+        public int id;
         @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         public boolean hasPermission(OfflinePlayer player, ClaimPermission perm) {
             if (player == null) return defaults.contains(perm);
@@ -362,6 +408,13 @@ public class Claims extends Feature {
 
         public Claim(OfflinePlayer owner) {
             this.owner = owner;
+            id = nextId++;
+        }
+
+        public Claim(OfflinePlayer owner, int id) {
+            this.owner = owner;
+            this.id = id;
+            nextId = Math.max(nextId, id + 1);
         }
     }
 
@@ -388,6 +441,13 @@ public class Claims extends Feature {
 
         public LandClaim(OfflinePlayer owner, Location start, Location end) {
             super(owner);
+            this.defaults.add(ClaimPermission.INTERACT_DOOR);
+            this.start = start;
+            this.end = end;
+        }
+
+        public LandClaim(OfflinePlayer owner, int id, Location start, Location end) {
+            super(owner, id);
             this.defaults.add(ClaimPermission.INTERACT_DOOR);
             this.start = start;
             this.end = end;
@@ -482,6 +542,10 @@ public class Claims extends Feature {
             super(owner);
             this.entity = entity;
         }
+        public EntityClaim(OfflinePlayer owner, int id, UUID entity) {
+            super(owner, id);
+            this.entity = entity;
+        }
         UUID entity;
         public boolean canAggro = false;
     }
@@ -561,7 +625,7 @@ public class Claims extends Feature {
                     }
                     landClaims.add(claim);
                     currentlyClaiming.remove(event.getPlayer());
-                    event.getPlayer().sendMessage(Component.text("Territory claimed.").color(NamedTextColor.GREEN));
+                    event.getPlayer().sendMessage(Component.text("Territory claimed (").color(NamedTextColor.GREEN).append(Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(")").color(NamedTextColor.GREEN)));
                 }
             } else {
                 dialogGui.openLCPage(event.getPlayer(), getLandClaim(event.getClickedBlock().getLocation(), true));
