@@ -549,6 +549,20 @@ public class Claims extends Feature {
             super(owner, id);
             this.entity = entity;
         }
+        public EntityClaim (EntityClaim orig, UUID entity) {
+            super(orig.owner);
+            perms = orig.perms;
+            defaults = orig.defaults;
+            this.entity = entity;
+            canAggro = orig.canAggro;
+        }
+        public EntityClaim (EntityClaim orig, UUID entity, int id) {
+            super(orig.owner, id);
+            perms = orig.perms;
+            defaults = orig.defaults;
+            this.entity = entity;
+            canAggro = orig.canAggro;
+        }
         UUID entity;
         public boolean canAggro = false;
     }

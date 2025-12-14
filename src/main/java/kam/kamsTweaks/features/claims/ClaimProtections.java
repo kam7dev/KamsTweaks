@@ -448,6 +448,15 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Entity entity = e.getEntity();
+        if (e.getDamageSource().getCausingEntity() instanceof Entity damager) {
+            if (claims.entityClaims.containsKey(damager.getUniqueId())) {
+                var claim = claims.entityClaims.get(damager.getUniqueId());
+                if (!claim.canAggro) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+        }
         if (!(entity instanceof ItemFrame || entity instanceof ArmorStand || entity instanceof AbstractHorse
                 || entity instanceof Boat || entity instanceof Minecart))
             return;
@@ -1128,9 +1137,26 @@ public class ClaimProtections implements Listener {
             if (e.getEntity() instanceof Mob entity) {
                 var claim = claims.getEntityClaim(entity);
                 if (claim != null) {
-                    if (!claim.canAggro) e.setCancelled(true);
+                    if (!claim.defaults.contains(Claims.ClaimPermission.DAMAGE_ENTITY)) {
+                        e.setCancelled(true);
+                        return;
+                    }
                 }
             }
+        }
+        if (claims.entityClaims.containsKey(e.getEntity().getUniqueId())) {
+            var claim = claims.entityClaims.get(e.getEntity().getUniqueId());
+            boolean hasReplaced = false;
+            for (var entity : e.getTransformedEntities()) {
+                Claims.EntityClaim newC;
+                if (!hasReplaced) {
+                    newC = new Claims.EntityClaim(claim, entity.getUniqueId(), claim.id);
+                } else {
+                    newC = new Claims.EntityClaim(claim, entity.getUniqueId());
+                }
+                claims.entityClaims.put(entity.getUniqueId(), newC);
+            }
+            claims.entityClaims.remove(e.getEntity().getUniqueId());
         }
     }
 
@@ -1146,7 +1172,8 @@ public class ClaimProtections implements Listener {
 
     @EventHandler
     public void entityDie(EntityDeathEvent e) {
-        claims.entityClaims.remove(e.getEntity().getUniqueId());
+        // delayed to next tick so transformations work
+        Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> claims.entityClaims.remove(e.getEntity().getUniqueId()), 0);
         if (e.getEntity() instanceof EnderDragon) {
             claims.disabledClaims.put(e.getEntity().getWorld(), 5 * 60);
         }
