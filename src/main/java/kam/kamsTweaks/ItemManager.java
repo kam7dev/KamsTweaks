@@ -39,7 +39,7 @@ public class ItemManager implements Listener {
             if (meta != null) {
                 meta.displayName(
                         Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-                meta.addEnchant(Enchantment.PROTECTION, 5, true);
+                meta.setEnchantmentGlintOverride(true);
                 NamespacedKey key = new NamespacedKey("kamstweaks", "item");
                 meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "claimer");
                 item.setItemMeta(meta);
@@ -61,8 +61,9 @@ public class ItemManager implements Listener {
             if (meta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
                 String data = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
                 if (data == null) return null;
-                if (data.equals("claimer") && meta.displayName().equals(Component.text("Land Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false))) {
-                    meta.displayName(Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+                if (data.equals("claimer") && meta.hasEnchants()) {
+                    meta.removeEnchantments();
+                    meta.setEnchantmentGlintOverride(true);
                     item.setItemMeta(meta);
                 }
                 return switch (data) {

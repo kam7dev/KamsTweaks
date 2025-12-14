@@ -41,6 +41,9 @@ permissions:
   kamstweaks.teleports.addwarp:
     default: op
     description: "Create a new warp"
+  kamstweaks.teleports.delwarp:
+    default: op
+    description: "Delete a warp"
   kamstweaks.teleports.spawn:
     default: true
     description: "Teleport to spawn"

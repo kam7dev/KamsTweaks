@@ -42,11 +42,7 @@ public class SlashHat extends Feature {
                     if (executor instanceof Player player) {
                         PlayerInventory inv = player.getInventory();
                         ItemStack hand = inv.getItemInMainHand();
-                        // free prot 5 bad
-                        if (ItemManager.ItemType.CLAIMER.equals(ItemManager.getType(hand))) {
-                            sender.sendMessage("You can't wear this.");
-                            return Command.SINGLE_SUCCESS;
-                        }
+                        ItemManager.getType(hand); // update it if its a claim tool that has prot 5 lol
                         ItemStack helmet = inv.getHelmet();
                         // no cheat
                         if (helmet != null && helmet.containsEnchantment(Enchantment.BINDING_CURSE)) {

@@ -91,21 +91,24 @@ public class Claims extends Feature {
                             player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
                             return Command.SINGLE_SUCCESS;
                         })).then(Commands.literal("delete").then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player)) return builder.buildFuture();
                             landClaims.forEach(claim -> {
-                                if (claim.owner.getPlayer() == ctx.getSource().getSender()) {
+                                Logger.info(claim.owner.getUniqueId() + " - " + player.getUniqueId());
+                                if (claim.owner.getUniqueId().equals(player.getUniqueId())) {
                                     builder.suggest(claim.id);
                                 }
                             });
                             entityClaims.forEach((uuid, claim) -> {
-                                if (claim.owner.getPlayer() == ctx.getSource().getSender()) {
+                                if (claim.owner.getUniqueId().equals(player.getUniqueId())) {
                                     builder.suggest(claim.id);
                                 }
                             });
                             return builder.buildFuture();
                         }).executes(ctx -> {
                             int id = ctx.getArgument("id", Integer.class);
+                            if (!(ctx.getSource().getSender() instanceof Player player)) return Command.SINGLE_SUCCESS;
                             for (var claim : landClaims) {
-                                if (claim.owner.getPlayer() == ctx.getSource().getSender() && claim.id == id) {
+                                if (claim.owner.getUniqueId().equals(player.getUniqueId()) && claim.id == id) {
                                     landClaims.remove(claim);
                                     ctx.getSource().getSender().sendMessage(Component.text("Successfully deleted your land claim."));
                                     return Command.SINGLE_SUCCESS;
@@ -113,7 +116,7 @@ public class Claims extends Feature {
                             }
                             for (var uuid : entityClaims.keySet()) {
                                 var claim = entityClaims.get(uuid);
-                                if (claim.owner.getPlayer() == ctx.getSource().getSender() && claim.id == id) {
+                                if (claim.owner.getUniqueId().equals(player.getUniqueId()) && claim.id == id) {
                                     entityClaims.remove(uuid);
                                     ctx.getSource().getSender().sendMessage(Component.text("Successfully deleted your entity claim."));
                                     return Command.SINGLE_SUCCESS;

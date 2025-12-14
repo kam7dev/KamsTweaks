@@ -116,6 +116,29 @@ public class Warp extends Feature {
                     return Command.SINGLE_SUCCESS;
                 }));
         commands.registrar().register(warpCmd.build());
+        LiteralArgumentBuilder<CommandSourceStack> delWarpCmd = Commands.literal("delwarp")
+                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.delwarp"))
+                .then(Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
+                    for (String warp : warps.keySet()) {
+                        builder.suggest(warp);
+                    }
+                    return builder.buildFuture();
+                }).executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
+                        sender.sendPlainMessage("Warps are disabled.");
+                        return Command.SINGLE_SUCCESS;
+                    }
+                    String warp = ctx.getArgument("name", String.class);
+                    if (!warps.containsKey(warp)) {
+                        sender.sendMessage(Component.text("Warp \"" + warp + "\" does not exist.").color(NamedTextColor.RED));
+                        return Command.SINGLE_SUCCESS;
+                    }
+                    warps.remove(warp);
+                    sender.sendMessage("Deleted warp " + warp + ".");
+                    return Command.SINGLE_SUCCESS;
+                }));
+        commands.registrar().register(delWarpCmd.build());
         LiteralArgumentBuilder<CommandSourceStack> warpsCmd = Commands.literal("warps")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.warps"))
                 .executes(ctx -> {
