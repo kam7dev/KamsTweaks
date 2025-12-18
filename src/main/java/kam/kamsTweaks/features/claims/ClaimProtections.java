@@ -1088,7 +1088,7 @@ public class ClaimProtections implements Listener {
                     }
                 }
                 if (event.getDamageSource().getCausingEntity() instanceof Player player) {
-                    if (ItemManager.ItemType.CLAIMER.equals(ItemManager.getType(player.getInventory().getItemInMainHand()))) {
+                    if (ItemManager.ItemType.CLAIMER.equals(ItemManager.getType(player.getInventory().getItemInMainHand())) && claims.isClaimable(event.getEntity())) {
                         if (claim == null) player.sendMessage(Component.text("This entity isn't claimed."));
                         else if (claim.owner == null)
                             player.sendMessage(Component.text("This entity is owned by the server."));
