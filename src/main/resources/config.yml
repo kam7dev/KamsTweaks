@@ -56,3 +56,6 @@ graves:
 
 zombify:
   enabled: true
+
+filter:
+  enabled: true
