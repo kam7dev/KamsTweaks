@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Names extends Feature {
     Map<UUID, Pair<String, List<TextColor>>> data = new HashMap<>();
-    static final String INVIS_REGEX = "[\\u200B-\\u200F\\uFEFF\\u2060]";
+    public static final String INVIS_REGEX = "[\\u200B-\\u200F\\uFEFF\\u2060]";
 
     public static Names instance;
 
@@ -123,6 +123,12 @@ public class Names extends Feature {
                         }
                         if (name.isBlank()) {
                             sender.sendPlainMessage("Nicknames cannot be empty.");
+                            return Command.SINGLE_SUCCESS;
+                        }
+                        var res = ChatFilter.instance.isFiltered(name);
+                        if (res.first) {
+                            Logger.warn("Nickname by " + sender.getName() + " was caught by the " + res.second.name + " automod: " + name);
+                            sender.sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         AtomicBoolean ret = new AtomicBoolean(false);
@@ -381,7 +387,7 @@ public class Names extends Feature {
     @Override
     public void loadData() {
         data.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         if (config.contains("names")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("names")).getKeys(false)) {
                 try {
@@ -426,7 +432,7 @@ public class Names extends Feature {
 
     @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         config.set("names", null);
 
         data.forEach((uuid, pair) -> {

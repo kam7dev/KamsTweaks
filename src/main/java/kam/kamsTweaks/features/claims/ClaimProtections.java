@@ -15,7 +15,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Directional;
-import org.bukkit.block.data.type.Farmland;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
@@ -940,7 +939,7 @@ public class ClaimProtections implements Listener {
             return;
         Player player = event.getPlayer();
         Claims.LandClaim claim = claims.getLandClaim(event.getClickedBlock().getLocation());
-        if (event.getClickedBlock() instanceof Farmland) {
+        if (event.getClickedBlock().getType() == Material.FARMLAND || event.getClickedBlock().getType() == Material.TURTLE_EGG) {
             if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
                 Component name = claim.owner != null ? Names.instance.getRenderedName(claim.owner) : Component.text("the server").color(NamedTextColor.GOLD);
                 message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));

@@ -3,6 +3,7 @@ package kam.kamsTweaks;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.features.*;
 import kam.kamsTweaks.features.claims.Claims;
+//import kam.kamsTweaks.features.discord.DIFeature;
 import kam.kamsTweaks.features.tp.TeleportFeatures;
 import kam.kamsTweaks.utils.KamsTweaksPlaceholder;
 import org.bukkit.Bukkit;
@@ -34,7 +35,8 @@ public final class KamsTweaks extends JavaPlugin {
     features.add(new SeedDispenser());
     features.add(new TeleportFeatures());
     features.add(new Zombify());
-    features.add(new NoBrainrot());
+    features.add(new ChatFilter());
+//    features.add(new DIFeature());
   }
 
   @Override
@@ -108,6 +110,7 @@ public final class KamsTweaks extends JavaPlugin {
   }
 
   public void loadConfigs() {
+      getConfig().options().copyDefaults(true);
     // General Config
     generalFile = new File(KamsTweaks.getInstance().getDataFolder(), "data.yml");
     if (!generalFile.exists()) {
@@ -115,9 +118,10 @@ public final class KamsTweaks extends JavaPlugin {
       KamsTweaks.getInstance().saveResource("data.yml", false);
     }
     generalConfig = YamlConfiguration.loadConfiguration(generalFile);
+    saveDefaultConfig();
   }
 
-  public FileConfiguration getGeneralConfig() {
+  public FileConfiguration getDataConfig() {
     return generalConfig;
   }
 }

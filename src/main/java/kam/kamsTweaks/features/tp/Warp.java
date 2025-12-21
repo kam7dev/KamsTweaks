@@ -41,7 +41,7 @@ public class Warp extends Feature {
 
     @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         config.set("warps", null);
         warps.forEach((name, loc) -> {
             if (loc != null) config.set("warps." + name, LocationUtils.serializeLocation(loc));
@@ -51,7 +51,7 @@ public class Warp extends Feature {
     @Override
     public void loadData() {
         warps.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         if (config.contains("warps")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("warps")).getKeys(false)) {
                 try {
