@@ -268,7 +268,7 @@ public class ClaimProtections implements Listener {
                 if (!(state instanceof ShulkerBox box)) return;
                 Inventory inv = box.getInventory();
                 e.getPlayer().openInventory(inv);
-                e.getPlayer().getInventory().remove(item);
+                e.getPlayer().getInventory().setItem(e.getHand(), new ItemStack(Material.AIR));
                 openBoxes.put(e.getPlayer(), item);
             } else {
                 message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
