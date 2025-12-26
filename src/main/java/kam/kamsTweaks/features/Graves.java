@@ -17,6 +17,7 @@ import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -54,7 +55,7 @@ public class Graves extends Feature {
                 graves.values().forEach(grave -> grave.tick(time));
                 lastTime = now;
             }
-        }, 20L, 20L);  // 20L = 1 second in ticks
+        }, 20L, 20L); // 20L = 1 second in ticks
     }
 
     @Override
@@ -93,53 +94,66 @@ public class Graves extends Feature {
                         sender.sendMessage("Only players can run this.");
                     }
                     return Command.SINGLE_SUCCESS;
-                })).then(Commands.literal("recover").then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
-                    if (!(ctx.getSource().getSender() instanceof Player player)) return builder.buildFuture();
-                    graves.forEach((id, grave) -> {
-                        if (grave.owner.getUniqueId().equals(player.getUniqueId()) && grave.msLeft <= 0 && !grave.recovery) {
-                            builder.suggest(id);
-                        }
-                    });
-                    return builder.buildFuture();
-                }).executes(ctx -> {
-                    if (!(ctx.getSource().getSender() instanceof Player player)) return Command.SINGLE_SUCCESS;
-                    int id = ctx.getArgument("id", Integer.class);
-                    Grave grave = graves.getOrDefault(id, null);
-                    if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId()) && !grave.recovery && grave.msLeft <= 0) {
-                        grave.recovery = true;
-                        grave.msLeft = 1000 * 60 * 10;
-                        grave.hasMessaged5 = false;
-                        grave.hasMessaged1 = false;
-                        grave.hasMessagedHalf = false;
-                        grave.hasMessagedExpire = false;
-                        ctx.getSource().getSender().sendMessage(Component.text("You have 10 minutes to recover your grave. After this, it will be gone permanently.").color(NamedTextColor.AQUA));
-                        grave.createStand();
-                        return Command.SINGLE_SUCCESS;
-                    }
-                    ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
-                    return Command.SINGLE_SUCCESS;
-                }))).then(Commands.literal("delete").then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
-                    if (!(ctx.getSource().getSender() instanceof Player player)) return builder.buildFuture();
-                    graves.forEach((id, grave) -> {
-                        if (grave.owner.getUniqueId().equals(player.getUniqueId())) {
-                            builder.suggest(id);
-                        }
-                    });
-                    return builder.buildFuture();
-                }).executes(ctx -> {
-                    if (!(ctx.getSource().getSender() instanceof Player player)) return Command.SINGLE_SUCCESS;
-                    int id = ctx.getArgument("id", Integer.class);
-                    Grave grave = graves.getOrDefault(id, null);
-                    if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId())) {
-                        if (grave.stand != null) grave.stand.remove();
-                        graves.remove(grave.id);
-                        ctx.getSource().getSender().sendMessage(Component.text("Grave deleted successfully.").color(NamedTextColor.AQUA));
-                        grave.createStand();
-                        return Command.SINGLE_SUCCESS;
-                    }
-                    ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
-                    return Command.SINGLE_SUCCESS;
-                })))
+                })).then(Commands.literal("recover")
+                        .then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return builder.buildFuture();
+                            graves.forEach((id, grave) -> {
+                                if (grave.owner.getUniqueId().equals(player.getUniqueId()) && grave.msLeft <= 0 && !grave.recovery) {
+                                    builder.suggest(id);
+                                }
+                            });
+                            return builder.buildFuture();
+                        }).executes(ctx -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return Command.SINGLE_SUCCESS;
+                            int id = ctx.getArgument("id", Integer.class);
+                            Grave grave = graves.getOrDefault(id, null);
+                            if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId()) && !grave.recovery
+                                    && grave.msLeft <= 0) {
+                                grave.recovery = true;
+                                grave.msLeft = 1000 * 60 * 10;
+                                grave.hasMessaged5 = false;
+                                grave.hasMessaged1 = false;
+                                grave.hasMessagedHalf = false;
+                                grave.hasMessagedExpire = false;
+                                ctx.getSource().getSender()
+                                        .sendMessage(Component
+                                                .text("You have 10 minutes to recover your grave. After this, it will be gone permanently.")
+                                                .color(NamedTextColor.AQUA));
+                                grave.createStand();
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
+                            return Command.SINGLE_SUCCESS;
+                        })))
+                .then(Commands.literal("delete")
+                        .then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return builder.buildFuture();
+                            graves.forEach((id, grave) -> {
+                                if (grave.owner.getUniqueId().equals(player.getUniqueId())) {
+                                    builder.suggest(id);
+                                }
+                            });
+                            return builder.buildFuture();
+                        }).executes(ctx -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return Command.SINGLE_SUCCESS;
+                            int id = ctx.getArgument("id", Integer.class);
+                            Grave grave = graves.getOrDefault(id, null);
+                            if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId())) {
+                                if (grave.stand != null)
+                                    grave.stand.remove();
+                                graves.remove(grave.id);
+                                ctx.getSource().getSender()
+                                        .sendMessage(Component.text("Grave deleted successfully.").color(NamedTextColor.AQUA));
+                                grave.createStand();
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
+                            return Command.SINGLE_SUCCESS;
+                        })))
                 .build());
     }
 
@@ -360,7 +374,8 @@ public class Graves extends Feature {
             e.setCancelled(true);
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
-            @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
+            @SuppressWarnings("DataFlowIssue")
+            int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
@@ -420,7 +435,8 @@ public class Graves extends Feature {
             e.setCancelled(true);
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
-            @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
+            @SuppressWarnings("DataFlowIssue")
+            int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
@@ -504,23 +520,54 @@ public class Graves extends Feature {
             this.inventory = Bukkit.createInventory(null, GRAVE_SIZE, Component.text("Grave"));
             for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
-                if (item != null && !item.isEmpty()) {
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
                     inventory.setItem(i, item);
                     inv.setItem(i, null);
                 }
             }
-            inventory.setItem(36, inv.getHelmet());
-            inv.setHelmet(null);
-            inventory.setItem(37, inv.getChestplate());
-            inv.setChestplate(null);
-            inventory.setItem(38, inv.getLeggings());
-            inv.setLeggings(null);
-            inventory.setItem(39, inv.getBoots());
-            inv.setBoots(null);
-            inventory.setItem(40, inv.getItemInOffHand());
-            inv.setItemInOffHand(null);
-            inventory.setItem(41, owner.getItemOnCursor());
-            owner.setItemOnCursor(null);
+            {
+                var item = inv.getHelmet();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(36, item);
+                    inv.setHelmet(null);
+                }
+            }
+            {
+                var item = inv.getChestplate();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(37, item);
+                    inv.setChestplate(null);
+                }
+            }
+            {
+                var item = inv.getLeggings();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(38, item);
+                    inv.setLeggings(null);
+                }
+            }
+            {
+                var item = inv.getBoots();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(39, item);
+                    inv.setBoots(null);
+                }
+            }
+
+            {
+                var item = inv.getItemInOffHand();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(40, item);
+                    inv.setItemInOffHand(null);
+                }
+            }
+            {
+                var item = owner.getItemOnCursor();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(41, item);
+                    owner.setItemOnCursor(null);
+                }
+            }
 
             Inventory topInv = owner.getOpenInventory().getTopInventory();
             if (topInv.getType() == InventoryType.CRAFTING && !(topInv.getSize() > 5)) {

@@ -2,7 +2,6 @@ package kam.kamsTweaks;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
-import io.papermc.paper.datacomponent.item.FoodProperties;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -11,20 +10,19 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.Sound;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.FoodComponent;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 
+@SuppressWarnings("UnstableApiUsage")
 public class ItemManager implements Listener {
     public enum ItemType {
-        CLAIMER,
+        CLAIM_TOOL
     }
 
     private static Map<ItemType, ItemStack> items;
@@ -34,17 +32,19 @@ public class ItemManager implements Listener {
         initialized = true;
         items = new HashMap<>();
         {
-            ItemStack item = new ItemStack(Material.STRUCTURE_VOID);
+            ItemStack item = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.displayName(
-                        Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+                meta.displayName(Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
                 meta.setEnchantmentGlintOverride(true);
+                meta.setMaxStackSize(64);
                 NamespacedKey key = new NamespacedKey("kamstweaks", "item");
                 meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "claimer");
                 item.setItemMeta(meta);
+                item.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
+                item.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "structure_void"));
             }
-            items.put(ItemType.CLAIMER, item);
+            items.put(ItemType.CLAIM_TOOL, item);
         }
     }
 
@@ -67,7 +67,7 @@ public class ItemManager implements Listener {
                     item.setItemMeta(meta);
                 }
                 return switch (data) {
-                    case "claimer" -> ItemType.CLAIMER;
+                    case "claimer" -> ItemType.CLAIM_TOOL;
                     default -> null;
                 };
             }
@@ -80,19 +80,18 @@ public class ItemManager implements Listener {
     @SuppressWarnings("UnstableApiUsage")
     @EventHandler
     void yummy(PlayerCommandPreprocessEvent event) {
-        if (!event.getPlayer().getName().equals("km7dev")) return;
+        if (!event.getPlayer().getName().equals("km7dev") && !event.getPlayer().getName().equals("km7dev2")) return;
         var split = event.getMessage().split(" ");
         if (split[0].equals("/yummy")) {
             var item = event.getPlayer().getInventory().getItemInMainHand();
-            if (ItemType.CLAIMER.equals(ItemManager.getType(item))) {
-                event.setCancelled(true);
-                event.getPlayer().sendMessage(Component.text(funny.get(rng.nextInt(0, funny.size() - 1))));
-                var meta = item.getItemMeta();
-                meta.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "yummy"), PersistentDataType.BOOLEAN, true);
-                item.setItemMeta(meta);
-                item.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable().consumeSeconds(split.length < 2 ? 1.6f : Float.parseFloat(split[1]))
-                        .sound(split.length < 3 ? Registry.SOUNDS.getKey(Sound.AMBIENT_CAVE).key() : Key.key(split[2])));
-            }
+            // if (ItemType.CLAIM_TOOL.equals(ItemManager.getType(item))) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(Component.text(funny.get(rng.nextInt(0, funny.size() - 1))));
+            var meta = item.getItemMeta();
+            meta.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "yummy"), PersistentDataType.BOOLEAN, true);
+            item.setItemMeta(meta);
+            item.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable().consumeSeconds(split.length < 2 ? 1.6f : Float.parseFloat(split[1])).sound(split.length < 3 ? Registry.SOUNDS.getKey(Sound.AMBIENT_CAVE).key() : Key.key(split[2])));
+            // }
         }
     }
 }

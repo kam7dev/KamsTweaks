@@ -60,7 +60,7 @@ zombify:
 filters:
   brainrot:
     enabled: false
-    regex: "(?i).*:shushing_face: :deaf_man:.*|.*:shushing_face::deaf_man:.*|.*461n 9055.*|.*4d1n r0ss.*|.*5c1b1di.*|.*5k1b1dy.*|.*a6in ross.*|.*adin ross.*|.*admin ross.*|.*baby gronk.*|.*bb gr0nk.*|.*bb gronk.*|.*BOMBARDINO CROCODILO.*|.*bopboompow.*|.*f4num.*|.*fanum.*|.*fire in the hole.*|.*g00n1ng.*|.*g00ning.*|.*g74tt.*|.*gedagedi.*|.*gooning.*|.*gy4tt.*|.*gyatt.*|.*hawk 2.*|.*hawk tua.*|.*hawk tuah.*|.*hawk two.*|.*kai cenat.*|.*low taper fade.*|.*m3w.*|.*m4xx1ng.*|.*m4xxing.*|.*maxx1ng.*|.*maxxing.*|.*mewer.*|.*mewing.*|.*quandale dingle.*|.*r177.*|.*r1zz.*|.*rizz.*|.*sc1b1d1.*|.*sc1b1dy.*|.*scibidi.*|.*scibidy.*|.*sigma.*|.*six.*seven.*|.*sk1b1.*|.*sk1bi.*|.*skbidi.*|.*skibi.*|.*skibiddi.*|.*skibide.*|.*skibidi.*|.*skibidy.*|.*skibity.*|.*skybidi.*|.*tralalero.*|.*tuah.*|.*tung.*|.*tung sahur.*|.*unohio.*|.*water on the hill.*"
+    regex: ":shushing_face: :deaf_man:, :shushing_face::deaf_man:, *461n 9055*, *4d1n r0ss*, *5c1b1di*, *5k1b1dy*, *a6in ross*, *adin ross*, *admin ross*, *baby gronk*, *bb gr0nk*, *bb gronk*, *BOMBARDINO CROCODILO*, *bopboompow*, *f4num*, *fanum*, *fire in the hole*, *g00n1ng*, *g00ning*, *g74tt*, *gedagedi*, *gooning*, *gy4tt*, *gyatt*, *hawk 2*, *hawk tua*, *hawk tuah*, *hawk two*, *kai cenat*, *low taper fade*, *m3w*, *m4xx1ng*, *m4xxing*, *maxx1ng*, maxxing, *mewer*, *mewing*, *quandale dingle*, *r177*, *r1zz*, rizz, *sc1b1d1*, *sc1b1dy*, *scibidi*, *scibidy*, *sigma*, *six*seven*, *sk1b1*, *sk1bi*, *skbidi*, *skibi*, *skibiddi*, *skibide*, *skibidi*, *skibidy*, *skibity*, *skybidi*, *tralalero*, tuah, *tung*, *tung sahur*, *unohio*, *water on the hill*"
     message: "Please take your brainrot somewhere else."
   slur:
     enabled: true

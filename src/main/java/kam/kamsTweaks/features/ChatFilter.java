@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
-import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
@@ -83,28 +82,15 @@ public class ChatFilter extends Feature {
                     filter = new Filter(str, cfg.getString("filters." + str + ".message", "Your message contains words banned by the server."), cfg.getString("filters." + str + ".fetch.link", ""));
                     filter.fetch();
                 } else {
-                    filter = new Filter(str, cfg.getString("filters." + str + ".message", "Your message contains words banned by the server."), Pattern.compile(cfg.getString("filters." + str + ".fetch.regex", ""), Pattern.CASE_INSENSITIVE));
+                    List<String> terms = Arrays.stream(cfg.getString("filters." + str + ".regex", "").split("[,\n]")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+                    String regex = ("\\b(" + String.join("|", terms) + ")\\b").replace("*", ".*");
+                    if (cfg.getString("filters." + str + ".regex", "").isEmpty()) return;
+                    filter = new Filter(str, cfg.getString("filters." + str + ".message", "Your message contains words banned by the server."), Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
                 }
                 filter.enabled = cfg.getBoolean("filters." + str + ".enabled", true);
                 filters.add(filter);
             }
         }
-        String str;
-        try {
-            ConfigCommand.addConfig(new ConfigCommand.BoolConfig("filter.brainrot", "filter.brainrot", true, "kamstweaks.configure"));
-            ConfigCommand.addConfig(new ConfigCommand.BoolConfig("filter.slur", "filter.slur", true, "kamstweaks.configure"));
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder().uri(URI.create("https://extras.km7dev.me/slurFilter")).GET().build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            KamsTweaks.getInstance().getDataConfig().set("slur-filter", response.body());
-            str = response.body();
-        } catch (Exception e) {
-            Logger.error("Failed to load updated slur filter!");
-            e.printStackTrace();
-            str = KamsTweaks.getInstance().getDataConfig().getString("slur-filter", "");
-        }
-        List<String> terms = Arrays.stream(str.split("[,\n]")).map(String::trim).filter(s -> !s.isEmpty()).toList();
-        String regex = ("\\b(" + String.join("|", terms) + ")\\b").replace("*", ".*");
     }
 
     public void shutdown() {
@@ -124,7 +110,8 @@ public class ChatFilter extends Feature {
     public Pair<Boolean, Filter> isFiltered(String str) {
         for (var filter : filters) {
             if (!filter.enabled) continue;
-            if (filter.pattern.matcher(str).find()) {
+            var m = filter.pattern.matcher(str);
+            if (m.find()) {
                 return new Pair<>(true, filter);
             }
         }

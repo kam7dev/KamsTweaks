@@ -88,10 +88,13 @@ public class Claims extends Feature {
                                 sender.sendPlainMessage("Only players get the claim tool.");
                                 return Command.SINGLE_SUCCESS;
                             }
-                            player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIMER).clone());
+                            player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIM_TOOL).clone());
                             return Command.SINGLE_SUCCESS;
-                        })).then(Commands.literal("delete").then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
-                            if (!(ctx.getSource().getSender() instanceof Player player)) return builder.buildFuture();
+                        }))
+                .then(Commands.literal("delete")
+                        .then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return builder.buildFuture();
                             landClaims.forEach(claim -> {
                                 Logger.info(claim.owner.getUniqueId() + " - " + player.getUniqueId());
                                 if (claim.owner.getUniqueId().equals(player.getUniqueId())) {
@@ -106,7 +109,8 @@ public class Claims extends Feature {
                             return builder.buildFuture();
                         }).executes(ctx -> {
                             int id = ctx.getArgument("id", Integer.class);
-                            if (!(ctx.getSource().getSender() instanceof Player player)) return Command.SINGLE_SUCCESS;
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return Command.SINGLE_SUCCESS;
                             for (var claim : landClaims) {
                                 if (claim.owner.getUniqueId().equals(player.getUniqueId()) && claim.id == id) {
                                     landClaims.remove(claim);
@@ -124,7 +128,8 @@ public class Claims extends Feature {
                             }
                             ctx.getSource().getSender().sendMessage(Component.text("You don't have a claim with that ID."));
                             return Command.SINGLE_SUCCESS;
-                        }))).build());
+                        })))
+                .build());
     }
 
     private File claimsFile;
@@ -141,7 +146,7 @@ public class Claims extends Feature {
 
     public boolean isClaimable(Entity e) {
         if (!(e instanceof Mob)) return false;
-        switch(e.getType()) {
+        switch (e.getType()) {
             case ELDER_GUARDIAN, ENDER_DRAGON, WITHER, WARDEN -> {
                 return false;
             }
@@ -186,7 +191,7 @@ public class Claims extends Feature {
                                 claim.defaults.add(ClaimPermission.valueOf(def));
                             }
                         } else if (claimsConfig.contains("claims." + key + ".default")) {
-                            switch(Objects.requireNonNull(claimsConfig.getString("claims." + key + ".default"))) {
+                            switch (Objects.requireNonNull(claimsConfig.getString("claims." + key + ".default"))) {
                                 case "BLOCKS":
                                     claim.defaults.add(ClaimPermission.BLOCK_PLACE);
                                     claim.defaults.add(ClaimPermission.BLOCK_BREAK);
@@ -203,7 +208,7 @@ public class Claims extends Feature {
                                     break;
                             }
                         }
-                    } catch(NullPointerException e) {
+                    } catch (NullPointerException e) {
                         Logger.excs.add(e);
                         Logger.warn(e.getMessage());
                         claim.defaults = new ArrayList<>();
@@ -241,7 +246,7 @@ public class Claims extends Feature {
                                 claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                             }
                         }
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         Logger.excs.add(e);
                         Logger.warn(e.getMessage());
                     }
@@ -271,7 +276,7 @@ public class Claims extends Feature {
                                     claim.defaults.add(ClaimPermission.valueOf(def));
                                 }
                             } else if (claimsConfig.contains("entities." + key + ".default")) {
-                                switch(Objects.requireNonNull(claimsConfig.getString("entities." + key + ".default"))) {
+                                switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".default"))) {
                                     case "INTERACT":
                                         claim.defaults.add(ClaimPermission.INTERACT_ENTITY);
                                         break;
@@ -280,7 +285,7 @@ public class Claims extends Feature {
                                         break;
                                 }
                             }
-                        } catch(NullPointerException e) {
+                        } catch (NullPointerException e) {
                             Logger.excs.add(e);
                             Logger.warn(e.getMessage());
                             claim.defaults = new ArrayList<>();
@@ -330,7 +335,8 @@ public class Claims extends Feature {
         int i = 0;
         for (LandClaim claim : landClaims) {
             String path = "claims." + i;
-            if (claim.owner != null) claimsConfig.set(path + ".owner", claim.owner.getUniqueId().toString());
+            if (claim.owner != null)
+                claimsConfig.set(path + ".owner", claim.owner.getUniqueId().toString());
             claimsConfig.set(path + ".id", claim.id);
             claimsConfig.set(path + ".corner1", LocationUtils.serializeBlockPos(claim.start));
             claimsConfig.set(path + ".corner2", LocationUtils.serializeBlockPos(claim.end));
@@ -434,7 +440,6 @@ public class Claims extends Feature {
 
         DEFAULT, // incompatible with all others
     }
-
 
     public static class LandClaim extends Claim {
         Location start;
@@ -545,24 +550,28 @@ public class Claims extends Feature {
             super(owner);
             this.entity = entity;
         }
+
         public EntityClaim(OfflinePlayer owner, int id, UUID entity) {
             super(owner, id);
             this.entity = entity;
         }
-        public EntityClaim (EntityClaim orig, UUID entity) {
+
+        public EntityClaim(EntityClaim orig, UUID entity) {
             super(orig.owner);
             perms = orig.perms;
             defaults = orig.defaults;
             this.entity = entity;
             canAggro = orig.canAggro;
         }
-        public EntityClaim (EntityClaim orig, UUID entity, int id) {
+
+        public EntityClaim(EntityClaim orig, UUID entity, int id) {
             super(orig.owner, id);
             perms = orig.perms;
             defaults = orig.defaults;
             this.entity = entity;
             canAggro = orig.canAggro;
         }
+
         UUID entity;
         public boolean canAggro = false;
     }
@@ -605,22 +614,33 @@ public class Claims extends Feature {
                                 } else {
                                     name = Names.instance.getRenderedName(c.owner);
                                 }
-                                event.getPlayer().sendMessage(Component.text("This land is already claimed by ").append(name, Component.text(".")).color(NamedTextColor.RED));
+                                event.getPlayer().sendMessage(Component.text("This land is already claimed by ")
+                                        .append(name, Component.text(".")).color(NamedTextColor.RED));
                                 return;
                             }
                         }
                     }
                     claim.start = loc;
-                    event.getPlayer().sendMessage(Component.text("Now click the other corner with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW)).append(Component.text(")").color(NamedTextColor.BLUE)).color(NamedTextColor.BLUE));
+                    event.getPlayer()
+                            .sendMessage(Component.text("Now click the other corner with your claim tool. (If you lost it, run ")
+                                    .append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool"))
+                                            .color(NamedTextColor.YELLOW))
+                                    .append(Component.text(")").color(NamedTextColor.BLUE)).color(NamedTextColor.BLUE));
                 } else {
                     if (claim.start.getWorld() != loc.getWorld()) {
-                        event.getPlayer().sendMessage(Component.text("You can't claim across dimensions - go back to the dimension you started in!").color(NamedTextColor.RED));
+                        event.getPlayer().sendMessage(
+                                Component.text("You can't claim across dimensions - go back to the dimension you started in!")
+                                        .color(NamedTextColor.RED));
                         return;
                     }
                     var max = KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claim-size", 50000);
-                    var has = Math.abs(claim.start.x() - loc.x()) * Math.abs(claim.start.y() - loc.y()) * Math.abs(claim.start.z() - loc.z());
+                    var has = Math.abs(claim.start.x() - loc.x()) * Math.abs(claim.start.y() - loc.y())
+                            * Math.abs(claim.start.z() - loc.z());
                     if (has > max) {
-                        event.getPlayer().sendMessage(Component.text("You can't claim more than " + max + " blocks - you are trying to claim " + has + ".").color(NamedTextColor.RED));
+                        event.getPlayer()
+                                .sendMessage(Component
+                                        .text("You can't claim more than " + max + " blocks - you are trying to claim " + has + ".")
+                                        .color(NamedTextColor.RED));
                         return;
                     }
                     claim.end = loc;
@@ -633,16 +653,19 @@ public class Claims extends Feature {
                                 } else {
                                     name = Names.instance.getRenderedName(other.owner);
                                 }
-                                event.getPlayer().sendMessage(Component.text("This land intersects a claim by ").append(name, Component.text(".")).color(NamedTextColor.RED));
+                                event.getPlayer().sendMessage(Component.text("This land intersects a claim by ")
+                                        .append(name, Component.text(".")).color(NamedTextColor.RED));
                                 return;
-                            } else if (other.owner.getUniqueId().equals(event.getPlayer().getUniqueId()) && other.priority >= claim.priority) {
+                            } else if (other.owner.getUniqueId().equals(event.getPlayer().getUniqueId())
+                                    && other.priority >= claim.priority) {
                                 claim.priority = other.priority + 1;
                             }
                         }
                     }
                     landClaims.add(claim);
                     currentlyClaiming.remove(event.getPlayer());
-                    event.getPlayer().sendMessage(Component.text("Territory claimed (").color(NamedTextColor.GREEN).append(Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(")").color(NamedTextColor.GREEN)));
+                    event.getPlayer().sendMessage(Component.text("Territory claimed (").color(NamedTextColor.GREEN).append(
+                            Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(")").color(NamedTextColor.GREEN)));
                 }
             } else {
                 dialogGui.openLCPage(event.getPlayer(), getLandClaim(event.getClickedBlock().getLocation(), true));

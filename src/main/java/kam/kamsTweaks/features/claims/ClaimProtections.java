@@ -1,6 +1,8 @@
 package kam.kamsTweaks.features.claims;
 
+import com.destroystokyo.paper.event.block.AnvilDamagedEvent;
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
+import io.papermc.paper.event.player.PlayerInsertLecternBookEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
@@ -10,6 +12,8 @@ import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
+import org.bukkit.block.ShulkerBox;
+import org.bukkit.block.data.Hangable;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -27,13 +31,17 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.world.StructureGrowEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.projectiles.BlockProjectileSource;
 
@@ -82,7 +90,7 @@ public class ClaimProtections implements Listener {
                         for (var other : claims.landClaims) {
                             if (other.intersects(claim.start, loc)) {
                                 if (other.owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
-                                    if(col != Color.RED) {
+                                    if (col != Color.RED) {
                                         col = Color.AQUA;
                                     }
                                     claims.dialogGui.showArea(e.getPlayer(), other.start, other.end, 1, 20, Color.PURPLE);
@@ -134,18 +142,75 @@ public class ClaimProtections implements Listener {
         }
     }
 
+    static List<Material> exceptions = List.of(
+            Material.CRAFTING_TABLE, Material.SMITHING_TABLE, Material.STONECUTTER,
+            Material.CARTOGRAPHY_TABLE, Material.FLETCHING_TABLE, Material.GRINDSTONE,
+            Material.LOOM, Material.ENCHANTING_TABLE, Material.ENDER_CHEST,
+            Material.LECTERN, Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL
+    );
+
+    @EventHandler
+    public void onLecternTake(PlayerTakeLecternBookEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+
+        Player player = e.getPlayer();
+        Claims.LandClaim claim = claims.getLandClaim(e.getLectern().getLocation());
+        if (claim == null) return;
+        if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
+            message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onLectern(PlayerInsertLecternBookEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+
+        Player player = e.getPlayer();
+        Claims.LandClaim claim = claims.getLandClaim(e.getLectern().getLocation());
+        if (claim == null) return;
+        if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
+            message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onAnvil(AnvilDamagedEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+        Logger.info("Hi");
+        e.getInventory().getViewers().stream()
+            .filter(h -> h instanceof Player)
+            .map(h -> (Player) h)
+            .findFirst()
+            .ifPresent(player -> {
+                Logger.info(player.getName());
+                Claims.LandClaim claim = claims.getLandClaim(e.getInventory().getLocation());
+                if (claim == null) return;
+                if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
+                    message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+                    e.setCancelled(true);
+                }
+            });
+
+    }
+
     /// Land Claims
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
-//        if (e.getPlayer().getTargetEntity(5) instanceof Creature creature && e.getPlayer().getVehicle() != creature)
-//            return;
-        if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIMER) {
+        if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIM_TOOL) {
             if (useClaimTool(e)) return;
         }
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
 
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK || e.getAction() == Action.LEFT_CLICK_BLOCK) {
+            if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                assert e.getClickedBlock() != null;
+                if (exceptions.contains(e.getClickedBlock().getType())) {
+                    return;
+                }
+            }
             assert e.getClickedBlock() != null;
             //noinspection deprecation
             if (e.getClickedBlock().getType().isInteractable()) {
@@ -181,11 +246,13 @@ public class ClaimProtections implements Listener {
         }
     }
 
+    Map<Player, ItemStack> openBoxes = new HashMap<>();
+
     @EventHandler
     public void onPlace(BlockPlaceEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
-        if (ItemManager.ItemType.CLAIMER.equals(ItemManager.getType(e.getItemInHand()))) {
+        if (ItemManager.ItemType.CLAIM_TOOL.equals(ItemManager.getType(e.getItemInHand()))) {
             e.setCancelled(true);
             return;
         }
@@ -193,9 +260,41 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
         if (claim == null) return;
         if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-            message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
             e.setCancelled(true);
             applyCooldowns(player);
+            ItemStack item = e.getItemInHand();
+            if (item.getType() == Material.SHULKER_BOX || item.getType().name().endsWith("_SHULKER_BOX")) {
+                ItemMeta meta = item.getItemMeta();
+                if (!(meta instanceof BlockStateMeta bsm)) return;
+                BlockState state = bsm.getBlockState();
+                if (!(state instanceof ShulkerBox box)) return;
+                Inventory inv = box.getInventory();
+                e.getPlayer().openInventory(inv);
+                e.getPlayer().getInventory().remove(item);
+                openBoxes.put(e.getPlayer(), item);
+            } else {
+                message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+            }
+        }
+    }
+
+    @EventHandler
+    void onGuiClose(InventoryCloseEvent e) {
+        Player plr = (Player) e.getPlayer();
+        ItemStack item = openBoxes.remove(plr);
+        if (item == null) return;
+        if (!(item.getItemMeta() instanceof BlockStateMeta meta)) return;
+        if (!(meta.getBlockState() instanceof ShulkerBox box)) return;
+        Inventory shulkerInv = box.getInventory();
+        Inventory guiInv = e.getInventory();
+        shulkerInv.setContents(guiInv.getContents());
+        meta.setBlockState(box);
+        item.setItemMeta(meta);
+        Map<Integer, ItemStack> rip = plr.getInventory().addItem(item);
+        if (!rip.isEmpty()) {
+            for (ItemStack drop : rip.values()) {
+                plr.getWorld().dropItem(plr.getLocation(), drop);
+            }
         }
     }
 
@@ -402,6 +501,12 @@ public class ClaimProtections implements Listener {
                 message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
+        } else {
+            Claims.LandClaim claim = claims.getLandClaim(e.getEntity().getLocation());
+            if (claim == null) return;
+            if (!claim.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK)) {
+                e.setCancelled(true);
+            }
         }
     }
 
@@ -456,7 +561,7 @@ public class ClaimProtections implements Listener {
                 }
             }
         }
-        if (!(entity instanceof ItemFrame || entity instanceof ArmorStand || entity instanceof AbstractHorse
+        if (!(entity instanceof Hangable || entity instanceof ArmorStand || entity instanceof AbstractHorse
                 || entity instanceof Boat || entity instanceof Minecart))
             return;
         if (e.getDamageSource().getCausingEntity() instanceof Player player) {
@@ -476,9 +581,11 @@ public class ClaimProtections implements Listener {
             if (claim == null) return;
             Claims.LandClaim origin = null;
             if (entity.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "origin"))) {
+                Logger.info("a");
                 Location loc = LocationUtils.deserializeBlockPos(Objects.requireNonNull(entity.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING)));
                 origin = claims.getLandClaim(loc);
             }
+            Logger.info("G");
             if (!claim.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK) && (origin == null || !origin.hasPermission(null, Claims.ClaimPermission.BLOCK_PLACE))) {
                 e.setCancelled(true);
             }
@@ -963,7 +1070,7 @@ public class ClaimProtections implements Listener {
         Claims.LandClaim claim = claims.getLandClaim(event.getBlock().getLocation());
         if (event.getEntity() instanceof Player player) {
             if (claim != null && !claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
-                Component name = claim.owner != null ? Names.instance.getRenderedName(claim.owner): Component.text("the server").color(NamedTextColor.GOLD);
+                Component name = claim.owner != null ? Names.instance.getRenderedName(claim.owner) : Component.text("the server").color(NamedTextColor.GOLD);
                 message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(name, Component.text(")")));
                 event.setCancelled(true);
             }
@@ -1022,7 +1129,7 @@ public class ClaimProtections implements Listener {
     public void onGrindstone(InventoryClickEvent event) {
         if (event.getInventory().getType() == InventoryType.GRINDSTONE) {
             ItemStack result = event.getInventory().getItem(2);
-            if (result != null && ItemManager.getType(result) == ItemManager.ItemType.CLAIMER) {
+            if (result != null && ItemManager.getType(result) == ItemManager.ItemType.CLAIM_TOOL) {
                 event.setCancelled(true);
                 event.getWhoClicked().sendMessage(Component.text("You cannot disenchant this item.").color(NamedTextColor.RED));
             }
@@ -1034,7 +1141,7 @@ public class ClaimProtections implements Listener {
     public void EConEntityInteract(PlayerInteractEntityEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (e.getRightClicked() instanceof Mob c) {
-            if (ItemManager.getType(e.getPlayer().getInventory().getItemInMainHand()) == ItemManager.ItemType.CLAIMER) {
+            if (ItemManager.getType(e.getPlayer().getInventory().getItemInMainHand()) == ItemManager.ItemType.CLAIM_TOOL) {
                 e.setCancelled(true);
                 if (claims.entityClaims.containsKey(e.getRightClicked().getUniqueId())) {
                     OfflinePlayer owner = claims.entityClaims.get(e.getRightClicked().getUniqueId()).owner;
@@ -1044,7 +1151,7 @@ public class ClaimProtections implements Listener {
                     }
                     if (hasMessaged.contains(e.getPlayer().getUniqueId())) return;
                     hasMessaged.add(e.getPlayer().getUniqueId());
-                    e.getPlayer().sendMessage(Component.text("This entity is already claimed by ").append(owner == null ? Component.text("the server") : Names.instance.getRenderedName(owner),Component.text(".")));
+                    e.getPlayer().sendMessage(Component.text("This entity is already claimed by ").append(owner == null ? Component.text("the server") : Names.instance.getRenderedName(owner), Component.text(".")));
                     return;
                 }
                 if (!e.getPlayer().hasPermission("kamstweaks.claims.claim")) {
@@ -1087,7 +1194,7 @@ public class ClaimProtections implements Listener {
                     }
                 }
                 if (event.getDamageSource().getCausingEntity() instanceof Player player) {
-                    if (ItemManager.ItemType.CLAIMER.equals(ItemManager.getType(player.getInventory().getItemInMainHand()))) {
+                    if (ItemManager.ItemType.CLAIM_TOOL.equals(ItemManager.getType(player.getInventory().getItemInMainHand()))) {
                         if (claim == null) player.sendMessage(Component.text("This entity isn't claimed."));
                         else if (claim.owner == null)
                             player.sendMessage(Component.text("This entity is owned by the server."));
