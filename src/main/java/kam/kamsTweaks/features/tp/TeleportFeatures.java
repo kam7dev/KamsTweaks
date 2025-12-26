@@ -13,6 +13,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -22,7 +23,10 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -131,13 +135,16 @@ public class TeleportFeatures extends Feature {
                 passenger.leaveVehicle();
             }
             vehicle.teleport(location);
+            ((LivingEntity)vehicle).addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
             for (var passenger : passengers) {
                 passenger.teleport(location);
                 vehicle.addPassenger(passenger);
+                ((LivingEntity)vehicle).addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
             }
             Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> vehicle.addPassenger(player), 1L);
         } else {
             player.teleport(location);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
         }
 
         r.id = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), r, 20, 20);

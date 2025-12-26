@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features;
 
+import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import kam.kamsTweaks.Feature;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -32,6 +33,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -201,6 +204,11 @@ public class Graves extends Feature {
         }
 
         return loc;
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerPostRespawnEvent e) {
+        e.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
     }
 
     @EventHandler
