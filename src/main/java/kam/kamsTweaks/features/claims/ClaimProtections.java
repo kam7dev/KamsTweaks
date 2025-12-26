@@ -178,13 +178,11 @@ public class ClaimProtections implements Listener {
     @EventHandler
     public void onAnvil(AnvilDamagedEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
-        Logger.info("Hi");
         e.getInventory().getViewers().stream()
             .filter(h -> h instanceof Player)
             .map(h -> (Player) h)
             .findFirst()
             .ifPresent(player -> {
-                Logger.info(player.getName());
                 Claims.LandClaim claim = claims.getLandClaim(e.getInventory().getLocation());
                 if (claim == null) return;
                 if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
@@ -581,11 +579,9 @@ public class ClaimProtections implements Listener {
             if (claim == null) return;
             Claims.LandClaim origin = null;
             if (entity.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "origin"))) {
-                Logger.info("a");
                 Location loc = LocationUtils.deserializeBlockPos(Objects.requireNonNull(entity.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING)));
                 origin = claims.getLandClaim(loc);
             }
-            Logger.info("G");
             if (!claim.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK) && (origin == null || !origin.hasPermission(null, Claims.ClaimPermission.BLOCK_PLACE))) {
                 e.setCancelled(true);
             }

@@ -96,7 +96,6 @@ public class Claims extends Feature {
                             if (!(ctx.getSource().getSender() instanceof Player player))
                                 return builder.buildFuture();
                             landClaims.forEach(claim -> {
-                                Logger.info(claim.owner.getUniqueId() + " - " + player.getUniqueId());
                                 if (claim.owner.getUniqueId().equals(player.getUniqueId())) {
                                     builder.suggest(claim.id);
                                 }
