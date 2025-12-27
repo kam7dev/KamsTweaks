@@ -135,11 +135,11 @@ public class TeleportFeatures extends Feature {
                 passenger.leaveVehicle();
             }
             vehicle.teleport(location);
-            ((LivingEntity)vehicle).addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
+            if (vehicle instanceof LivingEntity le) le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
             for (var passenger : passengers) {
                 passenger.teleport(location);
                 vehicle.addPassenger(passenger);
-                ((LivingEntity)vehicle).addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
+                if (passenger instanceof LivingEntity le) le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
             }
             Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> vehicle.addPassenger(player), 1L);
         } else {
