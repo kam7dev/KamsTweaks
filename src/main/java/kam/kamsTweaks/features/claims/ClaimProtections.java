@@ -542,7 +542,7 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Entity entity = e.getVehicle();
-        if (!(entity instanceof AbstractHorse || entity instanceof ChestBoat || entity instanceof StorageMinecart))
+        if (!(entity instanceof ChestBoat || entity instanceof StorageMinecart))
             return;
         Claims.LandClaim claim = claims.getLandClaim(e.getVehicle().getLocation());
         if (claim == null) return;
@@ -572,7 +572,7 @@ public class ClaimProtections implements Listener {
                 }
             }
         }
-        if (!(entity instanceof Hangable || entity instanceof ArmorStand || entity instanceof AbstractHorse
+        if (!(entity instanceof Hangable || entity instanceof ArmorStand
                 || entity instanceof Boat || entity instanceof Minecart))
             return;
         if (e.getDamageSource().getCausingEntity() instanceof Player player) {
