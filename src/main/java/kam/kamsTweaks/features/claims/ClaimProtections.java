@@ -234,6 +234,11 @@ public class ClaimProtections implements Listener {
                         message(player, Component.text("You don't have door permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                         e.setCancelled(true);
                     }
+                } else if ((e.getClickedBlock().getType().equals(Material.RESPAWN_ANCHOR) && !e.getClickedBlock().getWorld().isRespawnAnchorWorks()) || (e.getClickedBlock().getType().name().contains("BED") && !e.getClickedBlock().getWorld().isBedWorks())){
+                    if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
+                        message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+                        e.setCancelled(true);
+                    }
                 } else {
                     if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK)) {
                         message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
