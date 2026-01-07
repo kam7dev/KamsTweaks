@@ -3,6 +3,7 @@ package kam.kamsTweaks.features;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import io.papermc.paper.registry.keys.DataComponentTypeKeys;
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
@@ -13,7 +14,7 @@ import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("UnstableApiUsage")
-public class PotionFilterItWouldAlsoFilterSpawnEggsButPaperDoesntSupportThat extends Feature {
+public class ItemDataFilter extends Feature {
 
     @Override
     public void setup() {
@@ -48,6 +49,11 @@ public class PotionFilterItWouldAlsoFilterSpawnEggsButPaperDoesntSupportThat ext
                 } else if (eff.getType() == PotionEffectType.WITHER) {
                     e.setCancelled(true);
                 }
+            }
+        }
+        for (var t : item.getDataTypes()) {
+            if (t.key().equals(DataComponentTypeKeys.ENTITY_DATA.key())) {
+                item.resetData(t);
             }
         }
     }

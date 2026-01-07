@@ -38,7 +38,7 @@ public final class KamsTweaks extends JavaPlugin {
     features.add(new ChatFilter());
     features.add(new NoBoom());
     features.add(new NotTooExpensive());
-    features.add(new PotionFilterItWouldAlsoFilterSpawnEggsButPaperDoesntSupportThat());
+    features.add(new ItemDataFilter());
 //    features.add(new DIFeature());
   }
 
