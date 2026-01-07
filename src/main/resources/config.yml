@@ -68,3 +68,12 @@ filters:
       enabled: true
       link: "https://extras.km7dev.me/slurFilter"
     message: "Slurs aren't allowed on this server, please don't attempt to type them."
+
+no-explosions:
+  enabled: false
+
+potion-filter:
+  enabled: false
+
+not-too-expensive:
+  enabled: true
