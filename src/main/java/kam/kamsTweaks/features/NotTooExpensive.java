@@ -33,7 +33,7 @@ public class NotTooExpensive extends Feature {
         ItemStack item = event.getInventory().getFirstItem();
         if (item == null) return;
         if (!(item.getItemMeta() instanceof Repairable meta)) return;
-        if (meta.getRepairCost() == -1 || meta.getRepairCost() > 32) meta.setRepairCost(32);
+        if (meta.getRepairCost() == -1 || meta.getRepairCost() > 24) meta.setRepairCost(24);
         item.setItemMeta(meta);
     }
 }
