@@ -1294,7 +1294,7 @@ public class ClaimProtections implements Listener {
     public void entityDie(EntityDeathEvent e) {
         // delayed to next tick so transformations work
         Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> claims.entityClaims.remove(e.getEntity().getUniqueId()), 0);
-        if (e.getEntity() instanceof EnderDragon) {
+        if (e.getEntity() instanceof EnderDragon && e.getEntity().getWorld().getEnvironment() == World.Environment.THE_END) {
             claims.disabledClaims.put(e.getEntity().getWorld(), 5 * 60);
         }
     }
@@ -1310,10 +1310,10 @@ public class ClaimProtections implements Listener {
     @EventHandler
     public void onJoinWorld(EntityAddToWorldEvent event) {
         if (event.getEntity() instanceof Player player) {
-            if (event.getWorld().getEnderDragonBattle() != null && event.getWorld().getEnderDragonBattle().getEnderDragon() != null) {
-                player.sendMessage(Component.text("Claims are currently disabled in this world due to an ongoing dragon fight. They will be re-enabled 5 minutes after the fight.").color(NamedTextColor.YELLOW));
+            if (event.getWorld().getEnderDragonBattle() != null && event.getWorld().getEnvironment() == World.Environment.THE_END && event.getWorld().getEnderDragonBattle().getEnderDragon() != null) {
+                player.sendMessage(Component.text("Claims are currently disabled at the end island due to an ongoing dragon fight. They will be re-enabled 5 minutes after the fight.").color(NamedTextColor.YELLOW));
             } else if (claims.disabledClaims.containsKey(event.getWorld())) {
-                player.sendMessage(Component.text("Claims are currently disabled in this world due to a recent dragon fight. They will be re-enabled in " + claims.disabledClaims.get(event.getWorld()) + " seconds.").color(NamedTextColor.YELLOW));
+                player.sendMessage(Component.text("Claims are currently disabled at the end island due to a recent dragon fight. They will be re-enabled in " + claims.disabledClaims.get(event.getWorld()) + " seconds.").color(NamedTextColor.YELLOW));
             }
         }
     }

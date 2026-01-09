@@ -584,7 +584,9 @@ public class Claims extends Feature {
     }
 
     public @Nullable LandClaim getLandClaim(Location where, boolean ignoresWorldDisable) {
-        if (!ignoresWorldDisable && ((where.getWorld().getEnderDragonBattle() != null && where.getWorld().getEnderDragonBattle().getEnderDragon() != null) || disabledClaims.containsKey(where.getWorld()))) return null;
+        if (!ignoresWorldDisable && ((where.getWorld().getEnderDragonBattle() != null && where.getWorld().getEnderDragonBattle().getEnderDragon() != null) || disabledClaims.containsKey(where.getWorld()))) {
+            if (where.distance(new Location(where.getWorld(),0.f, where.y(), 0.f)) < 200) return null;
+        }
         LandClaim ret = null;
         for (var claim : landClaims) {
             if (claim.inBounds(where)) {
