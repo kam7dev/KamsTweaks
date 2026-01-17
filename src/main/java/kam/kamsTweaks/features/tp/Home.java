@@ -34,7 +34,7 @@ public class Home extends Feature {
 
     @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         config.set("homes", null);
 
         homes.forEach((uuid, loc) -> {
@@ -45,7 +45,7 @@ public class Home extends Feature {
     @Override
     public void loadData() {
         homes.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         if (config.contains("homes")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("homes")).getKeys(false)) {
                 try {

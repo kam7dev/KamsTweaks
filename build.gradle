@@ -1,10 +1,11 @@
 plugins {
     id 'java'
     id("xyz.jpenilla.run-paper") version "2.3.1"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = 'kam'
-version = "2.1.1-${getGitHash()}"
+version = "2.2.6-${getGitHash()}"
 
 repositories {
     mavenCentral()
@@ -26,9 +27,8 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
     compileOnly 'com.discordsrv:discordsrv:1.28.0'
-    compileOnly "com.viaversion:viabackwards:5.4.2"
-    compileOnly "com.viaversion:viaversion:5.4.2"
     compileOnly 'me.clip:placeholderapi:2.11.7'
+//    implementation "net.dv8tion:JDA:6.2.0"
 }
 
 tasks {
@@ -41,7 +41,11 @@ tasks {
 }
 
 tasks.named('jar') {
-    archiveFileName.set('KamsTweaks.jar') // exact output filename
+    enabled = false
+}
+
+tasks.named("shadowJar") {
+    archiveFileName.set("KamsTweaks.jar")
 }
 
 def getGitHash() {

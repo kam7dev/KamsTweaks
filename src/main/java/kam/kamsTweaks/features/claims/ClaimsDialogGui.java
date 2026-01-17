@@ -9,7 +9,9 @@ import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.features.ChatFilter;
 import kam.kamsTweaks.features.Names;
+//import kam.kamsTweaks.features.discord.DIFeature;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -312,6 +314,7 @@ public class ClaimsDialogGui {
                 if (!who.getUniqueId().equals(claim.owner.getUniqueId())) {
                     claims.entityClaims.remove(claim.entity);
                     Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.owner.getName() + "'s entity claim!");
+//                    DIFeature.instance.message("<t:" + System.currentTimeMillis() / 1000 + ":R> <@!1254538148755537971> ‼️" + (claim.owner.getName() != null ? claim.owner.getName() : "the server").toUpperCase() + "'S ENTITY CLAIM WAS DELETED BY " + who.getName().toUpperCase() + ", SEND A PIPEBOMB TO THEIR DOORSTEP! ‼️ ⚠️ 🔥");
                     Bukkit.getServer().sendMessage(Component.text("[Land Claims] " + who.getName() + " just deleted " + claim.owner.getName() + "'s entity claim!"));
                     Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
                     if (dsPlugin != null && dsPlugin.isEnabled()) {
@@ -458,6 +461,7 @@ public class ClaimsDialogGui {
                     if (!who.getUniqueId().equals(claim.owner.getUniqueId())) {
                         claims.landClaims.remove(claim);
                         Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.owner.getName() + "'s land claim!");
+//                        DIFeature.instance.message("<t:" + System.currentTimeMillis() / 1000 + ":R> <@!1254538148755537971> ‼️" + (claim.owner.getName() != null ? claim.owner.getName() : "the server").toUpperCase() + "'S LAND CLAIM WAS DELETED BY " + who.getName().toUpperCase() + ", SEND A PIPEBOMB TO THEIR DOORSTEP! ‼️ ⚠️ 🔥");
                         Bukkit.getServer().sendMessage(Component.text("[Land Claims] " + who.getName() + " just deleted " + claim.owner.getName() + "'s land claim!"));
                         Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
                         if (dsPlugin != null && dsPlugin.isEnabled()) {
@@ -503,12 +507,17 @@ public class ClaimsDialogGui {
                                 Component.text("Click to confirm your changes."),
                                 100,
                                 DialogAction.customClick((view, audience) -> {
-                                    claim.name = view.getText("name");
-                                    // had to do a variable cause intellij wasnt doing assert right 💀
-                                    // https://cdn.discordapp.com/attachments/1357431808421007410/1421905060543336539/image.png
                                     var prioF = view.getFloat("prio");
                                     assert prioF != null;
                                     claim.priority = prioF.intValue();
+                                    var res = ChatFilter.instance.isFiltered(view.getText("name"));
+                                    if (res.first) {
+                                        Logger.warn("Claim rename by " + who.getName() + " was caught by the " + res.second.name + " automod: " + view.getText("name"));
+                                        openEditLCSettingsPage(who, claim);
+                                        who.sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
+                                        return;
+                                    }
+                                    claim.name = view.getText("name");
                                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                         ),
                         ActionButton.create(

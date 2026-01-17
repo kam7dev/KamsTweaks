@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features;
 
+import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import kam.kamsTweaks.Feature;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -17,6 +18,7 @@ import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -31,6 +33,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -54,7 +58,7 @@ public class Graves extends Feature {
                 graves.values().forEach(grave -> grave.tick(time));
                 lastTime = now;
             }
-        }, 20L, 20L);  // 20L = 1 second in ticks
+        }, 20L, 20L); // 20L = 1 second in ticks
     }
 
     @Override
@@ -69,7 +73,7 @@ public class Graves extends Feature {
                         StringBuilder claimsMsg = new StringBuilder();
                         AtomicInteger i = new AtomicInteger();
                         graves.forEach((id, grave) -> {
-                            if (grave.owner.equals(player)) {
+                            if (grave.owner.getUniqueId().equals(player.getUniqueId())) {
                                 i.getAndIncrement();
                                 claimsMsg
                                         .append("\nGrave ").append(id).append(": ")
@@ -83,7 +87,7 @@ public class Graves extends Feature {
                                 if (grave.msLeft < 0) {
                                     claimsMsg.append(" (expired)");
                                 } else {
-                                    claimsMsg.append(" (").append((int)grave.msLeft / 1000).append(" seconds left)");
+                                    claimsMsg.append(" (").append((int) grave.msLeft / 1000).append(" seconds left)");
                                 }
                             }
                         });
@@ -93,30 +97,66 @@ public class Graves extends Feature {
                         sender.sendMessage("Only players can run this.");
                     }
                     return Command.SINGLE_SUCCESS;
-                })).then(Commands.literal("recover").then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
-                    graves.forEach((id, grave) -> {
-                        if (grave.owner.getPlayer() == ctx.getSource().getSender() && grave.msLeft <= 0 && !grave.recovery) {
-                            builder.suggest(id);
-                        }
-                    });
-                    return builder.buildFuture();
-                }).executes(ctx -> {
-                    int id = ctx.getArgument("id", Integer.class);
-                    Grave grave = graves.getOrDefault(id, null);
-                    if (grave != null && grave.owner.getPlayer() == ctx.getSource().getSender() && !grave.recovery && grave.msLeft <= 0) {
-                        grave.recovery = true;
-                        grave.msLeft = 1000 * 60 * 10;
-                        grave.hasMessaged5 = false;
-                        grave.hasMessaged1 = false;
-                        grave.hasMessagedHalf = false;
-                        grave.hasMessagedExpire = false;
-                        ctx.getSource().getSender().sendMessage(Component.text("You have 10 minutes to recover your grave. After this, it will be gone permanently.").color(NamedTextColor.AQUA));
-                        grave.createStand();
-                        return Command.SINGLE_SUCCESS;
-                    }
-                    ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
-                    return Command.SINGLE_SUCCESS;
-                })))
+                })).then(Commands.literal("recover")
+                        .then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return builder.buildFuture();
+                            graves.forEach((id, grave) -> {
+                                if (grave.owner.getUniqueId().equals(player.getUniqueId()) && grave.msLeft <= 0 && !grave.recovery) {
+                                    builder.suggest(id);
+                                }
+                            });
+                            return builder.buildFuture();
+                        }).executes(ctx -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return Command.SINGLE_SUCCESS;
+                            int id = ctx.getArgument("id", Integer.class);
+                            Grave grave = graves.getOrDefault(id, null);
+                            if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId()) && !grave.recovery
+                                    && grave.msLeft <= 0) {
+                                grave.recovery = true;
+                                grave.msLeft = 1000 * 60 * 10;
+                                grave.hasMessaged5 = false;
+                                grave.hasMessaged1 = false;
+                                grave.hasMessagedHalf = false;
+                                grave.hasMessagedExpire = false;
+                                ctx.getSource().getSender()
+                                        .sendMessage(Component
+                                                .text("You have 10 minutes to recover your grave. After this, it will be gone permanently.")
+                                                .color(NamedTextColor.AQUA));
+                                grave.createStand();
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
+                            return Command.SINGLE_SUCCESS;
+                        })))
+                .then(Commands.literal("delete")
+                        .then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return builder.buildFuture();
+                            graves.forEach((id, grave) -> {
+                                if (grave.owner.getUniqueId().equals(player.getUniqueId())) {
+                                    builder.suggest(id);
+                                }
+                            });
+                            return builder.buildFuture();
+                        }).executes(ctx -> {
+                            if (!(ctx.getSource().getSender() instanceof Player player))
+                                return Command.SINGLE_SUCCESS;
+                            int id = ctx.getArgument("id", Integer.class);
+                            Grave grave = graves.getOrDefault(id, null);
+                            if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId())) {
+                                if (grave.stand != null)
+                                    grave.stand.remove();
+                                graves.remove(grave.id);
+                                ctx.getSource().getSender()
+                                        .sendMessage(Component.text("Grave deleted successfully.").color(NamedTextColor.AQUA));
+                                grave.createStand();
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
+                            return Command.SINGLE_SUCCESS;
+                        })))
                 .build());
     }
 
@@ -127,7 +167,7 @@ public class Graves extends Feature {
                 loc.setYaw(0);
                 loc.set(loc.getBlockX() + .5f, 63, loc.getBlockZ() + .25f);
                 var down = loc.getBlock().getRelative(BlockFace.DOWN);
-                switch(loc.getWorld().getEnvironment()) {
+                switch (loc.getWorld().getEnvironment()) {
                     case NORMAL: {
                         down.setType(Material.STONE);
                         break;
@@ -143,7 +183,7 @@ public class Graves extends Feature {
                 }
                 var back = down.getRelative(BlockFace.SOUTH);
                 if (back.getType().equals(Material.AIR)) {
-                    switch(loc.getWorld().getEnvironment()) {
+                    switch (loc.getWorld().getEnvironment()) {
                         case NORMAL: {
                             back.setType(Material.STONE);
                             break;
@@ -164,6 +204,11 @@ public class Graves extends Feature {
         }
 
         return loc;
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerPostRespawnEvent e) {
+        e.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
     }
 
     @EventHandler
@@ -298,7 +343,7 @@ public class Graves extends Feature {
                 }
             }
         });
-        if (expired.get() > 0 || unexpired.get() > 0){
+        if (expired.get() > 0 || unexpired.get() > 0) {
             var msg = Component.text("You have ");
             if (expired.get() > 0) {
                 msg = msg.append(Component.text(expired.get() + " expired grave(s)"));
@@ -337,7 +382,8 @@ public class Graves extends Feature {
             e.setCancelled(true);
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
-            @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
+            @SuppressWarnings("DataFlowIssue")
+            int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
@@ -397,7 +443,8 @@ public class Graves extends Feature {
             e.setCancelled(true);
             if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
                 return;
-            @SuppressWarnings("DataFlowIssue") int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
+            @SuppressWarnings("DataFlowIssue")
+            int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
@@ -430,16 +477,17 @@ public class Graves extends Feature {
         boolean recovery = false;
 
         public void tick(long ms) {
-            if (owner.isOnline()) {
+            Player player = Bukkit.getPlayer(owner.getUniqueId());
+            if (player != null) {
                 this.msLeft -= ms;
                 if (msLeft <= 0) {
                     if (this.stand != null) {
                         this.stand.remove();
                         this.stand = null;
                     }
-                    if (owner.getPlayer() != null && !hasMessagedExpire) {
-                        owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, .6f, 1.0f);
-                        owner.getPlayer().sendMessage(Component.text("Your grave (" + id + ") just expired.").color(NamedTextColor.RED));
+                    if (!hasMessagedExpire) {
+                        player.playSound(player.getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, .6f, 1.0f);
+                        player.sendMessage(Component.text("Your grave (" + id + ") just expired.").color(NamedTextColor.RED));
                         hasMessagedExpire = true;
                     }
                     if (recovery) {
@@ -448,24 +496,18 @@ public class Graves extends Feature {
                 } else {
                     if (this.msLeft <= 1000 * 60 * 5 && !hasMessaged5) {
                         hasMessaged5 = true;
-                        if (owner.getPlayer() != null) {
-                            owner.getPlayer().sendMessage(Component.text("Your grave expires in 5 minutes!").color(NamedTextColor.RED));
-                            owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.0f);
-                        }
+                        player.sendMessage(Component.text("Your grave expires in 5 minutes!").color(NamedTextColor.RED));
+                        player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.0f);
                     }
                     if (this.msLeft <= 1000 * 60 && !hasMessaged1) {
                         hasMessaged1 = true;
-                        if (owner.getPlayer() != null) {
-                            owner.getPlayer().sendMessage(Component.text("Your grave expires in 1 minute!").color(NamedTextColor.RED));
-                            owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.2f);
-                        }
+                        player.sendMessage(Component.text("Your grave expires in 1 minute!").color(NamedTextColor.RED));
+                        player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.2f);
                     }
                     if (this.msLeft <= 1000 * 30 && !hasMessagedHalf) {
                         hasMessagedHalf = true;
-                        if (owner.getPlayer() != null) {
-                            owner.getPlayer().sendMessage(Component.text("Your grave expires in 30 seconds!").color(NamedTextColor.RED));
-                            owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, .5f, .5f);
-                        }
+                        player.sendMessage(Component.text("Your grave expires in 30 seconds!").color(NamedTextColor.RED));
+                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, .5f, .5f);
                     }
                 }
             }
@@ -486,30 +528,61 @@ public class Graves extends Feature {
             this.inventory = Bukkit.createInventory(null, GRAVE_SIZE, Component.text("Grave"));
             for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
-                if (item != null && !item.isEmpty()) {
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
                     inventory.setItem(i, item);
                     inv.setItem(i, null);
                 }
             }
-            inventory.setItem(36, inv.getHelmet());
-            inv.setHelmet(null);
-            inventory.setItem(37, inv.getChestplate());
-            inv.setChestplate(null);
-            inventory.setItem(38, inv.getLeggings());
-            inv.setLeggings(null);
-            inventory.setItem(39, inv.getBoots());
-            inv.setBoots(null);
-            inventory.setItem(40, inv.getItemInOffHand());
-            inv.setItemInOffHand(null);
-            inventory.setItem(41, owner.getItemOnCursor());
-            owner.setItemOnCursor(null);
+            {
+                var item = inv.getHelmet();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(36, item);
+                    inv.setHelmet(null);
+                }
+            }
+            {
+                var item = inv.getChestplate();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(37, item);
+                    inv.setChestplate(null);
+                }
+            }
+            {
+                var item = inv.getLeggings();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(38, item);
+                    inv.setLeggings(null);
+                }
+            }
+            {
+                var item = inv.getBoots();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(39, item);
+                    inv.setBoots(null);
+                }
+            }
+
+            {
+                var item = inv.getItemInOffHand();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(40, item);
+                    inv.setItemInOffHand(null);
+                }
+            }
+            {
+                var item = owner.getItemOnCursor();
+                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    inventory.setItem(41, item);
+                    owner.setItemOnCursor(null);
+                }
+            }
 
             Inventory topInv = owner.getOpenInventory().getTopInventory();
             if (topInv.getType() == InventoryType.CRAFTING && !(topInv.getSize() > 5)) {
                 for (int i = 1; i < 5; i++) { // Slot 0 is the result so ignore it
                     ItemStack item = topInv.getItem(i);
                     if (item != null && !item.isEmpty()) {
-                        inventory.setItem(44+i, item);
+                        inventory.setItem(44 + i, item);
                         topInv.setItem(i, null);
                     }
                 }
@@ -563,7 +636,7 @@ public class Graves extends Feature {
 
     @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         config.set("graves", null);
         graves.forEach((id, grave) -> {
             Inventories.saveInventory(grave.getInventory(), config, "graves." + id);
@@ -582,7 +655,7 @@ public class Graves extends Feature {
     public void loadData() {
         graves.clear();
         highest = 0;
-        FileConfiguration config = KamsTweaks.getInstance().getGeneralConfig();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         if (config.contains("graves")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("graves")).getKeys(false)) {
                 try {
@@ -620,29 +693,29 @@ public class Graves extends Feature {
     // From essentials
 
     // Calculate amount of EXP needed to level up
-    public static int getExpToLevelUp(int level){
-        if(level <= 15){
-            return 2*level+7;
-        } else if(level <= 30){
-            return 5*level-38;
+    public static int getExpToLevelUp(int level) {
+        if (level <= 15) {
+            return 2 * level + 7;
+        } else if (level <= 30) {
+            return 5 * level - 38;
         } else {
-            return 9*level-158;
+            return 9 * level - 158;
         }
     }
 
     // Calculate total experience up to a level
-    public static int getExpAtLevel(int level){
-        if(level <= 16){
-            return (int) (Math.pow(level,2) + 6*level);
-        } else if(level <= 31){
-            return (int) (2.5*Math.pow(level,2) - 40.5*level + 360.0);
+    public static int getExpAtLevel(int level) {
+        if (level <= 16) {
+            return (int) (Math.pow(level, 2) + 6 * level);
+        } else if (level <= 31) {
+            return (int) (2.5 * Math.pow(level, 2) - 40.5 * level + 360.0);
         } else {
-            return (int) (4.5*Math.pow(level,2) - 162.5*level + 2220.0);
+            return (int) (4.5 * Math.pow(level, 2) - 162.5 * level + 2220.0);
         }
     }
 
     // Calculate player's current EXP amount
-    public static int getPlayerExp(Player player){
+    public static int getPlayerExp(Player player) {
         int exp = 0;
         int level = player.getLevel();
 
@@ -657,7 +730,7 @@ public class Graves extends Feature {
 
     // Give or take EXP
     @SuppressWarnings("UnusedReturnValue")
-    public static int changePlayerExp(Player player, int exp){
+    public static int changePlayerExp(Player player, int exp) {
         // Get player's current exp
         int currentExp = getPlayerExp(player);
 
