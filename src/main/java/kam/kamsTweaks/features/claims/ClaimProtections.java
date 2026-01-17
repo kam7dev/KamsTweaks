@@ -1157,6 +1157,14 @@ public class ClaimProtections implements Listener {
         if (e.getRightClicked() instanceof Mob c) {
             if (ItemManager.getType(e.getPlayer().getInventory().getItemInMainHand()) == ItemManager.ItemType.CLAIM_TOOL) {
                 e.setCancelled(true);
+                if (e.getRightClicked() instanceof Tameable tameable && tameable.getOwnerUniqueId() != null) {
+                    if (tameable.getOwnerUniqueId() != e.getPlayer().getUniqueId()) {
+                        if (hasMessaged.contains(e.getPlayer().getUniqueId())) return;
+                        hasMessaged.add(e.getPlayer().getUniqueId());
+                        e.getPlayer().sendMessage(Component.text("This entity is tamed and cannot be claimed."));
+                        return;
+                    }
+                }
                 if (claims.entityClaims.containsKey(e.getRightClicked().getUniqueId())) {
                     OfflinePlayer owner = claims.entityClaims.get(e.getRightClicked().getUniqueId()).owner;
                     if (owner != null && owner.getUniqueId().equals(e.getPlayer().getUniqueId()) || e.getPlayer().hasPermission("kamstweaks.claims.manage")) {
