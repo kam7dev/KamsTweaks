@@ -319,7 +319,7 @@ public class Graves extends Feature {
     @EventHandler
     public void onLeave(PlayerQuitEvent e) {
         graves.forEach((id, grave) -> {
-            if (grave.owner.equals(e.getPlayer())) {
+            if (grave.owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
                 if (grave.stand != null) {
                     grave.stand.remove();
                     grave.stand = null;
@@ -333,7 +333,7 @@ public class Graves extends Feature {
         AtomicInteger expired = new AtomicInteger();
         AtomicInteger unexpired = new AtomicInteger();
         graves.forEach((id, grave) -> {
-            if (grave.owner.equals(e.getPlayer())) {
+            if (grave.owner.getUniqueId().equals(e.getPlayer().getUniqueId())) {
                 if (grave.stand != null) {
                     grave.stand.remove();
                     grave.stand = null;

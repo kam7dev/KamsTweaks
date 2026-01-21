@@ -402,7 +402,7 @@ public class Claims extends Feature {
         @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         public boolean hasPermission(OfflinePlayer player, ClaimPermission perm) {
             if (player == null) return defaults.contains(perm);
-            if (owner.equals(player.getPlayer())) return true;
+            if (owner.getUniqueId().equals(player.getUniqueId())) return true;
             if (perms.containsKey(player)) {
                 var p = perms.get(player);
                 if (p.contains(ClaimPermission.DEFAULT)) {

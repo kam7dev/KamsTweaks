@@ -577,7 +577,7 @@ public class ClaimProtections implements Listener {
                 }
             }
         }
-        if (!(entity instanceof Hangable || entity instanceof ArmorStand
+        if (!(entity instanceof Hangable || entity instanceof Hanging || entity instanceof ArmorStand
                 || entity instanceof Boat || entity instanceof Minecart))
             return;
         if (e.getDamageSource().getCausingEntity() instanceof Player player) {
