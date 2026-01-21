@@ -213,6 +213,9 @@ public class Graves extends Feature {
 
     @EventHandler
     public void onDie(PlayerDeathEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
+            return;
+
         Player player = event.getPlayer();
         if (player.getInventory().isEmpty() && player.getTotalExperience() == 0) return;
         var loc = checkLocation(player.getLocation());
