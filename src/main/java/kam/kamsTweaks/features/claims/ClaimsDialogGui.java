@@ -45,7 +45,7 @@ public class ClaimsDialogGui {
         List<ActionButton> btns = new ArrayList<>();
         int totalClaims = 0;
         for (var claim : claims.landClaims) {
-            if (who.equals(claim.owner)) totalClaims++;
+            if (who.getUniqueId().equals(claim.owner.getUniqueId())) totalClaims++;
         }
         if (!claims.currentlyClaiming.containsKey(who) && who.hasPermission("kamstweaks.claims.claim")) {
             if (totalClaims < KamsTweaks.getInstance().getConfig().getInt("land-claims.max-claims", 30)) {
@@ -118,7 +118,7 @@ public class ClaimsDialogGui {
                     entity.setBillboard(Display.Billboard.CENTER);
                     entity.setPersistent(false);
                     for (Player h : Bukkit.getOnlinePlayers()) {
-                        if (!h.equals(who)) {
+                        if (!h.getUniqueId().equals(who.getUniqueId())) {
                             h.hideEntity(KamsTweaks.getInstance(), entity);
                         }
                     }
@@ -127,7 +127,7 @@ public class ClaimsDialogGui {
                     @EventHandler
                     public void onPlayerJoin(PlayerJoinEvent event) {
                         Player joining = event.getPlayer();
-                        if (!joining.equals(who)) {
+                        if (!joining.getUniqueId().equals(who.getUniqueId())) {
                             Bukkit.getScheduler().runTask(KamsTweaks.getInstance(), () -> joining.hideEntity(KamsTweaks.getInstance(), display));
                         }
                     }
@@ -143,7 +143,7 @@ public class ClaimsDialogGui {
             Component msg = Component.empty();
             int i = 0;
             for (Claims.LandClaim claim : claims.landClaims) {
-                if (who.equals(claim.owner)) {
+                if (who.getUniqueId().equals(claim.owner.getUniqueId())) {
                     i++;
                     msg = msg.append(Component.text("\n"), Component.text("("), Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(") "), Component.text(claim.name).color(NamedTextColor.AQUA), Component.text(" (priority "), Component.text(claim.priority).color(NamedTextColor.YELLOW), Component.text("): "), Component.text(claim.start.getBlockX() + ", " + claim.start.getBlockY() + ", " + claim.start.getBlockZ()).color(NamedTextColor.GREEN), Component.text(" to "), Component.text(claim.end.getBlockX() + ", " + claim.end.getBlockY() + ", " + claim.end.getBlockZ()).color(NamedTextColor.GREEN), Component.text(" in "), Component.text(claim.start.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE));
                 }
@@ -153,7 +153,7 @@ public class ClaimsDialogGui {
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         btns.add(ActionButton.builder(Component.text("Delete ALL of Your Claims")).action(DialogAction.customClick((view, audience) -> {
             audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete ALL of your land claims?")).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete them!")).action(DialogAction.customClick((view2, audience2) -> {
-                claims.landClaims.removeIf(claim -> claim.owner.equals(who));
+                claims.landClaims.removeIf(claim -> claim.owner.getUniqueId().equals(who.getUniqueId()));
                 who.sendMessage(Component.text("Successfully deleted your land claims."));
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No, don't delete them!")).build()))));
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
