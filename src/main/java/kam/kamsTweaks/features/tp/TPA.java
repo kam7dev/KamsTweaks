@@ -271,7 +271,7 @@ public class TPA extends Feature {
                         tpAuto.put(p.getUniqueId(), newValue);
                         p.sendMessage(Component.text("TPAuto is now ").color(NamedTextColor.GOLD)
                                 .append(Component.text(newValue ? "ON" : "OFF").color(NamedTextColor.RED))
-                                .append(Component.text(". When you receive a TPA request " + (newValue ? "it will automatically be accepted." : "you will have to accept it manually")).color(NamedTextColor.GOLD)));
+                                .append(Component.text(". When you receive a TPA request " + (newValue ? "it will automatically be accepted." : "you will have to accept it manually.")).color(NamedTextColor.GOLD)));
                     }
                     return Command.SINGLE_SUCCESS;
                 }).build());
@@ -282,7 +282,7 @@ public class TPA extends Feature {
         tpAuto.clear();
         FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         if (config.contains("tpa-settings")) {
-            for (String key : Objects.requireNonNull(config.getConfigurationSection("tpa-settings")).getKeys(false)) {
+            for (String key : Objects.requireNonNull(config.getConfigurationSection("tpa-settings.tp-auto")).getKeys(false)) {
                 try {
                     UUID player = UUID.fromString(key);
                     Boolean playerTPAuto = config.getBoolean("tpa-settings.tp-auto." + key);

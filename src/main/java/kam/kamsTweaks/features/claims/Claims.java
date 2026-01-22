@@ -255,73 +255,73 @@ public class Claims extends Feature {
                     Logger.warn(e.getMessage());
                 }
             }
+        }
 
-            entityClaims.clear();
-            if (claimsConfig.contains("entities")) {
-                for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities")).getKeys(false)) {
+        entityClaims.clear();
+        if (claimsConfig.contains("entities")) {
+            for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities")).getKeys(false)) {
+                try {
+                    UUID entity = UUID.fromString(key);
+                    String ownerStr = claimsConfig.getString("entities." + key + ".owner");
+                    UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
+                    EntityClaim claim;
+                    if (claimsConfig.contains("entities." + key + ".id")) {
+                        claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), claimsConfig.getInt("entities." + key + ".id"), entity);
+                    } else {
+                        claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), entity);
+                    }
                     try {
-                        UUID entity = UUID.fromString(key);
-                        String ownerStr = claimsConfig.getString("entities." + key + ".owner");
-                        UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
-                        EntityClaim claim;
-                        if (claimsConfig.contains("entities." + key + ".id")) {
-                            claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), claimsConfig.getInt("entities." + key + ".id"), entity);
-                        } else {
-                            claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), entity);
+                        if (claimsConfig.contains("entities." + key + ".defaults")) {
+                            for (String def : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".defaults"))) {
+                                claim.defaults.add(ClaimPermission.valueOf(def));
+                            }
+                        } else if (claimsConfig.contains("entities." + key + ".default")) {
+                            switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".default"))) {
+                                case "INTERACT":
+                                    claim.defaults.add(ClaimPermission.INTERACT_ENTITY);
+                                    break;
+                                case "KILL":
+                                    claim.defaults.add(ClaimPermission.DAMAGE_ENTITY);
+                                    break;
+                            }
                         }
-                        try {
-                            if (claimsConfig.contains("entities." + key + ".defaults")) {
-                                for (String def : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".defaults"))) {
-                                    claim.defaults.add(ClaimPermission.valueOf(def));
+                    } catch (NullPointerException e) {
+                        Logger.excs.add(e);
+                        Logger.warn(e.getMessage());
+                        claim.defaults = new ArrayList<>();
+                    }
+
+                    try {
+                        if (claimsConfig.contains("entities." + key + ".permissions")) {
+                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions")).getKeys(false)) {
+                                List<ClaimPermission> perms = new ArrayList<>();
+                                for (String perm : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".permissions." + uuid))) {
+                                    perms.add(ClaimPermission.valueOf(perm));
                                 }
-                            } else if (claimsConfig.contains("entities." + key + ".default")) {
-                                switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".default"))) {
+                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
+                            }
+                        } else if (claimsConfig.contains("entities." + key + ".perms")) {
+                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
+                                List<ClaimPermission> perms = new ArrayList<>();
+                                switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".perms." + uuid))) {
                                     case "INTERACT":
-                                        claim.defaults.add(ClaimPermission.INTERACT_ENTITY);
+                                        perms.add(ClaimPermission.INTERACT_ENTITY);
                                         break;
                                     case "KILL":
-                                        claim.defaults.add(ClaimPermission.DAMAGE_ENTITY);
+                                        perms.add(ClaimPermission.DAMAGE_ENTITY);
                                         break;
                                 }
+                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
                             }
-                        } catch (NullPointerException e) {
-                            Logger.excs.add(e);
-                            Logger.warn(e.getMessage());
-                            claim.defaults = new ArrayList<>();
                         }
-
-                        try {
-                            if (claimsConfig.contains("entities." + key + ".permissions")) {
-                                for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions")).getKeys(false)) {
-                                    List<ClaimPermission> perms = new ArrayList<>();
-                                    for (String perm : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".permissions." + uuid))) {
-                                        perms.add(ClaimPermission.valueOf(perm));
-                                    }
-                                    claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
-                                }
-                            } else if (claimsConfig.contains("entities." + key + ".perms")) {
-                                for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
-                                    List<ClaimPermission> perms = new ArrayList<>();
-                                    switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".perms." + uuid))) {
-                                        case "INTERACT":
-                                            perms.add(ClaimPermission.INTERACT_ENTITY);
-                                            break;
-                                        case "KILL":
-                                            perms.add(ClaimPermission.DAMAGE_ENTITY);
-                                            break;
-                                    }
-                                    claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
-                                }
-                            }
-                        } catch (Exception e) {
-                            Logger.excs.add(e);
-                            Logger.warn(e.getMessage());
-                        }
-                        entityClaims.put(UUID.fromString(key), claim);
                     } catch (Exception e) {
                         Logger.excs.add(e);
                         Logger.warn(e.getMessage());
                     }
+                    entityClaims.put(UUID.fromString(key), claim);
+                } catch (Exception e) {
+                    Logger.excs.add(e);
+                    Logger.warn(e.getMessage());
                 }
             }
         }
