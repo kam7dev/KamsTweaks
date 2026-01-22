@@ -47,6 +47,7 @@ public class NoBoom extends Feature {
 
     @EventHandler
     public void onExplode(PlayerInteractEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("no-explode.enabled", false)) return;
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock() != null){
             //noinspection deprecation
             if (!e.getClickedBlock().getType().isInteractable()) return;
