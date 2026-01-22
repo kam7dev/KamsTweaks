@@ -5,8 +5,6 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.features.claims.Claims;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
@@ -35,13 +33,13 @@ public class NoBoom extends Feature {
 
     @EventHandler
     public void onExplode(BlockExplodeEvent e) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("no-explode.enabled", false)) return;
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("no-explosions.enabled", false)) return;
         e.setCancelled(true);
     }
 
     @EventHandler
     public void onExplode(EntityExplodeEvent e) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("no-explode.enabled", false)) return;
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("no-explosions.enabled", false)) return;
         e.setCancelled(true);
     }
 
