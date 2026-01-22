@@ -359,7 +359,10 @@ public class Names extends Feature {
         LiteralArgumentBuilder<CommandSourceStack> whoIsCmd = Commands.literal("whois")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.names.nick"))
                 .then(Commands.argument("who", StringArgumentType.greedyString()).suggests((ctx, builder) -> {
-                    data.forEach((uuid, pair) -> builder.suggest(pair.first));
+                    data.forEach((uuid, pair) -> {
+                            if (pair.first.contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
+                                builder.suggest(pair.first);
+                    });
                     return builder.buildFuture();
                 }).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();

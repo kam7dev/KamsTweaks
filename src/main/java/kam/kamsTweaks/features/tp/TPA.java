@@ -7,17 +7,18 @@ import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSele
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +40,7 @@ public class TPA extends Feature {
     }
 
     private final Map<Player, TPARequest> tpas = new LinkedHashMap<>();
+    private final Map<UUID, Boolean> tpAuto = new HashMap<>();
 
     private void sendRequest(Player sender, Player target, boolean here) {
         if (tpas.containsKey(sender)) {
@@ -66,7 +68,6 @@ public class TPA extends Feature {
                         .append(Component.text(". They have 60 seconds to accept it. You can cancel this by running ").color(NamedTextColor.GOLD))
                         .append(Component.text("/tpcancel").clickEvent(ClickEvent.runCommand("tpcancel")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED))
                         .append(Component.text(".").color(NamedTextColor.GOLD)));
-
         target.sendMessage(sender.displayName().color(NamedTextColor.RED)
                 .append(Component.text(here ? " requested you teleport to them. Run " : " requested to teleport to you. Run ").color(NamedTextColor.GOLD))
                 .append(Component.text("/tpaccept").clickEvent(ClickEvent.runCommand("tpaccept")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED))
@@ -104,6 +105,11 @@ public class TPA extends Feature {
         }, 1200);
 
         tpas.put(sender, new TPARequest(target, here, listener, taskId));
+
+        if (!here && tpAuto.containsKey(target.getUniqueId()) && tpAuto.get(target.getUniqueId())) {
+            target.sendMessage(Component.text("Accepted Automatically.").color(NamedTextColor.GOLD));
+            accept(target,sender);
+        }
     }
 
     private void accept(Player acceptor, Player requester) {
@@ -253,15 +259,48 @@ public class TPA extends Feature {
                     }
                     return Command.SINGLE_SUCCESS;
                 }).build());
+        commands.registrar().register(Commands.literal("tpauto")
+                .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
+                .executes(ctx -> {
+                    Entity exec = ctx.getSource().getExecutor();
+                    if (exec instanceof Player p) {
+                        UUID playerUUID = p.getUniqueId();
+                        boolean newValue = true;
+                        if (tpAuto.containsKey(playerUUID)) newValue = !tpAuto.get(playerUUID);
+
+                        tpAuto.put(p.getUniqueId(), newValue);
+                        p.sendMessage(Component.text("TPAuto is now ").color(NamedTextColor.GOLD)
+                                .append(Component.text(newValue ? "ON" : "OFF").color(NamedTextColor.RED))
+                                .append(Component.text(". When you receive a TPA request " + (newValue ? "it will automatically be accepted." : "you will have to accept it manually.")).color(NamedTextColor.GOLD)));
+                    }
+                    return Command.SINGLE_SUCCESS;
+                }).build());
     }
 
     @Override
     public void loadData() {
-
+        tpAuto.clear();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        if (config.contains("tpa-settings")) {
+            for (String key : Objects.requireNonNull(config.getConfigurationSection("tpa-settings.tp-auto")).getKeys(false)) {
+                try {
+                    UUID player = UUID.fromString(key);
+                    Boolean playerTPAuto = config.getBoolean("tpa-settings.tp-auto." + key);
+                    tpAuto.put(player, playerTPAuto);
+                } catch (Exception e) {
+                    Logger.excs.add(e);
+                    Logger.warn(e.getMessage());
+                }
+            }
+        }
     }
 
     @Override
     public void saveData() {
-
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        config.set("tpa-settings", null);
+        tpAuto.forEach((uuid, tpauto) -> {
+            if (tpauto != null) config.set("tpa-settings.tp-auto." + uuid, tpauto);
+        });
     }
 }

@@ -75,7 +75,8 @@ public class Warp extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.warp"))
                 .then(Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
                     for (String warp : warps.keySet()) {
-                        builder.suggest(warp);
+                        if (warp.contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
+                            builder.suggest(warp);
                     }
                     return builder.buildFuture();
                 }).executes(ctx -> {
@@ -120,7 +121,8 @@ public class Warp extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.delwarp"))
                 .then(Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
                     for (String warp : warps.keySet()) {
-                        builder.suggest(warp);
+                        if (warp.contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
+                            builder.suggest(warp);
                     }
                     return builder.buildFuture();
                 }).executes(ctx -> {
