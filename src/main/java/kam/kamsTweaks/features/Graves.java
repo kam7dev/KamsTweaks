@@ -527,9 +527,9 @@ public class Graves extends Feature {
         private static boolean slotIsOutput(InventoryType type, int slot) {
             switch (type) {
                 case LOOM, SMITHING -> {return slot == 3;}
-                case CARTOGRAPHY, GRINDSTONE, ANVIL -> {return slot == 2;}
-                case WORKBENCH, CRAFTING -> {return slot == 0;}
+                case CARTOGRAPHY, GRINDSTONE, ANVIL, MERCHANT -> {return slot == 2;}
                 case STONECUTTER -> {return slot == 1;}
+                case WORKBENCH, CRAFTING -> {return slot == 0;}
             }
             return false;
         }

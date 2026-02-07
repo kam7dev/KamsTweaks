@@ -164,13 +164,12 @@ public class ClaimProtections implements Listener {
 
     @EventHandler
     public void onDrain(CauldronLevelChangeEvent e) {
-	if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
-
-        Player who = e.getEntity() instanceof Player ? (Player)e.getEntity() : null;
+	    if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) return;
+        Player who = e.getEntity() instanceof Player ? (Player) e.getEntity() : null;
         Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
         if (claim == null) return;
         if (!claim.hasPermission(who, Claims.ClaimPermission.INTERACT_BLOCK)) {
-            message(who, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+            if (who != null) message(who, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
             e.setCancelled(true);
         }
     }
