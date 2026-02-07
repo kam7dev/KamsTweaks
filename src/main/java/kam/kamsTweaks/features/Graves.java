@@ -524,6 +524,16 @@ public class Graves extends Feature {
             this.msLeft = msLeft;
         }
 
+        private static boolean slotIsOutput(InventoryType type, int slot) {
+            switch (type) {
+                case LOOM, SMITHING -> {return slot == 3;}
+                case CARTOGRAPHY, GRINDSTONE, ANVIL -> {return slot == 2;}
+                case WORKBENCH, CRAFTING -> {return slot == 0;}
+                case STONECUTTER -> {return slot == 1;}
+            }
+            return false;
+        }
+
         public Grave(Player owner, Location location) {
             this.owner = owner;
             this.location = location;
@@ -581,13 +591,11 @@ public class Graves extends Feature {
             }
 
             Inventory topInv = owner.getOpenInventory().getTopInventory();
-            if (topInv.getType() == InventoryType.CRAFTING && !(topInv.getSize() > 5)) {
-                for (int i = 1; i < 5; i++) { // Slot 0 is the result so ignore it
-                    ItemStack item = topInv.getItem(i);
-                    if (item != null && !item.isEmpty()) {
-                        inventory.setItem(44 + i, item);
-                        topInv.setItem(i, null);
-                    }
+            for (int i = 0; i < topInv.getSize(); i++) {
+                ItemStack item = topInv.getItem(i);
+                if (item != null && !slotIsOutput(topInv.getType(), i)) {
+                    inventory.setItem(45+i, item);
+                    topInv.setItem(i, null);
                 }
             }
 
