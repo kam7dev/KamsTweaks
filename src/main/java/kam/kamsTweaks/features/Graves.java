@@ -534,6 +534,13 @@ public class Graves extends Feature {
             return false;
         }
 
+        private static boolean holdsItems(InventoryType type) {
+            return switch (type) {
+                case CHEST, DISPENSER, DROPPER, FURNACE, BREWING, ENDER_CHEST, BEACON, HOPPER, SHULKER_BOX, BARREL, BLAST_FURNACE, SMOKER, CRAFTER -> true;
+                default -> false;
+            };
+        }
+
         public Grave(Player owner, Location location) {
             this.owner = owner;
             this.location = location;
@@ -591,11 +598,13 @@ public class Graves extends Feature {
             }
 
             Inventory topInv = owner.getOpenInventory().getTopInventory();
-            for (int i = 0; i < topInv.getSize(); i++) {
-                ItemStack item = topInv.getItem(i);
-                if (item != null && !slotIsOutput(topInv.getType(), i)) {
-                    inventory.setItem(45+i, item);
-                    topInv.setItem(i, null);
+            if (!holdsItems(topInv.getType())) {
+                for (int i = 0; i < topInv.getSize(); i++) {
+                    ItemStack item = topInv.getItem(i);
+                    if (item != null && !slotIsOutput(topInv.getType(), i)) {
+                        inventory.setItem(45+i, item);
+                        topInv.setItem(i, null);
+                    }
                 }
             }
 

@@ -17,6 +17,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
@@ -144,6 +145,7 @@ public class Claims extends Feature {
     }
 
     public boolean isClaimable(Entity e) {
+        if (e instanceof Boat) return true;
         if (!(e instanceof Mob)) return false;
         switch (e.getType()) {
             case ELDER_GUARDIAN, ENDER_DRAGON, WITHER, WARDEN -> {

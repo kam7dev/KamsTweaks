@@ -287,6 +287,8 @@ public class ClaimProtections implements Listener {
                 e.getPlayer().openInventory(inv);
                 e.getPlayer().getInventory().setItem(e.getHand(), new ItemStack(Material.AIR));
                 openBoxes.put(e.getPlayer(), item);
+            } else if (item.getType() == Material.ENDER_CHEST) {
+                e.getPlayer().openInventory(e.getPlayer().getEnderChest());
             } else {
                 message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
             }
@@ -1091,13 +1093,20 @@ public class ClaimProtections implements Listener {
             if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK)) {
                 event.setCancelled(true);
             }
-        } else {
-            if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.INTERACT_BLOCK)) {
-                event.setCancelled(true);
-            }
-        }
-        if (event.getEntity() instanceof FallingBlock fb) {
+        } else if (event.getEntity() instanceof FallingBlock fb) {
             if (event.getTo() == org.bukkit.Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
+                var newClaim = claims.getLandClaim(event.getBlock().getRelative(BlockFace.DOWN).getLocation());
+                if (newClaim != null && !newClaim.hasPermission(claim != null ? claim.owner : null, Claims.ClaimPermission.BLOCK_BREAK)) {
+                    event.setCancelled(true);
+                    org.bukkit.inventory.ItemStack drop = new org.bukkit.inventory.ItemStack(event.getBlockData().getMaterial());
+                    org.bukkit.inventory.meta.ItemMeta meta = drop.getItemMeta();
+                    if (meta instanceof org.bukkit.inventory.meta.BlockDataMeta bdMeta) {
+                        bdMeta.setBlockData(event.getBlockData());
+                        drop.setItemMeta(bdMeta);
+                    }
+                    fb.getWorld().dropItemNaturally(fb.getLocation(), drop);
+                    fb.remove();
+                }
                 fb.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING, LocationUtils.serializeBlockPos(fb.getLocation()));
             } else {
                 Claims.LandClaim orig = null;
@@ -1116,6 +1125,10 @@ public class ClaimProtections implements Listener {
                     fb.getWorld().dropItemNaturally(fb.getLocation(), drop);
                     fb.remove();
                 }
+            }
+        } else {
+            if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.INTERACT_BLOCK)) {
+                event.setCancelled(true);
             }
         }
     }
@@ -1308,8 +1321,8 @@ public class ClaimProtections implements Listener {
 
     @EventHandler
     public void onFish(PlayerFishEvent e) {
-        if (e.getCaught() instanceof Mob mob) {
-            var claim = claims.getEntityClaim(mob);
+        if (e.getCaught() != null) {
+            var claim = claims.getEntityClaim(e.getCaught());
             if (claim == null || !claim.hasPermission(e.getPlayer(), Claims.ClaimPermission.INTERACT_ENTITY)) e.setCancelled(true);
         }
     }
