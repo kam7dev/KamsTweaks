@@ -33,10 +33,12 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -600,6 +602,29 @@ public class Graves extends Feature {
             Inventory topInv = owner.getOpenInventory().getTopInventory();
             if (!holdsItems(topInv.getType())) {
                 for (int i = 0; i < topInv.getSize(); i++) {
+                    if (45 + i > 53) {
+                        Logger.error("Attempted to put an item past max inventory space in an inventory! Type: " + topInv.getType());
+                        Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
+                        if (dsPlugin != null && dsPlugin.isEnabled()) {
+                            try {
+                                Class<?> dsClass = Class.forName("github.scarsz.discordsrv.DiscordSRV");
+                                Object dsInstance = dsClass.getMethod("getPlugin").invoke(null);
+
+                                Method getChannel = dsClass.getMethod("getDestinationTextChannelForGameChannelName", String.class);
+                                Object channel = getChannel.invoke(dsInstance, "global");
+
+                                if (channel != null) {
+                                    Method sendMessage = channel.getClass().getMethod("sendMessage", CharSequence.class);
+                                    Object action = sendMessage.invoke(channel, "<@!1254538148755537971> An inventory type appears to be a storage inventory but not listed! Check " + topInv.getType());
+                                    action.getClass().getMethod("queue").invoke(action);
+                                }
+                            } catch (Exception e) {
+                                Logger.excs.add(e);
+                                Logger.error("Failed to send message to discord: " + e.getMessage());
+                            }
+                        }
+                        break;
+                    }
                     ItemStack item = topInv.getItem(i);
                     if (item != null && !slotIsOutput(topInv.getType(), i)) {
                         inventory.setItem(45+i, item);

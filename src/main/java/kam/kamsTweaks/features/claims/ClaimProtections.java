@@ -5,41 +5,27 @@ import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import io.papermc.paper.event.player.PlayerInsertLecternBookEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
-import org.bukkit.block.ShulkerBox;
+import org.bukkit.block.*;
 import org.bukkit.block.data.Hangable;
 import org.bukkit.block.data.type.Bed;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.*;
-import org.bukkit.entity.minecart.ExplosiveMinecart;
-import org.bukkit.entity.minecart.StorageMinecart;
-import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
+import org.bukkit.entity.minecart.*;
+import org.bukkit.event.*;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.hanging.HangingBreakByEntityEvent;
-import org.bukkit.event.hanging.HangingPlaceEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.hanging.*;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.world.StructureGrowEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -1162,6 +1148,44 @@ public class ClaimProtections implements Listener {
         }
     }
 
+    @EventHandler
+    public void onHopperPull(InventoryMoveItemEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        if (event.getSource().getHolder() == null || event.getDestination().getHolder() == null)
+            return;
+        Claims.LandClaim in;
+        Claims.LandClaim to;
+        if (event.getSource().getHolder() instanceof BlockInventoryHolder) {
+            in = claims.getLandClaim(((BlockInventoryHolder) event.getSource().getHolder()).getBlock().getLocation());
+        } else if (event.getSource().getHolder() instanceof DoubleChest) {
+            in = claims.getLandClaim(((DoubleChest) event.getSource().getHolder()).getLocation());
+        } else if (event.getSource().getHolder() instanceof HopperMinecart) {
+            in = claims.getLandClaim(((HopperMinecart) event.getSource().getHolder()).getLocation());
+        } else if (event.getSource().getHolder() instanceof StorageMinecart) {
+            in = claims.getLandClaim(((StorageMinecart) event.getSource().getHolder()).getLocation());
+        } else {
+            return;
+        }
+        if (event.getDestination().getHolder() instanceof BlockInventoryHolder) {
+            to = claims.getLandClaim(((BlockInventoryHolder) event.getDestination().getHolder()).getBlock().getLocation());
+        } else if (event.getSource().getHolder() instanceof DoubleChest) {
+            to = claims.getLandClaim(((DoubleChest) event.getDestination().getHolder()).getLocation());
+        } else if (event.getDestination().getHolder() instanceof HopperMinecart) {
+            to = claims.getLandClaim(((HopperMinecart) event.getDestination().getHolder()).getLocation());
+        } else if (event.getDestination().getHolder() instanceof StorageMinecart) {
+            to = claims.getLandClaim(((StorageMinecart) event.getDestination().getHolder()).getLocation());
+        } else {
+            return;
+        }
+        if (in != null && !in.hasPermission(to != null ? to.owner : null, Claims.ClaimPermission.INTERACT_BLOCK)) {
+            event.setCancelled(true);
+        }
+        if (to != null && !to.hasPermission(in != null ? in.owner : null, Claims.ClaimPermission.INTERACT_BLOCK)) {
+            event.setCancelled(true);
+        }
+    }
+
     /// Entity Claims
     @EventHandler(priority = EventPriority.HIGH)
     public void EConEntityInteract(PlayerInteractEntityEvent e) {
@@ -1338,9 +1362,10 @@ public class ClaimProtections implements Listener {
         }
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     @EventHandler
     public void onSleep(PlayerBedEnterEvent event) {
-        if (event.getBedEnterResult() != PlayerBedEnterEvent.BedEnterResult.NOT_SAFE)
+        if (event.enterAction().canSleep().success())
             return;
 
         Block block = event.getBed();
