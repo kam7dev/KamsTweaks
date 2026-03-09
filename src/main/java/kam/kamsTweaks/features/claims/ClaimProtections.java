@@ -1190,7 +1190,7 @@ public class ClaimProtections implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void EConEntityInteract(PlayerInteractEntityEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
-		if (claims.isClaimable(e.getRightClicked()) {
+		if (claims.isClaimable(e.getRightClicked())) {
             if (ItemManager.getType(e.getPlayer().getInventory().getItemInMainHand()) == ItemManager.ItemType.CLAIM_TOOL) {
                 e.setCancelled(true);
                 if (e.getRightClicked() instanceof Tameable tameable && tameable.getOwnerUniqueId() != null) {
