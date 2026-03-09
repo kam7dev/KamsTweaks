@@ -1190,6 +1190,7 @@ public class ClaimProtections implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void EConEntityInteract(PlayerInteractEntityEvent e) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true)) return;
+		if (isClaimable(e.getRightClicked()) {
             if (ItemManager.getType(e.getPlayer().getInventory().getItemInMainHand()) == ItemManager.ItemType.CLAIM_TOOL) {
                 e.setCancelled(true);
                 if (e.getRightClicked() instanceof Tameable tameable && tameable.getOwnerUniqueId() != null) {
@@ -1233,6 +1234,7 @@ public class ClaimProtections implements Listener {
                 message(e.getPlayer(), Component.text("You don't have permission to interact with this entity! (Entity claimed by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
             }
+		}
     }
 
     @EventHandler
