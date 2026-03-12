@@ -23,7 +23,7 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.hanging.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
-import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.event.vehicle.*;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.BlockStateMeta;
@@ -192,6 +192,7 @@ public class ClaimProtections implements Listener {
     }
 
     /// Land Claims
+    @SuppressWarnings("deprecation")
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIM_TOOL) {
@@ -1235,6 +1236,44 @@ public class ClaimProtections implements Listener {
                 e.setCancelled(true);
             }
 		}
+    }
+
+    @EventHandler
+    public void onECVehicleDestroy(VehicleDestroyEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true))
+            return;
+        Entity entity = e.getVehicle();
+        Claims.EntityClaim claim = claims.getEntityClaim(entity);
+        if (claim == null) return;
+        if (e.getAttacker() instanceof Player player) {
+            if (!claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) {
+                message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+                e.setCancelled(true);
+            }
+        } else {
+            if (!claim.hasPermission(null, Claims.ClaimPermission.DAMAGE_ENTITY)) {
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onECVehicleDamage(VehicleDamageEvent e) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("entity-claims.enabled", true))
+            return;
+        Entity entity = e.getVehicle();
+        Claims.EntityClaim claim = claims.getEntityClaim(entity);
+        if (claim == null) return;
+        if (e.getAttacker() instanceof Player player) {
+            if (!claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) {
+                message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+                e.setCancelled(true);
+            }
+        } else {
+            if (!claim.hasPermission(null, Claims.ClaimPermission.DAMAGE_ENTITY)) {
+                e.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler

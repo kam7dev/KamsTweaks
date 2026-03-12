@@ -23,10 +23,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -243,9 +241,11 @@ public class ClaimsDialogGui {
                     var claim = new Claims.EntityClaim(who, entity.getUniqueId());
                     claims.entityClaims.put(entity.getUniqueId(), claim);
                     entity.setFireTicks(0);
-                    ((Mob) entity).setTarget(null);
+                    if (entity instanceof Mob mob) {
+                        mob.setTarget(null);
+                        mob.setRemoveWhenFarAway(false);
+                    }
                     entity.setPersistent(true);
-                    ((LivingEntity) entity).setRemoveWhenFarAway(false);
                     who.sendMessage(Component.text("Claimed ").append(entity.name(), Component.text(" successfully ("), Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(")")));
                 }
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("No")).build())));
