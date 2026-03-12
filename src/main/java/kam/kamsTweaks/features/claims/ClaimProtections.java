@@ -1263,16 +1263,27 @@ public class ClaimProtections implements Listener {
                     }
                     if (claim == null) return;
                     if (claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) return;
-                    Component name;
-                    if (claim.owner.isOnline()) {
-                        name = Objects.requireNonNull(claim.owner.getPlayer()).displayName();
-                    } else {
-                        name = claim.owner == null ? Component.text("the server").color(NamedTextColor.GOLD) : Names.instance.getRenderedName(claim.owner);
-                    }
-                    message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(name, Component.text(")")));
+                    message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                     event.setCancelled(true);
                 } else if (claim != null) {
                     if (claim.hasPermission(null, Claims.ClaimPermission.DAMAGE_ENTITY)) return;
+                    event.setCancelled(true);
+                }
+            }
+            case PROJECTILE -> {
+                if (event.getDamageSource().getCausingEntity() instanceof Player player) {
+                    if (ItemManager.ItemType.CLAIM_TOOL.equals(ItemManager.getType(player.getInventory().getItemInMainHand())) && claims.isClaimable(event.getEntity())) {
+                        if (claim == null) player.sendMessage(Component.text("This entity isn't claimed."));
+                        else if (claim.owner == null)
+                            player.sendMessage(Component.text("This entity is owned by the server."));
+                        else
+                            player.sendMessage(Component.text("This entity is owned by ").append(Names.instance.getRenderedName(claim.owner)));
+                        event.setCancelled(true);
+                        return;
+                    }
+                    if (claim == null) return;
+                    if (claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) return;
+                    message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                     event.setCancelled(true);
                 }
             }
@@ -1347,7 +1358,7 @@ public class ClaimProtections implements Listener {
     public void onFish(PlayerFishEvent e) {
         if (e.getCaught() != null) {
             var claim = claims.getEntityClaim(e.getCaught());
-            if (claim == null || !claim.hasPermission(e.getPlayer(), Claims.ClaimPermission.INTERACT_ENTITY)) e.setCancelled(true);
+            if (claim != null && !claim.hasPermission(e.getPlayer(), Claims.ClaimPermission.INTERACT_ENTITY)) e.setCancelled(true);
         }
     }
 
@@ -1362,10 +1373,10 @@ public class ClaimProtections implements Listener {
         }
     }
 
-    @SuppressWarnings("UnstableApiUsage")
+    @SuppressWarnings("deprecation")
     @EventHandler
     public void onSleep(PlayerBedEnterEvent event) {
-        if (event.enterAction().canSleep().success())
+        if (event.getBedEnterResult() != PlayerBedEnterEvent.BedEnterResult.NOT_SAFE)
             return;
 
         Block block = event.getBed();

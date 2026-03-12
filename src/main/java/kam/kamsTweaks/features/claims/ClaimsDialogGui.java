@@ -542,7 +542,7 @@ public class ClaimsDialogGui {
                 .base(DialogBase.builder(Component.text("Edit Claim Settings"))
                         .inputs(List.of(
 
-                                DialogInput.bool("aggro", Component.text("Can Target Players")).initial(claim.canAggro).build()
+                                DialogInput.bool("aggro", Component.text("Can Aggro")).initial(claim.canAggro).build()
                         )).build()
                 )
                 .type(DialogType.confirmation(
