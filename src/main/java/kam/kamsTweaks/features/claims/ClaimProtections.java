@@ -5,6 +5,7 @@ import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import io.papermc.paper.event.player.PlayerInsertLecternBookEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.utils.LocationUtils;
@@ -1153,37 +1154,42 @@ public class ClaimProtections implements Listener {
     public void onHopperPull(InventoryMoveItemEvent event) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
-        if (event.getSource().getHolder() == null || event.getDestination().getHolder() == null)
-            return;
-        Claims.LandClaim in;
-        Claims.LandClaim to;
-        if (event.getSource().getHolder() instanceof BlockInventoryHolder) {
-            in = claims.getLandClaim(((BlockInventoryHolder) event.getSource().getHolder()).getBlock().getLocation());
-        } else if (event.getSource().getHolder() instanceof DoubleChest) {
-            in = claims.getLandClaim(((DoubleChest) event.getSource().getHolder()).getLocation());
-        } else if (event.getSource().getHolder() instanceof HopperMinecart) {
-            in = claims.getLandClaim(((HopperMinecart) event.getSource().getHolder()).getLocation());
-        } else if (event.getSource().getHolder() instanceof StorageMinecart) {
-            in = claims.getLandClaim(((StorageMinecart) event.getSource().getHolder()).getLocation());
-        } else {
-            return;
-        }
-        if (event.getDestination().getHolder() instanceof BlockInventoryHolder) {
-            to = claims.getLandClaim(((BlockInventoryHolder) event.getDestination().getHolder()).getBlock().getLocation());
-        } else if (event.getSource().getHolder() instanceof DoubleChest) {
-            to = claims.getLandClaim(((DoubleChest) event.getDestination().getHolder()).getLocation());
-        } else if (event.getDestination().getHolder() instanceof HopperMinecart) {
-            to = claims.getLandClaim(((HopperMinecart) event.getDestination().getHolder()).getLocation());
-        } else if (event.getDestination().getHolder() instanceof StorageMinecart) {
-            to = claims.getLandClaim(((StorageMinecart) event.getDestination().getHolder()).getLocation());
-        } else {
-            return;
-        }
-        if (in != null && !in.hasPermission(to != null ? to.owner : null, Claims.ClaimPermission.INTERACT_BLOCK)) {
-            event.setCancelled(true);
-        }
-        if (to != null && !to.hasPermission(in != null ? in.owner : null, Claims.ClaimPermission.INTERACT_BLOCK)) {
-            event.setCancelled(true);
+        try {
+            if (event.getSource().getHolder() == null || event.getDestination().getHolder() == null)
+                return;
+            Claims.LandClaim in;
+            Claims.LandClaim to;
+            if (event.getSource().getHolder() instanceof BlockInventoryHolder holder) {
+                in = claims.getLandClaim(holder.getBlock().getLocation());
+            } else if (event.getSource().getHolder() instanceof DoubleChest chest) {
+                in = claims.getLandClaim(chest.getLocation());
+            } else if (event.getSource().getHolder() instanceof HopperMinecart minecart) {
+                in = claims.getLandClaim(minecart.getLocation());
+            } else if (event.getSource().getHolder() instanceof StorageMinecart minecart) {
+                in = claims.getLandClaim(minecart.getLocation());
+            } else {
+                return;
+            }
+            if (event.getDestination().getHolder() instanceof BlockInventoryHolder holder) {
+                to = claims.getLandClaim(holder.getBlock().getLocation());
+            } else if (event.getSource().getHolder() instanceof DoubleChest chest) {
+                to = claims.getLandClaim(chest.getLocation());
+            } else if (event.getDestination().getHolder() instanceof HopperMinecart minecart) {
+                to = claims.getLandClaim(minecart.getLocation());
+            } else if (event.getDestination().getHolder() instanceof StorageMinecart minecart) {
+                to = claims.getLandClaim(minecart.getLocation());
+            } else {
+                return;
+            }
+            if (in != null && !in.hasPermission(to != null ? to.owner : null, Claims.ClaimPermission.INTERACT_BLOCK)) {
+                event.setCancelled(true);
+            }
+            if (to != null && !to.hasPermission(in != null ? in.owner : null, Claims.ClaimPermission.INTERACT_BLOCK)) {
+                event.setCancelled(true);
+            }
+        } catch (Exception e) {
+            Logger.warn(e.getMessage());
+            Logger.excs.add(e);
         }
     }
 
