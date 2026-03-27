@@ -1068,7 +1068,7 @@ public class ClaimProtections implements Listener {
     public void onEntityChangeBlock(EntityChangeBlockEvent event) {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
-        if (event.getEntityType() == EntityType.SHEEP)
+        if (event.getEntityType() == EntityType.SHEEP || event.getEntityType() == EntityType.BEE)
             return;
         Claims.LandClaim claim = claims.getLandClaim(event.getBlock().getLocation());
         if (event.getEntity() instanceof Player player) {

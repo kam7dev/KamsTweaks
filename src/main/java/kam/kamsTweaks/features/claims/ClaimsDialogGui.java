@@ -4,6 +4,7 @@ import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
@@ -164,12 +165,31 @@ public class ClaimsDialogGui {
         openLCPage(who, in);
     }
 
+    public void showTutorial(Player who) {
+        who.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Claim Tool Info")).body(List.of(DialogBody.plainMessage(Component.text("""
+                Welcome to the Claim Tool! This explanation will guide you through its usage.
+                
+                To create a land claim, you must select an area by right-clicking two different blocks (or the same block twice if you want). Claims do not extend upward or downward infinitely, so to claim a tall build you need to select the lowest point and the highest point as well.
+                
+                You can also claim mobs, armor stands, boats, etc. These are entity claims.
+                
+                You are able to edit your claims to set the default permissions (which apply to all players) and give specific permissions for specific players, or set the behavior of the claimed entity. You can also change the name of your land claims and set their priority.
+                
+                Server operators are able to edit or delete your claims at any time if they need to."""), 400))).build())
+                .type(DialogType.notice(ActionButton.builder(Component.text("Back")).action(DialogAction.customClick((view, audience) -> {
+                    openMainPage(who);
+                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build())
+        )));
+        claims.claimsConfig.set("claimsTuto." + who.getUniqueId(), true);
+    }
 
     public void openMainPage(Player who) {
         Dialog dialog = Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Claims")).build()).type(DialogType.multiAction(List.of(ActionButton.builder(Component.text("Land Claims")).action(DialogAction.customClick((view, audience) -> {
             openLCPage(who);
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("Entity Claims")).action(DialogAction.customClick((view, audience) -> {
             openECPage(who);
+        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build(), ActionButton.builder(Component.text("Claim Tool Info")).action(DialogAction.customClick((view, audience) -> {
+            showTutorial(who);
         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build()), null, 1)));
         who.showDialog(dialog);
     }
@@ -462,7 +482,7 @@ public class ClaimsDialogGui {
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build());
         }
         btns.add(ActionButton.builder(Component.text("Delete Claim")).action(DialogAction.customClick((view, audience) -> {
-                audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete " +  (claim.owner.getUniqueId().equals(who.getUniqueId()) ? "your" : Names.instance.getRenderedName(claim.owner) + "'s") + " land claim (").append(Component.text(claim.name).color(NamedTextColor.GOLD), Component.text(")?"))).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete it!")).action(DialogAction.customClick((view2, audience2) -> {
+                audience.showDialog(Dialog.create(builder -> builder.empty().base(DialogBase.builder(Component.text("Are you sure you want to delete ").append(claim.owner.getUniqueId().equals(who.getUniqueId()) ? Component.text("your") : Names.instance.getRenderedName(claim.owner).append(Component.text("'s").color(NamedTextColor.WHITE)), Component.text(" land claim ("), Component.text(claim.name).color(NamedTextColor.GOLD), Component.text(")?"))).build()).type(DialogType.confirmation(ActionButton.builder(Component.text("Yes, delete it!")).action(DialogAction.customClick((view2, audience2) -> {
                     if (!who.getUniqueId().equals(claim.owner.getUniqueId())) {
                         claims.landClaims.remove(claim);
                         Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.owner.getName() + "'s land claim!");

@@ -16,6 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -104,7 +105,7 @@ public class Graves extends Feature {
                             if (!(ctx.getSource().getSender() instanceof Player player))
                                 return builder.buildFuture();
                             graves.forEach((id, grave) -> {
-                                if (grave.owner.getUniqueId().equals(player.getUniqueId()) && grave.msLeft <= 0 && !grave.recovery) {
+                                if (grave.owner.getUniqueId().equals(player.getUniqueId()) && grave.msLeft <= 0 /* && !grave.recovery */) {
                                     builder.suggest(id);
                                 }
                             });
@@ -114,7 +115,7 @@ public class Graves extends Feature {
                                 return Command.SINGLE_SUCCESS;
                             int id = ctx.getArgument("id", Integer.class);
                             Grave grave = graves.getOrDefault(id, null);
-                            if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId()) && !grave.recovery
+                            if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId()) // && !grave.recovery
                                     && grave.msLeft <= 0) {
                                 grave.recovery = true;
                                 grave.msLeft = 1000 * 60 * 10;
@@ -162,7 +163,63 @@ public class Graves extends Feature {
                 .build());
     }
 
+    static protected int getLavaTop(Location loc, int off) {
+        if (loc.getBlock().getType() == Material.LAVA) {
+            return getLavaTop(loc.add(0, 1, 0), off + 1);
+        } else {
+            if (loc.getBlock().getType().isAir()) return off;
+            else if (loc.add(0, 1, 0).getBlock().getType().isAir()) return off + 1;
+            else if (loc.add(0, 1, 0).getBlock().getType().isAir()) return off + 2;
+            else if (loc.add(0, 1, 0).getBlock().getType().isAir()) return off + 3;
+            loc.subtract(0, 3, 0);
+            return 0;
+        }
+    }
+
     public static Location checkLocation(Location loc) {
+        var wb = loc.getWorld().getWorldBorder();
+        if (!wb.isInside(loc)) {
+            loc.setX(Math.clamp(loc.getX(), wb.getCenter().getX() - wb.getSize() / 2, wb.getCenter().getX() + wb.getSize() / 2));
+            loc.setZ(Math.clamp(loc.getZ(), wb.getCenter().getZ() - wb.getSize() / 2, wb.getCenter().getZ() + wb.getSize() / 2));
+        }
+        if (loc.getBlock().getType() == Material.LAVA) {
+            var ret = getLavaTop(loc, 0);
+            if (ret > 0) {
+                var down = loc.getBlock().getRelative(BlockFace.DOWN);
+                switch (loc.getWorld().getEnvironment()) {
+                    case NORMAL: {
+                        down.setType(Material.STONE);
+                        break;
+                    }
+                    case NETHER: {
+                        down.setType(Material.NETHERRACK);
+                        break;
+                    }
+                    case THE_END: {
+                        down.setType(Material.END_STONE);
+                        break;
+                    }
+                }
+                var back = down.getRelative(BlockFace.SOUTH);
+                if (back.getType().equals(Material.AIR)) {
+                    switch (loc.getWorld().getEnvironment()) {
+                        case NORMAL: {
+                            back.setType(Material.STONE);
+                            break;
+                        }
+                        case NETHER: {
+                            back.setType(Material.NETHERRACK);
+                            break;
+                        }
+                        case THE_END: {
+                            back.setType(Material.END_STONE);
+                            break;
+                        }
+                    }
+                }
+                return loc;
+            }
+        }
         if (loc.getBlockY() < loc.getWorld().getMinHeight()) {
             var block = loc.getWorld().getHighestBlockAt(loc);
             if (block.getType().isAir()) {
@@ -225,6 +282,7 @@ public class Graves extends Feature {
         graves.put(grave.id, grave);
         event.getDrops().clear();
         event.setDroppedExp(0);
+        player.sendMessage(Component.text("You have a new grave at ").append(Component.text(String.format("(%s, %s, %s)", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())).color(NamedTextColor.RED), Component.text(" in "), Component.text(loc.getWorld().getName()).color(NamedTextColor.RED), Component.text(".")).color(NamedTextColor.GOLD));
     }
 
     void tp() {
@@ -495,9 +553,9 @@ public class Graves extends Feature {
                         player.sendMessage(Component.text("Your grave (" + id + ") just expired.").color(NamedTextColor.RED));
                         hasMessagedExpire = true;
                     }
-                    if (recovery) {
-                        Bukkit.getScheduler().runTask(KamsTweaks.getInstance(), () -> graves.remove(this.id));
-                    }
+//                    if (recovery) {
+//                        Bukkit.getScheduler().runTask(KamsTweaks.getInstance(), () -> graves.remove(this.id));
+//                    }
                 } else {
                     if (this.msLeft <= 1000 * 60 * 5 && !hasMessaged5) {
                         hasMessaged5 = true;

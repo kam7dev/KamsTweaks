@@ -92,6 +92,21 @@ public class Claims extends Feature {
                             player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIM_TOOL).clone());
                             return Command.SINGLE_SUCCESS;
                         }))
+                .then(Commands.literal("cancel")
+                        .executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true)) {
+                                sender.sendPlainMessage("Land claims are disabled.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            if (!(sender instanceof Player player)) {
+                                sender.sendPlainMessage("Only players run this.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            sender.sendMessage(Component.text("Cancelled claiming land.").color(NamedTextColor.RED));
+                            currentlyClaiming.remove(player);
+                            return Command.SINGLE_SUCCESS;
+                        }))
                 .then(Commands.literal("delete")
                         .then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
                             if (!(ctx.getSource().getSender() instanceof Player player))
@@ -602,7 +617,13 @@ public class Claims extends Feature {
 
     public void handleItem(PlayerInteractEvent event) {
         if (event.getClickedBlock() == null) {
-            dialogGui.openMainPage(event.getPlayer());
+            var plr = event.getPlayer();
+            if (!KamsTweaks.getInstance().getDataConfig().contains("shown." + plr.getUniqueId())) {
+                KamsTweaks.getInstance().getDataConfig().set("shown." + plr.getUniqueId(), true);
+                dialogGui.showTutorial(plr);
+            } else {
+                dialogGui.openMainPage(plr);
+            }
         } else {
             var loc = event.getClickedBlock().getLocation();
             if (currentlyClaiming.containsKey(event.getPlayer())) {

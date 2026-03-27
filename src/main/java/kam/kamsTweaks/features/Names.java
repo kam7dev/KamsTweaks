@@ -103,6 +103,13 @@ public class Names extends Feature {
 
     }
 
+    private static int score(String candidate, String target) {
+        if (target.isEmpty()) return 0;
+        if (candidate.startsWith(target)) return 0;
+        if (candidate.contains(target)) return 1;
+        return 2;
+    }
+
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> nickCmd = Commands.literal("nick")
@@ -163,8 +170,30 @@ public class Names extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.names.color"))
                 .then(Commands.argument("colors", StringArgumentType.greedyString())
                         .suggests((ctx, builder) -> {
-                            for (String color : NamedTextColor.NAMES.keys()) {
-                                builder.suggest(color.toLowerCase());
+                            String input = builder.getInput();
+                            List<String> parts = new ArrayList<>(List.of(input.split(" ")));
+                            parts.removeFirst();
+
+                            String target;
+                            if (!input.endsWith(" ") && !parts.isEmpty()) {
+                                target = parts.removeLast().toLowerCase();
+                            } else {
+                                target = "";
+                            }
+
+                            String prefix = String.join(" ", parts);
+                            if (!prefix.isEmpty()) prefix += " ";
+
+                            List<String> colors = new ArrayList<>(NamedTextColor.NAMES.keys());
+                            colors.sort(Comparator
+                                    .comparingInt((String c) -> score(c.toLowerCase(), target))
+                                    .thenComparing(String::compareTo)
+                            );
+
+                            for (String color : colors) {
+                                if (target.isEmpty() || color.toLowerCase().contains(target)) {
+                                    builder.suggest(prefix + color.toLowerCase());
+                                }
                             }
                             return builder.buildFuture();
                         })

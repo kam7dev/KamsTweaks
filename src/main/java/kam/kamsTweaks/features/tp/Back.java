@@ -10,6 +10,7 @@ import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.Graves;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -84,6 +85,6 @@ public class Back extends Feature {
     public void onDeath(PlayerDeathEvent e) {
         Player player = e.getPlayer();
         TeleportFeatures.get().locations.put(player, Graves.checkLocation(player.getLocation()));
-        player.sendMessage(Component.text("Return to your death location with /back.").color(NamedTextColor.GOLD));
+        player.sendMessage(Component.text("Return to your death location with ").append(Component.text("/back").color(NamedTextColor.RED).clickEvent(ClickEvent.runCommand("/back")), Component.text(".")).color(NamedTextColor.GOLD));
     }
 }

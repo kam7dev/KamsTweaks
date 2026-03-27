@@ -60,6 +60,14 @@ public class TPA extends Feature {
             sender.sendMessage(Component.text("You can't teleport to yourself, silly!").color(NamedTextColor.RED));
             return;
         }
+        if (target.isDead()) {
+            sender.sendMessage(Component.text("This person is currently dead.").color(NamedTextColor.RED));
+            return;
+        }
+        if (sender.isDead()) {
+            sender.sendMessage(Component.text("You can't teleport to while dead.").color(NamedTextColor.RED));
+            return;
+        }
 
         String type = here ? "TPAHere" : "TPA";
         sender.sendMessage(
