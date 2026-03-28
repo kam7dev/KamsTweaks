@@ -1,28 +1,33 @@
 package kam.kamsTweaks;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import kam.kamsTweaks.ext.GeyserAnvixosBitsData;
 import kam.kamsTweaks.features.*;
 import kam.kamsTweaks.features.claims.Claims;
 //import kam.kamsTweaks.features.discord.DIFeature;
 import kam.kamsTweaks.features.tp.TeleportFeatures;
-import kam.kamsTweaks.utils.KamsTweaksPlaceholder;
+import kam.kamsTweaks.ext.KamsTweaksPlaceholder;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.event.EventRegistrar;
+import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCustomItemsEvent;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class KamsTweaks extends JavaPlugin {
+public final class KamsTweaks extends JavaPlugin implements EventRegistrar {
   private static KamsTweaks m_instance = null;
 
   public static KamsTweaks getInstance() {
     return m_instance;
   }
 
+  GeyserAnvixosBitsData gabd = new GeyserAnvixosBitsData();
   List<Feature> features = new ArrayList<>();
 
   KamsTweaks() {
@@ -72,6 +77,8 @@ public final class KamsTweaks extends JavaPlugin {
       new KamsTweaksPlaceholder().register();
     }
 
+//    GeyserApi.api().eventBus().register(this, gabd);
+    GeyserApi.api().eventBus().subscribe(this, GeyserDefineCustomItemsEvent.class, gabd::onGeyserDefineCustomItems);
   }
 
   @Override

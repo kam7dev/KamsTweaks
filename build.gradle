@@ -22,12 +22,16 @@ repositories {
     maven {
         url = 'https://repo.extendedclip.com/releases/'
     }
+    maven {
+        url = uri("https://repo.opencollab.dev/main/")
+    }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly 'com.discordsrv:discordsrv:1.28.0'
     compileOnly 'me.clip:placeholderapi:2.11.7'
+    compileOnly('org.geysermc.geyser:api:2.9.5-SNAPSHOT')
 //    implementation "net.dv8tion:JDA:6.2.0"
 }
 

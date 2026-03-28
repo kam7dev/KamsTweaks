@@ -1,4 +1,4 @@
-package kam.kamsTweaks.utils;
+package kam.kamsTweaks.ext;
 
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.Names;
