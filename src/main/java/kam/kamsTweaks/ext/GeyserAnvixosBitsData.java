@@ -20,7 +20,10 @@ public class GeyserAnvixosBitsData {
                         Identifier.of("ltsmp:disc_23"), // Bedrock item identifier
                         Identifier.of("ltsmp:23") // Java item model
                 )
-                .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
+                .bedrockOptions(CustomItemBedrockOptions.builder()
+                        .protectionValue(7)
+                        .creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
+                        .displayName("§e%item.record.name\n§7Anvixo - 23")
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
                 .priority(1)
                 .build());
@@ -40,7 +43,9 @@ public class GeyserAnvixosBitsData {
                         Identifier.of("ltsmp:blessedtrident_old"), // Bedrock item identifier
                         Identifier.of("minecraft:trident") // Java item model
                 )
-                .bedrockOptions(CustomItemBedrockOptions.builder().allowOffhand(true).creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
+                .bedrockOptions(CustomItemBedrockOptions.builder()
+                        .allowOffhand(true)
+                        .creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
                 .component(JavaItemDataComponents.TOOL, JavaTool.builder()
                         .canDestroyBlocksInCreative(false)
@@ -84,6 +89,7 @@ public class GeyserAnvixosBitsData {
                         Identifier.of("ltsmp:enchanted_disc"), // Bedrock item identifier
                         Identifier.of("ltsmp:enchanted_disc") // Java item model
                 )
+                .displayName("§b%item.record.name\n§7noski - enchanted")
                 .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
                 .component(JavaItemDataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
@@ -123,6 +129,7 @@ public class GeyserAnvixosBitsData {
                         Identifier.of("ltsmp:hauntmuskie"), // Bedrock item identifier
                         Identifier.of("ltsmp:hauntmuskie") // Java item model
                 )
+                .displayName("§b%item.record.name\n§7C418 - Haunt Muskie")
                 .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
                 .priority(1)
@@ -133,21 +140,23 @@ public class GeyserAnvixosBitsData {
                         Identifier.of("ltsmp:hauntmuskiecover"), // Bedrock item identifier
                         Identifier.of("ltsmp:hauntmuskiecover") // Java item model
                 )
+                .displayName("§d%item.record.name\n§7Jurjo13 - Haunt Muskie (Cover)")
                 .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
                 .priority(1)
                 .build());
 
-        // Hemelytra
-        event.register(Identifier.of("elytra"), CustomItemDefinition.builder(
-                        Identifier.of("ltsmp:hemelytra"), // Bedrock item identifier
-                        Identifier.of("ltsmp:hemelytra") // Java item model
-                )
-                .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
-                .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
-                .component(JavaItemDataComponents.EQUIPPABLE, JavaEquippable.builder().slot(JavaEquippable.EquipmentSlot.CHEST).build())
-                .priority(1)
-                .build());
+        // Could not replicate hemelytra functionality in bedrock as a custom item.
+//        // Hemelytra
+//        event.register(Identifier.of("elytra"), CustomItemDefinition.builder(
+//                        Identifier.of("ltsmp:hemelytra"), // Bedrock item identifier
+//                        Identifier.of("ltsmp:hemelytra") // Java item model
+//                )
+//                .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
+//                .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
+//                .component(JavaItemDataComponents.EQUIPPABLE, JavaEquippable.builder().slot(JavaEquippable.EquipmentSlot.CHEST).build())
+//                .priority(1)
+//                .build());
 
         // Maraca
         event.register(Identifier.of("music_disc_creator"), CustomItemDefinition.builder(
@@ -202,7 +211,6 @@ public class GeyserAnvixosBitsData {
                 )
                 .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
-                .component(JavaItemDataComponents.PIERCING_WEAPON, JavaPiercingWeapon.instance())
                 .component(JavaItemDataComponents.TOOL, JavaTool.builder()
                         .rule(JavaTool.Rule.builder()
                                 .blocks(Holders.builder().tag(Identifier.of("minecraft:leaves")).build())
@@ -257,6 +265,7 @@ public class GeyserAnvixosBitsData {
                         Identifier.of("ltsmp:wild"), // Bedrock item identifier
                         Identifier.of("ltsmp:wild") // Java item model
                 )
+                .displayName("§b%item.record.name\n§7JamiesName - 18")
                 .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
                 .priority(1)
@@ -307,6 +316,7 @@ public class GeyserAnvixosBitsData {
                         Identifier.of("ltsmp:woosh"), // Bedrock item identifier
                         Identifier.of("ltsmp:woosh") // Java item model
                 )
+                .displayName("§e%item.record.name\n§7Terraainn - Woosh")
                 .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
                 .priority(1)
