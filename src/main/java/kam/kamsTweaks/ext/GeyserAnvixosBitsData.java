@@ -2,6 +2,9 @@ package kam.kamsTweaks.ext;
 
 
 import kam.kamsTweaks.Logger;
+
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.event.EventRegistrar;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCustomItemsEvent;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemBedrockOptions;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
@@ -10,10 +13,14 @@ import org.geysermc.geyser.api.util.CreativeCategory;
 import org.geysermc.geyser.api.util.Holders;
 import org.geysermc.geyser.api.util.Identifier;
 
-public class GeyserAnvixosBitsData {
-    public void onGeyserDefineCustomItems(GeyserDefineCustomItemsEvent event) {
-        Logger.info("Hi!");
+public class GeyserAnvixosBitsData implements EventRegistrar {
+    public GeyserAnvixosBitsData() {
+            GeyserApi.api().eventBus().subscribe(this, GeyserDefineCustomItemsEvent.class, this::onGeyserDefineCustomItems);
+            Logger.info("Setting up geyser listener...");
+    }
 
+    public void onGeyserDefineCustomItems(GeyserDefineCustomItemsEvent event) {
+        Logger.info("Setting up Anvixo's Bits items with Geyser");
         // 23 / Daisy Bell
         event.register(Identifier.of("music_disc_chirp"), CustomItemDefinition.builder(
                         // for some reason ltsmp:23 breaks
