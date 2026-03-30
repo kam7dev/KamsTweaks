@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import github.scarsz.discordsrv.util.DiscordUtil;
 import kam.kamsTweaks.utils.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -191,13 +192,9 @@ public class ChatFilter extends Feature {
         Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
         if (dsPlugin != null && dsPlugin.isEnabled()) {
             try {
-                Class<?> dsClass = Class.forName("github.scarsz.discordsrv.util.DiscordUtil");
-                Object channel = dsClass.getMethod("getTextChannelById", String.class).invoke(null, "1487994679579508836");
-
+                var channel = DiscordUtil.getTextChannelById("1487994679579508836");
                 if (channel != null) {
-                    Method sendMessage = channel.getClass().getMethod("sendMessage", CharSequence.class);
-                    Object action = sendMessage.invoke(channel, message);
-                    action.getClass().getMethod("queue").invoke(action);
+                    channel.sendMessage("<@&1488275345252810882> " + message);
                 }
             } catch (Exception e) {
                 Logger.excs.add(e);
