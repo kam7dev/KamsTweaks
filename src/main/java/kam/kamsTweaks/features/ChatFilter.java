@@ -132,7 +132,7 @@ public class ChatFilter extends Feature {
         return new Pair<>(false, null);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onChat(AsyncChatEvent e) {
         var str = ser.serialize(e.message());
         var res = isFiltered(str);
