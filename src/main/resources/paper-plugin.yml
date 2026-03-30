@@ -75,3 +75,6 @@ dependencies:
     Geyser-Spigot:
       load: BEFORE
       required: false
+    BlockLocker:
+      load: BEFORE
+      required: false

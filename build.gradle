@@ -25,6 +25,10 @@ repositories {
     maven {
         url = uri("https://repo.opencollab.dev/main/")
     }
+    maven {
+        name = "codemc-repo"
+        url = "https://repo.codemc.io/repository/maven-public/"
+    }
 }
 
 dependencies {
@@ -32,6 +36,7 @@ dependencies {
     compileOnly 'com.discordsrv:discordsrv:1.28.0'
     compileOnly 'me.clip:placeholderapi:2.11.7'
     compileOnly('org.geysermc.geyser:api:2.9.5-SNAPSHOT')
+    compileOnly 'nl.rutgerkok:blocklocker:1.13'
 //    implementation "net.dv8tion:JDA:6.2.0"
 }
 

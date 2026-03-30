@@ -10,6 +10,7 @@ import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import nl.rutgerkok.blocklocker.BlockLockerAPIv2;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -592,6 +593,24 @@ public class Claims extends Feature {
         public boolean canAggro = false;
     }
 
+    public static OfflinePlayer isBlockLocked(Player player, Location start, Location end) {
+        if (Bukkit.getPluginManager().isPluginEnabled("BlockLocker")) {
+            if (start.getWorld() != end.getWorld()) return null;
+            var world = start.getWorld();
+            for (var x = Math.min(start.getBlockX(), end.getBlockX()); x <= Math.max(start.getBlockX(), end.getBlockX()); x++) {
+                for (var y = Math.min(start.getBlockY(), end.getBlockY()); y <= Math.max(start.getBlockY(), end.getBlockY()); y++) {
+                    for (var z = Math.min(start.getBlockZ(), end.getBlockZ()); z <= Math.max(start.getBlockZ(), end.getBlockZ()); z++) {
+                        var block = world.getBlockAt(x, y, z);
+                        if (BlockLockerAPIv2.isProtected(block) && !BlockLockerAPIv2.isOwner(player, block))
+                            //noinspection OptionalGetWithoutIsPresent
+                            return BlockLockerAPIv2.getOwner(block).get();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public @Nullable EntityClaim getEntityClaim(Entity entity) {
         return entityClaims.getOrDefault(entity.getUniqueId(), null);
     }
@@ -629,6 +648,12 @@ public class Claims extends Feature {
             if (currentlyClaiming.containsKey(event.getPlayer())) {
                 var claim = currentlyClaiming.get(event.getPlayer());
                 if (claim.start == null) {
+                    var blOwner = isBlockLocked(event.getPlayer(), loc, loc);
+                    if (blOwner != null) {
+                        event.getPlayer().sendMessage(Component.text("This land is a locked block owned by ")
+                                .append(Names.instance.getRenderedName(blOwner), Component.text(".")).color(NamedTextColor.RED));
+                        return;
+                    }
                     for (var c : landClaims) {
                         if (c.inBounds(loc)) {
                             if (c.owner == null || (!c.owner.getUniqueId().equals(event.getPlayer().getUniqueId()))) {
@@ -665,6 +690,12 @@ public class Claims extends Feature {
                                 .sendMessage(Component
                                         .text("You can't claim more than " + max + " blocks - you are trying to claim " + has + ".")
                                         .color(NamedTextColor.RED));
+                        return;
+                    }
+                    var blOwner = isBlockLocked(event.getPlayer(), claim.start, loc);
+                    if (blOwner != null) {
+                        event.getPlayer().sendMessage(Component.text("This land contains a locked block owned by ")
+                                .append(Names.instance.getRenderedName(blOwner), Component.text(".")).color(NamedTextColor.RED));
                         return;
                     }
                     claim.end = loc;
