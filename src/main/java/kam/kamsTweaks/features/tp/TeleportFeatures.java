@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -100,6 +101,24 @@ public class TeleportFeatures extends Feature {
 
     public void teleport(Player player, Location location) {
         teleportations.remove(player);
+        var o = new Object() {
+            int task;
+            Listener listener;
+        };
+        o.listener = new Listener() {
+            @EventHandler
+            void onAttack(EntityDamageByEntityEvent e) {
+                if (e.getDamager() == player) {
+                    player.sendMessage(Component.text("Teleport immunity lost since you attacked someone/something.").color(NamedTextColor.YELLOW));
+                    player.removePotionEffect(PotionEffectType.RESISTANCE);
+                    HandlerList.unregisterAll(o.listener);
+                }
+            }
+        };
+        Bukkit.getPluginManager().registerEvents(o.listener, KamsTweaks.getInstance());
+        o.task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
+            HandlerList.unregisterAll(o.listener);
+        }, 15 * 20);
 
         Entity vehicle = player.getVehicle();
         if (vehicle != null) {
