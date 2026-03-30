@@ -8,6 +8,7 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.features.Names;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -41,6 +42,7 @@ public class TPA extends Feature {
 
     private final Map<Player, TPARequest> tpas = new LinkedHashMap<>();
     private final Map<UUID, Boolean> tpAuto = new HashMap<>();
+    private final Map<UUID, List<UUID>> tpBlock = new HashMap<>();
 
     private void sendRequest(Player sender, Player target, boolean here) {
         if (tpas.containsKey(sender)) {
@@ -66,6 +68,11 @@ public class TPA extends Feature {
         }
         if (sender.isDead()) {
             sender.sendMessage(Component.text("You can't teleport to while dead.").color(NamedTextColor.RED));
+            return;
+        }
+
+        if (tpBlock.containsKey(target.getUniqueId()) && tpBlock.get(target.getUniqueId()).contains(sender.getUniqueId())) {
+            sender.sendMessage(Component.text("The player you want to teleport to has you blocked").color(NamedTextColor.RED));
             return;
         }
 
@@ -283,18 +290,65 @@ public class TPA extends Feature {
                     }
                     return Command.SINGLE_SUCCESS;
                 }).build());
+        commands.registrar().register(Commands.literal("tpblock")
+                .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                .executes(ctx -> {
+                    Entity exec = ctx.getSource().getExecutor();
+                    if (exec instanceof Player p) {
+                        UUID playerUUID = p.getUniqueId();
+                        List<UUID> list;
+                        if (!tpBlock.containsKey(playerUUID)) {
+                            list = new ArrayList<>();
+                            tpBlock.put(playerUUID, list);
+                        } else {
+                            list = tpBlock.get(playerUUID);
+                        }
+
+                        Player target = ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst();
+                        if (list.contains(target.getUniqueId())) {
+                            list.remove(target.getUniqueId());
+                            p.sendMessage(Component.text("Unblocked ").color(NamedTextColor.GOLD)
+                                    .append(Names.instance.getRenderedName(target).color(NamedTextColor.RED))
+                                    .append(Component.text(". They can now send TPA requests to you.")));
+                        } else {
+                            list.add(target.getUniqueId());
+                            p.sendMessage(Component.text("Blocked ").color(NamedTextColor.GOLD)
+                                    .append(Names.instance.getRenderedName(target).color(NamedTextColor.RED))
+                                    .append(Component.text(". They can no longer send TPA requests to you.")));
+                        }
+                    }
+                    return Command.SINGLE_SUCCESS;
+                })).build());
     }
 
     @Override
     public void loadData() {
         tpAuto.clear();
         FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
-        if (config.contains("tpa-settings")) {
+        if (config.contains("tpa-settings.tp-auto")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("tpa-settings.tp-auto")).getKeys(false)) {
                 try {
                     UUID player = UUID.fromString(key);
                     Boolean playerTPAuto = config.getBoolean("tpa-settings.tp-auto." + key);
                     tpAuto.put(player, playerTPAuto);
+                } catch (Exception e) {
+                    Logger.excs.add(e);
+                    Logger.warn(e.getMessage());
+                }
+            }
+        }
+
+        tpBlock.clear();
+        if (config.contains("tpa-settings.tp-block")) {
+            for (String key : Objects.requireNonNull(config.getConfigurationSection("tpa-settings.tp-block")).getKeys(false)) {
+                try {
+                    UUID player = UUID.fromString(key);
+                    List<UUID> playerTPBlock = new ArrayList<>();
+                    for (var str : config.getStringList("tpa-settings.tp-block." + key)) {
+                        playerTPBlock.add(UUID.fromString(str));
+                    }
+                    tpBlock.put(player, playerTPBlock);
                 } catch (Exception e) {
                     Logger.excs.add(e);
                     Logger.warn(e.getMessage());
@@ -309,6 +363,15 @@ public class TPA extends Feature {
         config.set("tpa-settings", null);
         tpAuto.forEach((uuid, tpauto) -> {
             if (tpauto != null) config.set("tpa-settings.tp-auto." + uuid, tpauto);
+        });
+        tpBlock.forEach((uuid, tpblock) -> {
+            List<String> list = new ArrayList<>();
+            if (tpblock != null) {
+                for (var u : tpblock) {
+                    list.add(u.toString());
+                }
+                config.set("tpa-settings.tp-block." + uuid, list);
+            }
         });
     }
 }

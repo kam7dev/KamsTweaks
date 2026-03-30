@@ -1,25 +1,50 @@
 package kam.kamsTweaks.ext;
 
 
+import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.event.EventRegistrar;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCustomItemsEvent;
+import org.geysermc.geyser.api.event.lifecycle.GeyserDefineResourcePacksEvent;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemBedrockOptions;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
 import org.geysermc.geyser.api.item.custom.v2.component.java.*;
+import org.geysermc.geyser.api.pack.PackCodec;
+import org.geysermc.geyser.api.pack.ResourcePack;
 import org.geysermc.geyser.api.util.CreativeCategory;
 import org.geysermc.geyser.api.util.Holders;
 import org.geysermc.geyser.api.util.Identifier;
 
-public class GeyserAnvixosBitsData implements EventRegistrar {
-    public GeyserAnvixosBitsData() {
-            GeyserApi.api().eventBus().subscribe(this, GeyserDefineCustomItemsEvent.class, this::onGeyserDefineCustomItems);
-            Logger.info("Setting up geyser listener...");
+public class GeyserItemData implements EventRegistrar {
+    public GeyserItemData() {
+        Logger.info("Setting up geyser listener");
+        GeyserApi.api().eventBus().subscribe(this, GeyserDefineCustomItemsEvent.class, this::onGeyserDefineCustomItems);
+        GeyserApi.api().eventBus().subscribe(this, GeyserDefineResourcePacksEvent.class, this::onGeyserDefineResourcePacks);
     }
 
+    public void onGeyserDefineResourcePacks(GeyserDefineResourcePacksEvent event) {
+        KamsTweaks.getInstance().saveResource("bedrock.zip", true);
+        event.register(ResourcePack.builder(PackCodec.path(KamsTweaks.getInstance().getDataPath().resolve("bedrock.zip"))).build());
+    }
+
+
     public void onGeyserDefineCustomItems(GeyserDefineCustomItemsEvent event) {
+        // KamsTweaks
+        Logger.info("Setting up KamsTweaks items with Geyser");
+
+        // Claim Tool
+        event.register(Identifier.of("music_disc_pigstep"), CustomItemDefinition.builder(
+                        Identifier.of("kamstweaks:claim_tool"), // Bedrock item identifier
+                        Identifier.of("minecraft:structure_void") // Java item model
+                )
+                .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("kamstweaks"))
+                .component(JavaItemDataComponents.MAX_STACK_SIZE, 64)
+                .priority(1)
+                .build());
+
+        // Anvixo's Bits
         Logger.info("Setting up Anvixo's Bits items with Geyser");
         // 23 / Daisy Bell
         event.register(Identifier.of("music_disc_chirp"), CustomItemDefinition.builder(
@@ -30,7 +55,7 @@ public class GeyserAnvixosBitsData implements EventRegistrar {
                 .bedrockOptions(CustomItemBedrockOptions.builder()
                         .protectionValue(7)
                         .creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
-                        .displayName("§e%item.record.name\n§7Anvixo - 23")
+                .displayName("§e%item.record.name\n§7Anvixo - 23")
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
                 .priority(1)
                 .build());
@@ -172,10 +197,10 @@ public class GeyserAnvixosBitsData implements EventRegistrar {
                 )
                 .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("bits"))
                 .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
-                        .component(JavaItemDataComponents.CONSUMABLE, JavaConsumable.builder()
-                                .consumeSeconds(.1f)
-                                .animation(JavaConsumable.Animation.BRUSH)
-                                .build())
+                .component(JavaItemDataComponents.CONSUMABLE, JavaConsumable.builder()
+                        .consumeSeconds(.1f)
+                        .animation(JavaConsumable.Animation.BRUSH)
+                        .build())
                 .component(JavaItemDataComponents.USE_COOLDOWN, JavaUseCooldown.builder()
                         .seconds(120f)
                         .cooldownGroup(Identifier.of("ltsmp:maraca"))

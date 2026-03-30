@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features;
 
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -11,10 +12,13 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import kam.kamsTweaks.utils.Pair;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import io.papermc.paper.command.brigadier.Commands;
@@ -133,7 +137,7 @@ public class ChatFilter extends Feature {
         var str = ser.serialize(e.message());
         var res = isFiltered(str);
         if (res.first) {
-            Logger.warn("Message by " + e.getPlayer().getName() + " was caught by the " + res.second.name + " automod: " + str);
+            warnStaff("Message by " + e.getPlayer().getName() + " was caught by the " + res.second.name + " automod: " + str);
             e.setCancelled(true);
             e.getPlayer().sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
         }
@@ -153,7 +157,7 @@ public class ChatFilter extends Feature {
         var str = ser.serialize(comps);
         var res = isFiltered(str);
         if (res.first) {
-            Logger.warn("Sign by " + e.getPlayer().getName() + " was caught by the " + res.second.name + " automod: " + str);
+            warnStaff("Sign by " + e.getPlayer().getName() + " was caught by the " + res.second.name + " automod: " + str);
             e.setCancelled(true);
             e.getPlayer().sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
         }
@@ -168,10 +172,35 @@ public class ChatFilter extends Feature {
                 var str = ser.serialize(item.displayName());
                 var res = isFiltered(str);
                 if (res.first) {
-                    Logger.warn("Anvil rename by " + e.getWhoClicked().getName() + " was caught by the " + res.second.name + " automod: " + str);
+                    warnStaff("Anvil rename by " + e.getWhoClicked().getName() + " was caught by the " + res.second.name + " automod: " + str);
                     e.setCancelled(true);
                     e.getWhoClicked().sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                 }
+            }
+        }
+    }
+
+    public static void warnStaff(String message) {
+        Logger.warn(message);
+        Bukkit.getOperators().forEach(offlinePlayer -> {
+            if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() instanceof Player player) {
+                player.sendMessage(Component.text(message).color(NamedTextColor.RED));
+            }
+        });
+        Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
+        if (dsPlugin != null && dsPlugin.isEnabled()) {
+            try {
+                Class<?> dsClass = Class.forName("github.scarsz.discordsrv.util.DiscordUtil");
+                Object channel = dsClass.getMethod("getTextChannelById", String.class).invoke(null, "1487994679579508836");
+
+                if (channel != null) {
+                    Method sendMessage = channel.getClass().getMethod("sendMessage", CharSequence.class);
+                    Object action = sendMessage.invoke(channel, message);
+                    action.getClass().getMethod("queue").invoke(action);
+                }
+            } catch (Exception e) {
+                Logger.excs.add(e);
+                Logger.error("Failed to send message to discord: " + e.getMessage());
             }
         }
     }

@@ -539,7 +539,7 @@ public class ClaimsDialogGui {
                                     claim.priority = prioF.intValue();
                                     var res = ChatFilter.instance.isFiltered(view.getText("name"));
                                     if (res.first) {
-                                        Logger.warn("Claim rename by " + who.getName() + " was caught by the " + res.second.name + " automod: " + view.getText("name"));
+                                        ChatFilter.warnStaff("Claim rename by " + who.getName() + " was caught by the " + res.second.name + " automod: " + view.getText("name"));
                                         openEditLCSettingsPage(who, claim);
                                         who.sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                                         return;

@@ -134,7 +134,7 @@ public class Names extends Feature {
                         }
                         var res = ChatFilter.instance.isFiltered(name);
                         if (res.first) {
-                            Logger.warn("Nickname by " + sender.getName() + " was caught by the " + res.second.name + " automod: " + name);
+                            ChatFilter.warnStaff("Nickname by " + sender.getName() + " was caught by the " + res.second.name + " automod: " + name);
                             sender.sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }

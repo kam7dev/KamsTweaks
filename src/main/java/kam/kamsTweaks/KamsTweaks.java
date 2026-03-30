@@ -1,7 +1,7 @@
 package kam.kamsTweaks;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import kam.kamsTweaks.ext.GeyserAnvixosBitsData;
+import kam.kamsTweaks.ext.GeyserItemData;
 import kam.kamsTweaks.features.*;
 import kam.kamsTweaks.features.claims.Claims;
 //import kam.kamsTweaks.features.discord.DIFeature;
@@ -24,7 +24,7 @@ public final class KamsTweaks extends JavaPlugin {
     return m_instance;
   }
 
-  GeyserAnvixosBitsData bits;
+  GeyserItemData bits;
   List<Feature> features = new ArrayList<>();
 
   KamsTweaks() {
@@ -75,7 +75,7 @@ public final class KamsTweaks extends JavaPlugin {
     }
 
 //    GeyserApi.api().eventBus().register(this, gabd);
-    if (getServer().getPluginManager().isPluginEnabled("Geyser-Spigot")) bits = new GeyserAnvixosBitsData();
+    if (getServer().getPluginManager().isPluginEnabled("Geyser-Spigot")) bits = new GeyserItemData();
   }
 
   @Override

@@ -1032,6 +1032,8 @@ public class ClaimProtections implements Listener {
             if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK)) {
                 event.setCancelled(true);
             }
+        } else if (event.getEntity() instanceof ArmorStand stand && stand.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "grave"))) {
+            event.setCancelled(true);
         } else {
             if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.INTERACT_BLOCK)) {
                 event.setCancelled(true);
@@ -1081,6 +1083,8 @@ public class ClaimProtections implements Listener {
             if (claim != null && !claim.hasPermission(null, Claims.ClaimPermission.BLOCK_BREAK)) {
                 event.setCancelled(true);
             }
+        } else if (event.getEntity() instanceof ArmorStand stand && stand.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "grave"))) {
+            event.setCancelled(true);
         } else if (event.getEntity() instanceof FallingBlock fb) {
             if (event.getTo() == org.bukkit.Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
                 var newClaim = claims.getLandClaim(event.getBlock().getRelative(BlockFace.DOWN).getLocation());
