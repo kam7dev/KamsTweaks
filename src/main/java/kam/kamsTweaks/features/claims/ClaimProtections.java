@@ -1088,6 +1088,12 @@ public class ClaimProtections implements Listener {
         } else if (event.getEntity() instanceof FallingBlock fb) {
             if (event.getTo() == org.bukkit.Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
                 var newClaim = claims.getLandClaim(event.getBlock().getRelative(BlockFace.DOWN).getLocation());
+
+                if (claim != null && !claim.hasPermission(newClaim != null ? newClaim.owner : null, Claims.ClaimPermission.BLOCK_BREAK)) {
+                    event.setCancelled(true);
+                    fb.remove();
+                }
+
                 if (newClaim != null && !newClaim.hasPermission(claim != null ? claim.owner : null, Claims.ClaimPermission.BLOCK_BREAK)) {
                     event.setCancelled(true);
                     org.bukkit.inventory.ItemStack drop = new org.bukkit.inventory.ItemStack(event.getBlockData().getMaterial());

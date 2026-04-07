@@ -8,16 +8,19 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.features.Graves;
+import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
-import org.bukkit.event.EventHandler;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
+import java.util.UUID;
 
 public class Back extends Feature {
     @Override
@@ -51,7 +54,7 @@ public class Back extends Feature {
                             sender.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(player) + " seconds.").color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
-                        if (!handler.locations.containsKey(player)) {
+                        if (!handler.locations.containsKey(player.getUniqueId())) {
                             sender.sendMessage(Component.text("You have not teleported anywhere recently.").color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
@@ -61,7 +64,7 @@ public class Back extends Feature {
                                         .append(Component.text(time > 0 ? " in " : ".").color(NamedTextColor.GOLD))
                                         .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
                                         .append(Component.text(time > 0 ? ", please do not move." : "").color(NamedTextColor.GOLD)));
-                        handler.scheduleTeleport(player, handler.locations.get(player), time);
+                        handler.scheduleTeleport(player, handler.locations.get(player.getUniqueId()), time);
                         return Command.SINGLE_SUCCESS;
                     }
                     sender.sendMessage("Only players can use /back.");
@@ -73,18 +76,33 @@ public class Back extends Feature {
 
     @Override
     public void loadData() {
-
+        var tpf = TeleportFeatures.get();
+        tpf.locations.clear();
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        if (config.contains("back-locs")) {
+            for (String key : Objects.requireNonNull(config.getConfigurationSection("back-locs")).getKeys(false)) {
+                try {
+                    UUID owner = UUID.fromString(key);
+                    String locStr = config.getString("back-locs." + key);
+                    assert locStr != null;
+                    Location loc = LocationUtils.deserializeLocation(locStr);
+                    if (loc.getWorld() == null) continue;
+                    tpf.locations.put(owner, loc);
+                } catch (Exception e) {
+                    Logger.excs.add(e);
+                    Logger.warn(e.getMessage());
+                }
+            }
+        }
     }
 
     @Override
     public void saveData() {
+        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        config.set("back-locs", null);
 
-    }
-
-    @EventHandler
-    public void onDeath(PlayerDeathEvent e) {
-        Player player = e.getPlayer();
-        TeleportFeatures.get().locations.put(player, Graves.checkLocation(player.getLocation()));
-        player.sendMessage(Component.text("Return to your death location with ").append(Component.text("/back").color(NamedTextColor.RED).clickEvent(ClickEvent.runCommand("/back")), Component.text(".")).color(NamedTextColor.GOLD));
+        TeleportFeatures.get().locations.forEach((uuid, loc) -> {
+            if (loc != null) config.set("back-locs." + uuid, LocationUtils.serializeLocation(loc));
+        });
     }
 }

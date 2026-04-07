@@ -69,13 +69,14 @@ public class Warp extends Feature {
     }
 
 
+    @SuppressWarnings("UnstableApiUsage")
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> warpCmd = Commands.literal("warp")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.warp"))
                 .then(Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
                     for (String warp : warps.keySet()) {
-                        if (warp.contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
+                        if (warp.toLowerCase().contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
                             builder.suggest(warp);
                     }
                     return builder.buildFuture();
@@ -121,7 +122,7 @@ public class Warp extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.delwarp"))
                 .then(Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
                     for (String warp : warps.keySet()) {
-                        if (warp.contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
+                        if (warp.toLowerCase().contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
                             builder.suggest(warp);
                     }
                     return builder.buildFuture();
@@ -149,17 +150,12 @@ public class Warp extends Feature {
                         sender.sendPlainMessage("Warps are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
-                    Entity executor = ctx.getSource().getExecutor();
-                    //if (executor instanceof Player) {
-                        Component c = Component.text("The server has the following warps:").color(NamedTextColor.GOLD);
-                        for (var warp : warps.keySet()) {
-                            c = c.appendNewline().append(Component.text(warp).color(NamedTextColor.WHITE));
-                        }
-                        sender.sendMessage(c);
-                        return Command.SINGLE_SUCCESS;
-                    //}
-                    //sender.sendMessage("Only players can use warps.");
-                    //return Command.SINGLE_SUCCESS;
+                    Component c = Component.text("The server has the following warps:").color(NamedTextColor.GOLD);
+                    for (var warp : warps.keySet()) {
+                        c = c.appendNewline().append(Component.text(warp).color(NamedTextColor.WHITE));
+                    }
+                    sender.sendMessage(c);
+                    return Command.SINGLE_SUCCESS;
                 });
         commands.registrar().register(warpsCmd.build());
 
@@ -190,7 +186,7 @@ public class Warp extends Feature {
                     }
                         String warp = ctx.getArgument("name", String.class);
 			BlockPosition pos = ctx.getArgument("location", BlockPositionResolver.class).resolve(ctx.getSource()); 
-                        warps.put(warp, pos.toLocation(Bukkit.getWorlds().get(0)));
+                        warps.put(warp, pos.toLocation(Bukkit.getWorlds().getFirst()));
                         sender.sendMessage(Component.text("Successfully created the warp ").color(NamedTextColor.GOLD)
                                 .append(Component.text(warp).color(NamedTextColor.RED))
                                 .append(Component.text(".").color(NamedTextColor.GOLD)));

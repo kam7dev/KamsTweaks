@@ -15,6 +15,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Pose;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -27,15 +28,11 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TeleportFeatures extends Feature {
-    public Map<Player, Location> locations = new HashMap<>();
+    public Map<UUID, Location> locations = new HashMap<>();
     public Map<Player, Integer> teleportations = new HashMap<>();
     public Map<Player, Integer> onCooldown = new HashMap<>();
 
@@ -44,6 +41,7 @@ public class TeleportFeatures extends Feature {
     static TeleportFeatures instance;
 
     public TeleportFeatures() {
+        instance = this;
         // rtp is being removed due to its mass lag causing
         features.add(new Spawn());
         features.add(new Back());
@@ -54,7 +52,6 @@ public class TeleportFeatures extends Feature {
 
     @Override
     public void setup() {
-        instance = this;
         for (var feature : features) {
             feature.setup();
         }
@@ -116,9 +113,7 @@ public class TeleportFeatures extends Feature {
             }
         };
         Bukkit.getPluginManager().registerEvents(o.listener, KamsTweaks.getInstance());
-        o.task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
-            HandlerList.unregisterAll(o.listener);
-        }, 15 * 20);
+        o.task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> HandlerList.unregisterAll(o.listener), 15 * 20);
 
         Entity vehicle = player.getVehicle();
         if (vehicle != null) {
@@ -134,7 +129,7 @@ public class TeleportFeatures extends Feature {
             }
         }
         onCooldown.put(player, KamsTweaks.getInstance().getConfig().getInt("teleportation.cooldown"));
-        locations.put(player, player.getLocation());
+        locations.put(player.getUniqueId(), player.getLocation());
         var r = new Runnable() {
             int id = 0;
             @Override
@@ -148,13 +143,21 @@ public class TeleportFeatures extends Feature {
                 onCooldown.put(player, val);
             }
         };
+        if (player.isSleeping()) player.wakeup(false);
+        player.setPose(Pose.STANDING);
         if (vehicle != null) {
             var passengers = vehicle.getPassengers();
             for (var passenger : passengers) {
                 passenger.leaveVehicle();
+                if (passenger instanceof Player passp && passp.isSleeping()) passp.wakeup(false);
+                passenger.setPose(Pose.STANDING);
             }
             vehicle.teleport(location);
-            if (vehicle instanceof LivingEntity le) le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
+            if (vehicle instanceof LivingEntity le) {
+                player.setPose(Pose.STANDING);
+                if (le instanceof Player passp && passp.isSleeping()) passp.wakeup(false);
+                le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
+            }
             for (var passenger : passengers) {
                 passenger.teleport(location);
                 vehicle.addPassenger(passenger);

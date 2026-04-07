@@ -16,7 +16,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -113,6 +112,19 @@ public class Graves extends Feature {
                         }).executes(ctx -> {
                             if (!(ctx.getSource().getSender() instanceof Player player))
                                 return Command.SINGLE_SUCCESS;
+                            AtomicInteger recovCount = new AtomicInteger(0);
+                            graves.forEach((id, grave) -> {
+                                if (grave.owner.getUniqueId().equals(player.getUniqueId()) && grave.msLeft > 0 && grave.recovery) {
+                                    recovCount.getAndAdd(1);
+                                }
+                            });
+                            if (recovCount.get() >= 3) {
+                                ctx.getSource().getSender()
+                                        .sendMessage(Component
+                                                .text("You are already recovering 3 graves.")
+                                                .color(NamedTextColor.RED));
+                                return Command.SINGLE_SUCCESS;
+                            }
                             int id = ctx.getArgument("id", Integer.class);
                             Grave grave = graves.getOrDefault(id, null);
                             if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId()) // && !grave.recovery
@@ -125,7 +137,7 @@ public class Graves extends Feature {
                                 grave.hasMessagedExpire = false;
                                 ctx.getSource().getSender()
                                         .sendMessage(Component
-                                                .text("You have 10 minutes to recover your grave. After this, it will be gone permanently.")
+                                                .text("You have 10 minutes to recover your grave. You can recover a grave repeaatedly, but only 3 can be recovered at a time.")
                                                 .color(NamedTextColor.AQUA));
                                 grave.createStand();
                                 return Command.SINGLE_SUCCESS;
@@ -525,7 +537,7 @@ public class Graves extends Feature {
         onEntityInteract(e);
     }
 
-    public class Grave {
+    public static class Grave {
         OfflinePlayer owner;
         Inventory inventory;
         Location location;
@@ -644,14 +656,14 @@ public class Graves extends Feature {
 
             {
                 var item = inv.getItemInOffHand();
-                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                if (!item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
                     inventory.setItem(40, item);
                     inv.setItemInOffHand(null);
                 }
             }
             {
                 var item = owner.getItemOnCursor();
-                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                if (!item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
                     inventory.setItem(41, item);
                     owner.setItemOnCursor(null);
                 }
@@ -726,14 +738,6 @@ public class Graves extends Feature {
             stand.setInvulnerable(true);
             stand.customName(Component.text(owner.getName() == null ? "Unknown" : owner.getName()).color(NamedTextColor.GOLD).append(Component.text("'s Grave").color(NamedTextColor.WHITE)));
             stand.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "grave"), PersistentDataType.INTEGER, this.id);
-        }
-
-        void setArmorStand(ArmorStand stand) {
-            this.stand = stand;
-        }
-
-        ArmorStand getArmorStand() {
-            return stand;
         }
     }
 
