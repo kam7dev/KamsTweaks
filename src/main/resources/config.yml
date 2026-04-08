@@ -32,8 +32,6 @@ slash-hat: true
 
 # nicknames
 nicknames: true
-# name colors
-name-colors: true
 
 teleportation:
   # How long you stay in place before teleporting, in seconds

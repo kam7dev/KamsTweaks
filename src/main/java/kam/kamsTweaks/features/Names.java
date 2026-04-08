@@ -12,6 +12,8 @@ import kam.kamsTweaks.utils.Pair;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -28,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Names extends Feature {
-    Map<UUID, Pair<String, List<TextColor>>> data = new HashMap<>();
+    Map<UUID, Component> data = new HashMap<>();
     public static final String INVIS_REGEX = "[\\u200B-\\u200F\\uFEFF\\u2060]";
 
     public static Names instance;
@@ -37,65 +39,9 @@ public class Names extends Feature {
         instance = this;
     }
 
-    private static List<String> splitGraphemes(String input) {
-        BreakIterator iter = BreakIterator.getCharacterInstance(Locale.ROOT);
-        iter.setText(input);
-        List<String> result = new ArrayList<>();
-        int start = iter.first();
-        for (int end = iter.next(); end != BreakIterator.DONE; start = end, end = iter.next()) {
-            result.add(input.substring(start, end));
-        }
-        return result;
-    }
-
-    public static Component gradientName(String name, List<TextColor> colors) {
-        Component res = Component.empty();
-        if (name.isEmpty() || colors.isEmpty()) {
-            return Component.text(name);
-        }
-
-        List<String> graphemes = splitGraphemes(name);
-
-        int totalSteps = graphemes.size() - 1;
-        int totalColors = colors.size() - 1;
-
-        for (int i = 0; i < graphemes.size(); i++) {
-            double progress = totalSteps == 0 ? 0 : (double) i / totalSteps;
-            TextColor color = getTextColor(colors, progress, totalColors);
-            res = res.append(Component.text(graphemes.get(i)).color(color));
-        }
-        return res;
-    }
-
-    private static TextColor getTextColor(List<TextColor> colors, double progress, int totalColors) {
-        double scaled = progress * totalColors;
-        int idx = (int) Math.floor(scaled);
-        double blend = scaled - idx;
-
-        TextColor a = colors.get(idx);
-        TextColor b = colors.get(Math.min(idx + 1, totalColors));
-
-        int r = (int) Math.round(a.red() * (1 - blend) + b.red() * blend);
-        int g = (int) Math.round(a.green() * (1 - blend) + b.green() * blend);
-        int bCol = (int) Math.round(a.blue() * (1 - blend) + b.blue() * blend);
-
-        return TextColor.color(r, g, bCol);
-    }
-
-    public Component renderName(Pair<String, List<TextColor>> info) {
-        if (info.second == null || info.second.isEmpty()) {
-            return Component.text(info.first);
-        }
-        if (info.second.size() == 1) {
-            return Component.text(info.first).color(info.second.getFirst());
-        }
-        return gradientName(info.first, info.second);
-    }
-
     @Override
     public void setup() {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("nicknames.enabled", "nicknames.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("name-colors.enabled", "name-colors.enabled", true, "kamstweaks.configure"));
     }
 
     @Override
@@ -110,6 +56,8 @@ public class Names extends Feature {
         return 2;
     }
 
+    PlainTextComponentSerializer pt = PlainTextComponentSerializer.plainText();
+
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> nickCmd = Commands.literal("nick")
@@ -122,40 +70,32 @@ public class Names extends Feature {
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
-                        Pair<String, List<TextColor>> info;
                         String name = ctx.getArgument("name", String.class).replaceAll(INVIS_REGEX, "");
-                        if (name.length() > 20) {
+                        Component comp = MiniMessage.miniMessage().deserialize(name);
+                        var plain = pt.serialize(comp);
+                        if (plain.length() > 20) {
                             sender.sendPlainMessage("Nicknames cannot be longer than 20 characters.");
                             return Command.SINGLE_SUCCESS;
                         }
-                        if (name.isBlank()) {
+                        if (plain.isBlank()) {
                             sender.sendPlainMessage("Nicknames cannot be empty.");
                             return Command.SINGLE_SUCCESS;
                         }
-                        var res = ChatFilter.instance.isFiltered(name);
+                        var res = ChatFilter.instance.isFiltered(plain);
                         if (res.first) {
-                            ChatFilter.warnStaff("Nickname by " + sender.getName() + " was caught by the " + res.second.name + " automod: " + name);
+                            ChatFilter.warnStaff("Nickname by " + sender.getName() + " was caught by the " + res.second.name + " automod: " + plain);
                             sender.sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         AtomicBoolean ret = new AtomicBoolean(false);
-                        data.forEach((uuid, pair) -> {
-                            if (!uuid.equals(player.getUniqueId()) && Objects.equals(pair.first, name)) {
+                        data.forEach((uuid, other) -> {
+                            if (!uuid.equals(player.getUniqueId()) && Objects.equals(plain, pt.serialize(other))) {
                                 sender.sendPlainMessage("Someone already has that nickname.");
                                 ret.set(true);
                             }
                         });
                         if (ret.get()) return Command.SINGLE_SUCCESS;
-
-                        if (data.containsKey(player.getUniqueId())) {
-                            info = data.get(player.getUniqueId());
-                            info.first = name;
-                        } else {
-                            info = new Pair<>(name, new ArrayList<>());
-                        }
-                        data.put(player.getUniqueId(), info);
-
-                        Component comp = renderName(info);
+                        data.put(player.getUniqueId(), comp);
                         player.displayName(comp);
                         player.playerListName(comp);
                         sender.sendMessage(Component.text("Your nickname is now ").append(comp).append(Component.text(".")));
@@ -367,8 +307,7 @@ public class Names extends Feature {
                                     return Command.SINGLE_SUCCESS;
                                 }
 
-                                Pair<String, List<TextColor>> info =
-                                        data.getOrDefault(player.getUniqueId(), new Pair<>(player.getName(), new ArrayList<>()));
+                                Pair<String, List<TextColor>> info = data.getOrDefault(player.getUniqueId(), new Pair<>(player.getName(), new ArrayList<>()));
                                 info.second = colors;
                                 data.put(player.getUniqueId(), info);
 
