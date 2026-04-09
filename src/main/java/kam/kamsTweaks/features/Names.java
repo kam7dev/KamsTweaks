@@ -106,230 +106,13 @@ public class Names extends Feature {
                 }));
         commands.registrar().register(nickCmd.build());
 
-        LiteralArgumentBuilder<CommandSourceStack> colorCmd = Commands.literal("color")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.names.color"))
-                .then(Commands.argument("colors", StringArgumentType.greedyString())
-                        .suggests((ctx, builder) -> {
-                            String input = builder.getInput();
-                            List<String> parts = new ArrayList<>(List.of(input.split(" ")));
-                            parts.removeFirst();
-
-                            String target;
-                            if (!input.endsWith(" ") && !parts.isEmpty()) {
-                                target = parts.removeLast().toLowerCase();
-                            } else {
-                                target = "";
-                            }
-
-                            String prefix = String.join(" ", parts);
-                            if (!prefix.isEmpty()) prefix += " ";
-
-                            List<String> colors = new ArrayList<>(NamedTextColor.NAMES.keys());
-                            colors.sort(Comparator
-                                    .comparingInt((String c) -> score(c.toLowerCase(), target))
-                                    .thenComparing(String::compareTo)
-                            );
-
-                            for (String color : colors) {
-                                if (target.isEmpty() || color.toLowerCase().contains(target)) {
-                                    builder.suggest(prefix + color.toLowerCase());
-                                }
-                            }
-                            return builder.buildFuture();
-                        })
-                        .executes(ctx -> {
-                            CommandSender sender = ctx.getSource().getSender();
-                            if (!KamsTweaks.getInstance().getConfig().getBoolean("name-colors.enabled", true)) {
-                                sender.sendPlainMessage("Name colors are disabled.");
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            Entity executor = ctx.getSource().getExecutor();
-                            if (executor instanceof Player player) {
-                                String raw = ctx.getArgument("colors", String.class);
-                                String[] parts = raw.split("\\s+");
-
-                                List<TextColor> colors = new ArrayList<>();
-                                List<String> invalid = new ArrayList<>();
-                                for (String part : parts) {
-                                    TextColor color = NamedTextColor.NAMES.value(part.toLowerCase(Locale.ROOT));
-                                    if (color == null) color = TextColor.fromHexString(part.startsWith("#") ? part : "#" + part);
-                                    if (color != null) colors.add(color);
-                                    else {
-                                        switch(part.toLowerCase()) {
-                                            case "pride": {
-                                                colors.add(NamedTextColor.RED);
-                                                colors.add(NamedTextColor.GOLD);
-                                                colors.add(NamedTextColor.YELLOW);
-                                                colors.add(NamedTextColor.GREEN);
-                                                colors.add(NamedTextColor.BLUE);
-                                                colors.add(NamedTextColor.DARK_PURPLE);
-                                                break;
-                                            }
-                                            case "lesbian": {
-                                                colors.add(TextColor.fromHexString("#D52D00"));
-                                                colors.add(TextColor.fromHexString("#EF7627"));
-                                                colors.add(TextColor.fromHexString("#FF9A56"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#D162A4"));
-                                                colors.add(TextColor.fromHexString("#B55690"));
-                                                colors.add(TextColor.fromHexString("#A30262"));
-                                                break;
-                                            }
-                                            case "gay": {
-                                                colors.add(TextColor.fromHexString("#078D70"));
-                                                colors.add(TextColor.fromHexString("#26CEAA"));
-                                                colors.add(TextColor.fromHexString("#98E8C1"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#7BADE2"));
-                                                colors.add(TextColor.fromHexString("#5049CC"));
-                                                colors.add(TextColor.fromHexString("#3D1A78"));
-                                                break;
-                                            }
-                                            case "bi", "bisexual": {
-                                                colors.add(TextColor.fromHexString("#D60270"));
-                                                colors.add(TextColor.fromHexString("#9B4F96"));
-                                                colors.add(TextColor.fromHexString("#0038A8"));
-                                                break;
-                                            }
-                                            case "trans": {
-                                                colors.add(TextColor.fromHexString("#55CDFC"));
-                                                colors.add(TextColor.fromHexString("#F7A8B8"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#F7A8B8"));
-                                                colors.add(TextColor.fromHexString("#55CDFC"));
-                                                break;
-                                            }
-                                            case "pan": {
-                                                colors.add(TextColor.fromHexString("#FF1B8D"));
-                                                colors.add(TextColor.fromHexString("#FFD800"));
-                                                colors.add(TextColor.fromHexString("#1BB3FF"));
-                                                break;
-                                            }
-                                            case "nonbinary", "nb": {
-                                                colors.add(TextColor.fromHexString("#FFF430"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#9C59D1"));
-                                                colors.add(TextColor.fromHexString("#000000"));
-                                                break;
-                                            }
-                                            case "genderfluid": {
-                                                colors.add(TextColor.fromHexString("#FF75A2"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#BE18D6"));
-                                                colors.add(TextColor.fromHexString("#000000"));
-                                                colors.add(TextColor.fromHexString("#333EBD"));
-                                                break;
-                                            }
-                                            case "genderqueer": {
-                                                colors.add(TextColor.fromHexString("#B57EDC"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#4A8123"));
-                                                break;
-                                            }
-                                            case "intersex": {
-                                                colors.add(TextColor.fromHexString("#FFD800"));
-                                                colors.add(TextColor.fromHexString("#7902AA"));
-                                                break;
-                                            }
-                                            case "asexual": {
-                                                colors.add(TextColor.fromHexString("#000000"));
-                                                colors.add(TextColor.fromHexString("#A3A3A3"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#800080"));
-                                                break;
-                                            }
-                                            case "aromantic": {
-                                                colors.add(TextColor.fromHexString("#3DA542"));
-                                                colors.add(TextColor.fromHexString("#A7D379"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#A9A9A9"));
-                                                colors.add(TextColor.fromHexString("#000000"));
-                                                break;
-                                            }
-                                            case "demisexual": {
-                                                colors.add(TextColor.fromHexString("#000000"));
-                                                colors.add(TextColor.fromHexString("#A4A4A4"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#800080"));
-                                                break;
-                                            }
-                                            case "demiboy": {
-                                                colors.add(TextColor.fromHexString("#7F7F7F"));
-                                                colors.add(TextColor.fromHexString("#9AD9EB"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#9AD9EB"));
-                                                colors.add(TextColor.fromHexString("#7F7F7F"));
-                                                break;
-                                            }
-                                            case "demigirl": {
-                                                colors.add(TextColor.fromHexString("#7F7F7F"));
-                                                colors.add(TextColor.fromHexString("#FBA9B0"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#FBA9B0"));
-                                                colors.add(TextColor.fromHexString("#7F7F7F"));
-                                                break;
-                                            }
-                                            case "polysexual": {
-                                                colors.add(TextColor.fromHexString("#F61CB9"));
-                                                colors.add(TextColor.fromHexString("#07D569"));
-                                                colors.add(TextColor.fromHexString("#1C92F6"));
-                                                break;
-                                            }
-                                            case "bigender": {
-                                                colors.add(TextColor.fromHexString("#C479A2"));
-                                                colors.add(TextColor.fromHexString("#EDA5CD"));
-                                                colors.add(TextColor.fromHexString("#D6C7E8"));
-                                                colors.add(TextColor.fromHexString("#FFFFFF"));
-                                                colors.add(TextColor.fromHexString("#D6C7E8"));
-                                                colors.add(TextColor.fromHexString("#9AC7E8"));
-                                                colors.add(TextColor.fromHexString("#6D82D1"));
-                                                break;
-                                            }
-                                            case "geode": {
-                                                colors.add(TextColor.fromHexString("#F4D48E"));
-                                                colors.add(TextColor.fromHexString("#F5AE7D"));
-                                                colors.add(TextColor.fromHexString("#EC897C"));
-                                                colors.add(TextColor.fromHexString("#D56985"));
-                                                colors.add(TextColor.fromHexString("#AD5492"));
-                                                colors.add(TextColor.fromHexString("#714A9A"));
-                                                break;
-                                            }
-                                            default: {
-                                                invalid.add(part);
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if (!invalid.isEmpty()) {
-                                    sender.sendPlainMessage("Invalid color(s): " + String.join(", ", invalid));
-                                    return Command.SINGLE_SUCCESS;
-                                }
-
-                                Pair<String, List<TextColor>> info = data.getOrDefault(player.getUniqueId(), new Pair<>(player.getName(), new ArrayList<>()));
-                                info.second = colors;
-                                data.put(player.getUniqueId(), info);
-
-                                Component comp = renderName(info);
-                                player.displayName(comp);
-                                player.playerListName(comp);
-
-                                sender.sendMessage(Component.text("Your name is now ").append(comp).append(Component.text(".")));
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            sender.sendMessage("Only players can use /color.");
-                            return Command.SINGLE_SUCCESS;
-                        })
-                );
-        commands.registrar().register(colorCmd.build());
-
         LiteralArgumentBuilder<CommandSourceStack> whoIsCmd = Commands.literal("whois")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.names.nick"))
                 .then(Commands.argument("who", StringArgumentType.greedyString()).suggests((ctx, builder) -> {
-                    data.forEach((uuid, pair) -> {
-                            if (pair.first.contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
-                                builder.suggest(pair.first);
+                    data.forEach((uuid, comp) -> {
+                            var ds = pt.serialize(comp);
+                            if (ds.contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
+                                builder.suggest(ds);
                     });
                     return builder.buildFuture();
                 }).executes(ctx -> {
@@ -341,7 +124,7 @@ public class Names extends Feature {
                     String name = ctx.getArgument("who", String.class);
                     AtomicReference<OfflinePlayer> who = new AtomicReference<>();
                     data.forEach((uuid, pair) -> {
-                        if (Objects.equals(pair.first, name)) {
+                        if (Objects.equals(pt.serialize(pair), name)) {
                             who.set(Bukkit.getServer().getOfflinePlayer(uuid));
                         }
                     });
@@ -359,6 +142,7 @@ public class Names extends Feature {
     public void loadData() {
         data.clear();
         FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        /*
         if (config.contains("names")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("names")).getKeys(false)) {
                 try {
@@ -399,10 +183,12 @@ public class Names extends Feature {
                 }
             }
         }
+        */
     }
 
     @Override
     public void saveData() {
+        /*
         FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
         config.set("names", null);
 
@@ -426,19 +212,20 @@ public class Names extends Feature {
                 }
             }
         });
+        */
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        var player = event.getPlayer();
+        /*var player = event.getPlayer();
         Pair<String, List<TextColor>> info =
                 data.getOrDefault(player.getUniqueId(), new Pair<>(player.getName(), new ArrayList<>()));
         Component comp = renderName(info);
         player.displayName(comp);
-        player.playerListName(comp);
+        player.playerListName(comp);*/
     }
 
     public Component getRenderedName(OfflinePlayer player) {
-        return renderName(data.getOrDefault(player.getUniqueId(), new Pair<>(player.getName(), new ArrayList<>())));
+        return data.getOrDefault(player.getUniqueId(), Component.text(player.getName()));
     }
 }
