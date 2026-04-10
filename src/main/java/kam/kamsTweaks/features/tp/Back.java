@@ -9,14 +9,18 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.features.Graves;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -104,5 +108,12 @@ public class Back extends Feature {
         TeleportFeatures.get().locations.forEach((uuid, loc) -> {
             if (loc != null) config.set("back-locs." + uuid, LocationUtils.serializeLocation(loc));
         });
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent e) {
+        Player player = e.getPlayer();
+        TeleportFeatures.get().locations.put(player.getUniqueId(), Graves.checkLocation(player.getLocation()));
+        player.sendMessage(Component.text("Return to your death location with ").append(Component.text("/back").color(NamedTextColor.RED).clickEvent(ClickEvent.runCommand("/back")), Component.text(".")).color(NamedTextColor.GOLD));
     }
 }
