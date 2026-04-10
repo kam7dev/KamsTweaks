@@ -275,6 +275,7 @@ public class Names extends Feature {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("nicknames.enabled", true)) return;
         var player = event.getPlayer();
         var comp = getRenderedName(player);
         player.displayName(comp);
@@ -284,6 +285,7 @@ public class Names extends Feature {
     public Component getRenderedName(@NotNull OfflinePlayer player) {
         var pName = player.getName();
         if (pName == null) pName = "Unknown";
+        if (!KamsTweaks.getInstance().getConfig().getBoolean("nicknames.enabled", true)) return Component.text(pName);
         return data.getOrDefault(player.getUniqueId(), Component.text(pName));
     }
 }
