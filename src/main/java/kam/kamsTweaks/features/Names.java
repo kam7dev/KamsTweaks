@@ -10,9 +10,12 @@ import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.utils.Pair;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -35,6 +38,17 @@ public class Names extends Feature {
 
     public static Names instance;
 
+    PlainTextComponentSerializer pt = PlainTextComponentSerializer.plainText();
+    MiniMessage mm = MiniMessage.builder().tags(TagResolver.builder()
+            .resolver(StandardTags.color())
+            .resolver(StandardTags.decorations())
+            .resolver(StandardTags.shadowColor())
+            .resolver(StandardTags.reset())
+            .resolver(StandardTags.gradient())
+            .resolver(StandardTags.rainbow())
+            .resolver(StandardTags.pride())
+            .build()).build();
+
     public Names() {
         instance = this;
     }
@@ -49,14 +63,63 @@ public class Names extends Feature {
 
     }
 
-    private static int score(String candidate, String target) {
-        if (target.isEmpty()) return 0;
-        if (candidate.startsWith(target)) return 0;
-        if (candidate.contains(target)) return 1;
-        return 2;
-    }
+    public static class Compat {
+        private static List<String> splitGraphemes(String input) {
+            BreakIterator iter = BreakIterator.getCharacterInstance(Locale.ROOT);
+            iter.setText(input);
+            List<String> result = new ArrayList<>();
+            int start = iter.first();
+            for (int end = iter.next(); end != BreakIterator.DONE; start = end, end = iter.next()) {
+                result.add(input.substring(start, end));
+            }
+            return result;
+        }
 
-    PlainTextComponentSerializer pt = PlainTextComponentSerializer.plainText();
+        public static Component gradientName(String name, List<TextColor> colors) {
+            Component res = Component.empty();
+            if (name.isEmpty() || colors.isEmpty()) {
+                return Component.text(name);
+            }
+
+            List<String> graphemes = splitGraphemes(name);
+
+            int totalSteps = graphemes.size() - 1;
+            int totalColors = colors.size() - 1;
+
+            for (int i = 0; i < graphemes.size(); i++) {
+                double progress = totalSteps == 0 ? 0 : (double) i / totalSteps;
+                TextColor color = getTextColor(colors, progress, totalColors);
+                res = res.append(Component.text(graphemes.get(i)).color(color));
+            }
+            return res;
+        }
+
+        private static TextColor getTextColor(List<TextColor> colors, double progress, int totalColors) {
+            double scaled = progress * totalColors;
+            int idx = (int) Math.floor(scaled);
+            double blend = scaled - idx;
+
+            TextColor a = colors.get(idx);
+            TextColor b = colors.get(Math.min(idx + 1, totalColors));
+
+            int r = (int) Math.round(a.red() * (1 - blend) + b.red() * blend);
+            int g = (int) Math.round(a.green() * (1 - blend) + b.green() * blend);
+            int bCol = (int) Math.round(a.blue() * (1 - blend) + b.blue() * blend);
+
+            return TextColor.color(r, g, bCol);
+        }
+
+        public static Component renderName(Pair<String, List<TextColor>> info) {
+            if (info.second == null || info.second.isEmpty()) {
+                return Component.text(info.first);
+            }
+            if (info.second.size() == 1) {
+                return Component.text(info.first).color(info.second.getFirst());
+            }
+            return gradientName(info.first, info.second);
+        }
+
+    }
 
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
@@ -71,10 +134,10 @@ public class Names extends Feature {
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
                         String name = ctx.getArgument("name", String.class).replaceAll(INVIS_REGEX, "");
-                        Component comp = MiniMessage.miniMessage().deserialize(name);
+                        Component comp = Component.text().append(mm.deserialize(name)).build().hoverEvent(HoverEvent.showText(Component.text(player.getName())));
                         var plain = pt.serialize(comp);
-                        if (plain.length() > 20) {
-                            sender.sendPlainMessage("Nicknames cannot be longer than 20 characters.");
+                        if (plain.length() > 30) {
+                            sender.sendPlainMessage("Nicknames cannot be longer than 30 characters.");
                             return Command.SINGLE_SUCCESS;
                         }
                         if (plain.isBlank()) {
@@ -131,7 +194,7 @@ public class Names extends Feature {
                     if (who.get() == null) {
                         sender.sendMessage("No one is using the nickname " + name + ".");
                     } else {
-                        sender.sendMessage(name + " is " + who.get().getName() + ".");
+                        sender.sendMessage(getRenderedName(who.get()) + " is " + who.get().getName() + ".");
                     }
                     return Command.SINGLE_SUCCESS;
                 }));
@@ -142,13 +205,28 @@ public class Names extends Feature {
     public void loadData() {
         data.clear();
         FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
-        /*
-        if (config.contains("names")) {
+        if (config.contains("names-v2")) {
+            for (String key : Objects.requireNonNull(config.getConfigurationSection("names-v2")).getKeys(false)) {
+                try {
+                    UUID owner = UUID.fromString(key);
+                    var pName = Bukkit.getServer().getOfflinePlayer(owner).getName();
+                    if (pName == null) pName = "Unknown";
+                    Component nick = Component.text().append(mm.deserialize(Objects.requireNonNull(config.getString("names-v2." + key, Bukkit.getServer().getOfflinePlayer(owner).getName())))).build().hoverEvent(HoverEvent.showText(Component.text(pName)));
+                    if ((pt.serialize(nick).isBlank())) continue;
+                    data.put(owner, nick);
+                } catch (Exception e) {
+                    Logger.excs.add(e);
+                    Logger.warn("Failed to load name for " + key + ": " + e.getMessage());
+                }
+            }
+        } else if (config.contains("names")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("names")).getKeys(false)) {
                 try {
                     UUID owner = UUID.fromString(key);
 
-                    String nick = config.getString("names." + key + ".nick", Bukkit.getServer().getOfflinePlayer(owner).getName());
+                    var pName = Bukkit.getServer().getOfflinePlayer(owner).getName();
+                    if (pName == null) pName = "Unknown";
+                    String nick = config.getString("names." + key + ".nick", pName);
 
                     List<TextColor> colors = new ArrayList<>();
                     List<String> gradientList = config.getStringList("names." + key + ".gradient");
@@ -170,62 +248,42 @@ public class Names extends Feature {
                         }
                     }
 
-                    if ((nick == null || nick.isBlank()) && colors.isEmpty()) continue;
+                    if ((nick.isBlank()) && colors.isEmpty()) continue;
 
                     Pair<String, List<TextColor>> info = new Pair<>(
-                            (nick == null || nick.isBlank()) ? Bukkit.getServer().getOfflinePlayer(owner).getName() : nick,
+                            (nick.isBlank()) ? pName : nick,
                             colors
                     );
-                    data.put(owner, info);
+                    data.put(owner, Component.text().append(Compat.renderName(info)).build().hoverEvent(HoverEvent.showText(Component.text(pName))));
                 } catch (Exception e) {
                     Logger.excs.add(e);
                     Logger.warn("Failed to load name for " + key + ": " + e.getMessage());
                 }
             }
         }
-        */
     }
 
     @Override
     public void saveData() {
-        /*
         FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
-        config.set("names", null);
+        config.set("names-v2", null);
 
-        data.forEach((uuid, pair) -> {
-            String path = "names." + uuid;
-            if (pair.first != null) config.set(path + ".nick", pair.first);
-            if (pair.second != null && !pair.second.isEmpty()) {
-                if (pair.second.size() == 1) {
-                    TextColor c = pair.second.getFirst();
-                    if (c instanceof NamedTextColor named) {
-                        config.set(path + ".color", named.toString());
-                    } else {
-                        config.set(path + ".color", String.format("#%06X", c.value()));
-                    }
-                } else {
-                    List<String> hexList = new ArrayList<>();
-                    for (TextColor c : pair.second) {
-                        hexList.add(String.format("#%06X", c.value()));
-                    }
-                    config.set(path + ".gradient", hexList);
-                }
-            }
+        data.forEach((uuid, comp) -> {
+            if (comp != null) config.set("names-v2." + uuid, mm.serialize(comp));
         });
-        */
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        /*var player = event.getPlayer();
-        Pair<String, List<TextColor>> info =
-                data.getOrDefault(player.getUniqueId(), new Pair<>(player.getName(), new ArrayList<>()));
-        Component comp = renderName(info);
+        var player = event.getPlayer();
+        var comp = getRenderedName(player);
         player.displayName(comp);
-        player.playerListName(comp);*/
+        player.playerListName(comp);
     }
 
-    public Component getRenderedName(OfflinePlayer player) {
-        return data.getOrDefault(player.getUniqueId(), Component.text(player.getName()));
+    public Component getRenderedName(@NotNull OfflinePlayer player) {
+        var pName = player.getName();
+        if (pName == null) pName = "Unknown";
+        return data.getOrDefault(player.getUniqueId(), Component.text(pName));
     }
 }
