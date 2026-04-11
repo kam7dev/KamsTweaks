@@ -39,7 +39,8 @@ public final class KamsTweaks extends JavaPlugin {
     features.add(new Zombify());
     features.add(new ChatFilter());
     features.add(new NoBoom());
-    features.add(new ItemDataFilter());
+      features.add(new ItemDataFilter());
+      features.add(new PlayerPVPToggle());
 //    features.add(new DIFeature());
   }
 

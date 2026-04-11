@@ -75,3 +75,6 @@ potion-filter:
 
 not-too-expensive:
   enabled: true
+
+player-pvp:
+  enabled: true
