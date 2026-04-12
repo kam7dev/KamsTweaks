@@ -459,7 +459,7 @@ public class ClaimProtections implements Listener {
         if (!KamsTweaks.getInstance().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Entity entity = e.getRightClicked();
-        if (!(entity instanceof ArmorStand) && !(entity instanceof ItemFrame)) return;
+        if (!(entity instanceof ArmorStand) && !(entity instanceof ItemFrame) && !(entity instanceof LeashHitch)) return;
         Player player = e.getPlayer();
         Claims.LandClaim claim = claims.getLandClaim(entity.getLocation());
         Claims.LandClaim origin = null;
@@ -468,7 +468,7 @@ public class ClaimProtections implements Listener {
             origin = claims.getLandClaim(loc);
         }
         if (claim == null) return;
-        if (entity instanceof ArmorStand) {
+        if (entity instanceof ArmorStand || entity instanceof LeashHitch) {
             if (!claim.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK) && (origin == null || !origin.hasPermission(player, Claims.ClaimPermission.INTERACT_BLOCK))) {
                 message(player, Component.text("You don't have block interaction permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
                 e.setCancelled(true);
