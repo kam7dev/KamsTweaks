@@ -210,34 +210,6 @@ public class ClaimProtections implements Listener {
         }
     }
 
-
-    @EventHandler
-    public void onBucketEmpty(PlayerBucketEmptyEvent e) {
-        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
-            return;
-        Player player = e.getPlayer();
-        Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
-        if (claim == null) return;
-        if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_PLACE)) {
-            e.setCancelled(true);
-            message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
-            applyCooldowns(player);
-        }
-    }
-
-    @EventHandler
-    public void onBucketPickup(PlayerBucketFillEvent e) {
-        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
-            return;
-        Player player = e.getPlayer();
-        Claims.LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
-        if (claim == null) return;
-        if (!claim.hasPermission(player, Claims.ClaimPermission.BLOCK_BREAK)) {
-            e.setCancelled(true);
-            message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
-        }
-    }
-
     @EventHandler
     public void onDispenser(BlockDispenseEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))

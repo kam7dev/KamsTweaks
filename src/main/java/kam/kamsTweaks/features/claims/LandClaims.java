@@ -85,7 +85,11 @@ public class LandClaims implements Listener {
         LECTERN_TAKE("Take from Lecterns"),
 
         DRAIN_CAULDRON("Drain Cauldrons"),
+
         DAMAGE_ANVIL("Damage Anvils"),
+
+        EMPTY_BUCKETS("Empty Buckets"),
+        FILL_BUCKETS("Fill Buckets"),
 
         ;
 

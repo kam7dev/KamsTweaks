@@ -52,7 +52,7 @@ public class LandProtections implements Listener {
     }
 
     @EventHandler
-    public void onDrain(CauldronLevelChangeEvent e) {
+    public void onDrainCauldron(CauldronLevelChangeEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true)) return;
         Player who = e.getEntity() instanceof Player ? (Player) e.getEntity() : null;
         LandClaim claim = claims.getClaim(e.getBlock().getLocation());
@@ -79,5 +79,32 @@ public class LandProtections implements Listener {
                     }
                 });
 
+    }
+
+        @EventHandler
+    public void onBucketEmpty(PlayerBucketEmptyEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        Player player = e.getPlayer();
+        LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
+        if (claim == null) return;
+        if (!claim.hasPermissions(player, LandPermission.BLOCK_PLACE, AdvancedLandPermission.EMPTY_BUCKETS)) {
+            e.setCancelled(true);
+            message(player, Component.text("You don't have block place permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+            applyCooldowns(player);
+        }
+    }
+
+    @EventHandler
+    public void onBucketPickup(PlayerBucketFillEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        Player player = e.getPlayer();
+        LandClaim claim = claims.getLandClaim(e.getBlock().getLocation());
+        if (claim == null) return;
+        if (!claim.hasPermission(player, LandPermission.BLOCK_BREAK)) {
+            e.setCancelled(true);
+            message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(Names.instance.getRenderedName(claim.owner), Component.text(")")));
+        }
     }
 }
