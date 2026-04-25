@@ -56,7 +56,7 @@ public class TeleportFeatures extends Feature {
             feature.setup();
         }
         for (var feature : features) {
-            Bukkit.getServer().getPluginManager().registerEvents(feature, KamsTweaks.getInstance());
+            Bukkit.getServer().getPluginManager().registerEvents(feature, KamsTweaks.get());
         }
         ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.timer", "teleportation.timer", 5, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.cooldown", "teleportation.cooldown", 10, "kamstweaks.configure"));
@@ -112,8 +112,8 @@ public class TeleportFeatures extends Feature {
                 }
             }
         };
-        Bukkit.getPluginManager().registerEvents(o.listener, KamsTweaks.getInstance());
-        o.task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> HandlerList.unregisterAll(o.listener), 15 * 20);
+        Bukkit.getPluginManager().registerEvents(o.listener, KamsTweaks.get());
+        o.task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> HandlerList.unregisterAll(o.listener), 15 * 20);
 
         Entity vehicle = player.getVehicle();
         if (vehicle != null) {
@@ -128,7 +128,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
         }
-        onCooldown.put(player, KamsTweaks.getInstance().getConfig().getInt("teleportation.cooldown"));
+        onCooldown.put(player, KamsTweaks.get().getConfig().getInt("teleportation.cooldown"));
         locations.put(player.getUniqueId(), player.getLocation());
         var r = new Runnable() {
             int id = 0;
@@ -163,13 +163,13 @@ public class TeleportFeatures extends Feature {
                 vehicle.addPassenger(passenger);
                 if (passenger instanceof LivingEntity le) le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
             }
-            Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> vehicle.addPassenger(player), 1L);
+            Bukkit.getScheduler().runTaskLater(KamsTweaks.get(), () -> vehicle.addPassenger(player), 1L);
         } else {
             player.teleport(location);
             player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
         }
 
-        r.id = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.getInstance(), r, 20, 20);
+        r.id = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), r, 20, 20);
     }
 
     public void scheduleTeleport(Player player, Location location, double time) {
@@ -177,7 +177,7 @@ public class TeleportFeatures extends Feature {
             Listener listener;
         };
 
-        int task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
+        int task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> {
             HandlerList.unregisterAll(ref.listener);
             teleport(player, location);
         }, (long) time * 20);
@@ -224,7 +224,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
         };
-        Bukkit.getPluginManager().registerEvents(ref.listener, KamsTweaks.getInstance());
+        Bukkit.getPluginManager().registerEvents(ref.listener, KamsTweaks.get());
     }
 
     public void scheduleTeleport(Player player, Entity target, double time) {
@@ -232,7 +232,7 @@ public class TeleportFeatures extends Feature {
             Listener listener;
         };
 
-        int task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
+        int task = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> {
             HandlerList.unregisterAll(ref.listener);
             teleport(player, target.getLocation());
         }, (long) time * 20);
@@ -311,7 +311,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
         };
-        Bukkit.getPluginManager().registerEvents(ref.listener, KamsTweaks.getInstance());
+        Bukkit.getPluginManager().registerEvents(ref.listener, KamsTweaks.get());
     }
 
     public static TeleportFeatures get() {

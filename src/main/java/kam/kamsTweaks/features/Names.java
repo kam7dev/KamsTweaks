@@ -58,11 +58,6 @@ public class Names extends Feature {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("nicknames.enabled", "nicknames.enabled", true, "kamstweaks.configure"));
     }
 
-    @Override
-    public void shutdown() {
-
-    }
-
     public static class Compat {
         private static List<String> splitGraphemes(String input) {
             BreakIterator iter = BreakIterator.getCharacterInstance(Locale.ROOT);
@@ -127,7 +122,7 @@ public class Names extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.names.nick"))
                 .then(Commands.argument("name", StringArgumentType.greedyString()).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("nicknames.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("nicknames.enabled", true)) {
                         sender.sendPlainMessage("Nicknames are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -180,7 +175,7 @@ public class Names extends Feature {
                     return builder.buildFuture();
                 }).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("nicknames.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("nicknames.enabled", true)) {
                         sender.sendPlainMessage("Nicknames are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -204,7 +199,7 @@ public class Names extends Feature {
     @Override
     public void loadData() {
         data.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         if (config.contains("names-v2")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("names-v2")).getKeys(false)) {
                 try {
@@ -215,8 +210,8 @@ public class Names extends Feature {
                     if ((pt.serialize(nick).isBlank())) continue;
                     data.put(owner, nick);
                 } catch (Exception e) {
-                    Logger.excs.add(e);
-                    Logger.warn("Failed to load name for " + key + ": " + e.getMessage());
+                    Logger.error("Failed to load name for " + key + ". Exception printed below.");
+                    Logger.handleException(e);
                 }
             }
         } else if (config.contains("names")) {
@@ -256,8 +251,8 @@ public class Names extends Feature {
                     );
                     data.put(owner, Component.text().append(Compat.renderName(info)).build().hoverEvent(HoverEvent.showText(Component.text(pName))));
                 } catch (Exception e) {
-                    Logger.excs.add(e);
-                    Logger.warn("Failed to load name for " + key + ": " + e.getMessage());
+                    Logger.warn("Failed to load name for " + key + ". Exception printed below.");
+                    Logger.handleException(e);
                 }
             }
         }
@@ -265,7 +260,7 @@ public class Names extends Feature {
 
     @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         config.set("names-v2", null);
 
         data.forEach((uuid, comp) -> {
@@ -275,7 +270,7 @@ public class Names extends Feature {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("nicknames.enabled", true)) return;
+        if (!KamsTweaks.get().getConfig().getBoolean("nicknames.enabled", true)) return;
         var player = event.getPlayer();
         var comp = getRenderedName(player);
         player.displayName(comp);
@@ -285,7 +280,7 @@ public class Names extends Feature {
     public Component getRenderedName(@NotNull OfflinePlayer player) {
         var pName = player.getName();
         if (pName == null) pName = "Unknown";
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("nicknames.enabled", true)) return Component.text(pName);
+        if (!KamsTweaks.get().getConfig().getBoolean("nicknames.enabled", true)) return Component.text(pName);
         return data.getOrDefault(player.getUniqueId(), Component.text(pName));
     }
 }

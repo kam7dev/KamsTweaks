@@ -33,19 +33,19 @@ public class NoBoom extends Feature {
 
     @EventHandler
     public void onExplode(BlockExplodeEvent e) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("no-explosions.enabled", false)) return;
+        if (!KamsTweaks.get().getConfig().getBoolean("no-explosions.enabled", false)) return;
         e.setCancelled(true);
     }
 
     @EventHandler
     public void onExplode(EntityExplodeEvent e) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("no-explosions.enabled", false)) return;
+        if (!KamsTweaks.get().getConfig().getBoolean("no-explosions.enabled", false)) return;
         e.setCancelled(true);
     }
 
     @EventHandler
     public void onExplode(PlayerInteractEvent e) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("no-explode.enabled", false)) return;
+        if (!KamsTweaks.get().getConfig().getBoolean("no-explode.enabled", false)) return;
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock() != null){
             //noinspection deprecation
             if (!e.getClickedBlock().getType().isInteractable()) return;

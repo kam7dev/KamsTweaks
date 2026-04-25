@@ -22,8 +22,7 @@ public class Bootstrapper implements PluginBootstrap {
                 ).toURI();
                 registrar.discoverPack(uri, "kamstweaks");
             } catch (final Exception e) {
-                Logger.excs.add(e);
-                Logger.error(e.getMessage());
+                Logger.handleException(e);
             }
         });
     }

@@ -33,7 +33,7 @@ public class Spawn extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.spawn"))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.spawn.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.spawn.enabled", true)) {
                         sender.sendPlainMessage("/spawn is disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -48,7 +48,7 @@ public class Spawn extends Feature {
                             sender.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(player) + " seconds.").color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
-                        int time = KamsTweaks.getInstance().getConfig().getInt("teleportation.timer");
+                        int time = KamsTweaks.get().getConfig().getInt("teleportation.timer");
                         sender.sendMessage(
                                 Component.text("Teleporting to spawn")
                                         .color(NamedTextColor.GOLD)

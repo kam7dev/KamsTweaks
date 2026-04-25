@@ -36,7 +36,7 @@ public class SilkSpawner extends Feature {
   public void onBreak(BlockBreakEvent e) {
     if (e.isCancelled())
       return;
-    if (!KamsTweaks.getInstance().getConfig().getBoolean("silk-spawners.enabled", true))
+    if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))
       return;
     if (!e.getPlayer().hasPermission("kamstweaks.silkspawner"))
       return;
@@ -65,7 +65,7 @@ public class SilkSpawner extends Feature {
 
   @EventHandler
   public void onPlace(BlockPlaceEvent e) {
-    if (!KamsTweaks.getInstance().getConfig().getBoolean("silk-spawners.enabled", true))
+    if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))
       return;
     if (e.getBlock().getState() instanceof CreatureSpawner spawner) {
       var name = e.getItemInHand().getItemMeta().getPersistentDataContainer()

@@ -35,7 +35,7 @@ public class ItemDataFilter extends Feature {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("potion-filter.enabled", false)) return;
+        if (!KamsTweaks.get().getConfig().getBoolean("potion-filter.enabled", false)) return;
         var item = e.getItem();
         if (item == null) return;
         if (item.hasData(DataComponentTypes.POTION_CONTENTS)) {

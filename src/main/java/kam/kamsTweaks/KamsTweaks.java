@@ -20,7 +20,7 @@ import java.util.List;
 public final class KamsTweaks extends JavaPlugin {
   private static KamsTweaks m_instance = null;
 
-  public static KamsTweaks getInstance() {
+  public static KamsTweaks get() {
     return m_instance;
   }
 
@@ -100,16 +100,15 @@ public final class KamsTweaks extends JavaPlugin {
 
   public void saveConfigs() {
     // General Config
-    generalFile = new File(KamsTweaks.getInstance().getDataFolder(), "data.yml");
+    generalFile = new File(KamsTweaks.get().getDataFolder(), "data.yml");
     if (!generalFile.exists()) {
       boolean ignored = generalFile.getParentFile().mkdirs();
-      KamsTweaks.getInstance().saveResource("data.yml", false);
+      KamsTweaks.get().saveResource("data.yml", false);
     }
     try {
       generalConfig.save(generalFile);
     } catch (IOException e) {
-      Logger.warn(e.getMessage());
-      Logger.excs.add(e);
+      Logger.handleException(e);
     }
 
     // Default Config
@@ -119,10 +118,10 @@ public final class KamsTweaks extends JavaPlugin {
   public void loadConfigs() {
       getConfig().options().copyDefaults(true);
     // General Config
-    generalFile = new File(KamsTweaks.getInstance().getDataFolder(), "data.yml");
+    generalFile = new File(KamsTweaks.get().getDataFolder(), "data.yml");
     if (!generalFile.exists()) {
       boolean ignored = generalFile.getParentFile().mkdirs();
-      KamsTweaks.getInstance().saveResource("data.yml", false);
+      KamsTweaks.get().saveResource("data.yml", false);
     }
     generalConfig = YamlConfiguration.loadConfiguration(generalFile);
     saveDefaultConfig();

@@ -33,15 +33,8 @@ public class Warp extends Feature {
     Map<String, Location> warps = new HashMap<>();
 
     @Override
-    public void setup() { }
-
-    @Override
-    public void shutdown() { }
-
-
-    @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         config.set("warps", null);
         warps.forEach((name, loc) -> {
             if (loc != null) config.set("warps." + name, LocationUtils.serializeLocation(loc));
@@ -51,7 +44,7 @@ public class Warp extends Feature {
     @Override
     public void loadData() {
         warps.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         if (config.contains("warps")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("warps")).getKeys(false)) {
                 try {
@@ -61,8 +54,7 @@ public class Warp extends Feature {
                     if (loc.getWorld() == null) continue;
                     warps.put(key, loc);
                 } catch (Exception e) {
-                    Logger.excs.add(e);
-                    Logger.warn(e.getMessage());
+                    Logger.handleException(e);
                 }
             }
         }
@@ -82,7 +74,7 @@ public class Warp extends Feature {
                     return builder.buildFuture();
                 }).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
                         sender.sendPlainMessage("Warps are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -102,7 +94,7 @@ public class Warp extends Feature {
                             sender.sendMessage(Component.text("Warp \"" + warp + "\" does not exist.").color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
-                        double time = KamsTweaks.getInstance().getConfig().getDouble("teleportation.timer");
+                        double time = KamsTweaks.get().getConfig().getDouble("teleportation.timer");
                         sender.sendMessage(
                                 Component.text("Teleporting to the ").color(NamedTextColor.GOLD)
                                         .append(Component.text(warp).color(NamedTextColor.RED))
@@ -128,7 +120,7 @@ public class Warp extends Feature {
                     return builder.buildFuture();
                 }).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
                         sender.sendPlainMessage("Warps are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -146,7 +138,7 @@ public class Warp extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.warps"))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
                         sender.sendPlainMessage("Warps are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -163,7 +155,7 @@ public class Warp extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.addwarp"))
                 .then(Commands.argument("name", StringArgumentType.word()).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
                         sender.sendPlainMessage("Warps are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -180,7 +172,7 @@ public class Warp extends Feature {
                     return Command.SINGLE_SUCCESS;
                 }).then(Commands.argument("location", ArgumentTypes.blockPosition()).executes(ctx -> {
 		 CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
                         sender.sendPlainMessage("Warps are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -193,7 +185,7 @@ public class Warp extends Feature {
                     return Command.SINGLE_SUCCESS;
 	}).then(Commands.argument("world", ArgumentTypes.world()).executes(ctx -> {
 		 CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.warp.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
                         sender.sendPlainMessage("Warps are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }

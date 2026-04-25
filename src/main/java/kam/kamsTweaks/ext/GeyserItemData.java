@@ -25,8 +25,8 @@ public class GeyserItemData implements EventRegistrar {
     }
 
     public void onGeyserDefineResourcePacks(GeyserDefineResourcePacksEvent event) {
-        KamsTweaks.getInstance().saveResource("bedrock.zip", true);
-        event.register(ResourcePack.builder(PackCodec.path(KamsTweaks.getInstance().getDataPath().resolve("bedrock.zip"))).build());
+        KamsTweaks.get().saveResource("bedrock.zip", true);
+        event.register(ResourcePack.builder(PackCodec.path(KamsTweaks.get().getDataPath().resolve("bedrock.zip"))).build());
     }
 
 

@@ -34,7 +34,7 @@ public class SlashHat extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.hat"))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("slash-hat", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("slash-hat", true)) {
                         sender.sendPlainMessage("/hat is disabled.");
                         return Command.SINGLE_SUCCESS;
                     }

@@ -1,6 +1,5 @@
 package kam.kamsTweaks.features;
 
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -21,11 +20,8 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
 
-import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
-import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
@@ -63,12 +59,12 @@ public class ChatFilter extends Feature {
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder().uri(URI.create(fetchUrl)).GET().build();
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                KamsTweaks.getInstance().getDataConfig().set("filter-cache." + name, response.body());
+                KamsTweaks.get().getDataConfig().set("filter-cache." + name, response.body());
                 str = response.body();
             } catch (Exception e) {
-                Logger.error("Failed to load updated filter for " + name + "!");
-                e.printStackTrace();
-                str = KamsTweaks.getInstance().getDataConfig().getString("filter-cache." + name, "");
+                Logger.error("Failed to load updated filter for " + name + ". Exception printed below.");
+                Logger.handleException(e);
+                str = KamsTweaks.get().getDataConfig().getString("filter-cache." + name, "");
             }
             List<String> terms = Arrays.stream(str.split("[,\n]")).map(String::trim).filter(s -> !s.isEmpty()).toList();
             String regex = ("\\b(" + String.join("|", terms) + ")\\b").replace("*", ".*");
@@ -80,7 +76,7 @@ public class ChatFilter extends Feature {
 
     public void setup() {
         instance = this;
-        var cfg = KamsTweaks.getInstance().getConfig();
+        var cfg = KamsTweaks.get().getConfig();
         if (cfg.contains("filters")) {
             for (var str : Objects.requireNonNull(cfg.getConfigurationSection("filters")).getKeys(false)) {
                 Filter filter;
@@ -97,18 +93,6 @@ public class ChatFilter extends Feature {
                 filters.add(filter);
             }
         }
-    }
-
-    public void shutdown() {
-    }
-
-    public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-    }
-
-    public void loadData() {
-    }
-
-    public void saveData() {
     }
 
     PlainTextComponentSerializer ser = PlainTextComponentSerializer.plainText();
@@ -197,8 +181,8 @@ public class ChatFilter extends Feature {
                     channel.sendMessage("<@&1488275345252810882> " + message);
                 }
             } catch (Exception e) {
-                Logger.excs.add(e);
-                Logger.error("Failed to send message to discord: " + e.getMessage());
+                Logger.error("Failed to send message to discord. Exception printed below.");
+                Logger.handleException(e);
             }
         }
     }

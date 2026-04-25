@@ -27,14 +27,8 @@ public class Home extends Feature {
     Map<UUID, Location> homes = new HashMap<>();
 
     @Override
-    public void setup() {}
-
-    @Override
-    public void shutdown() {}
-
-    @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         config.set("homes", null);
 
         homes.forEach((uuid, loc) -> {
@@ -45,7 +39,7 @@ public class Home extends Feature {
     @Override
     public void loadData() {
         homes.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         if (config.contains("homes")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("homes")).getKeys(false)) {
                 try {
@@ -56,8 +50,7 @@ public class Home extends Feature {
                     if (loc.getWorld() == null) continue;
                     homes.put(owner, loc);
                 } catch (Exception e) {
-                    Logger.excs.add(e);
-                    Logger.warn(e.getMessage());
+                    Logger.handleException(e);
                 }
             }
         }
@@ -69,7 +62,7 @@ public class Home extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.homes"))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.homes.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.homes.enabled", true)) {
                         sender.sendPlainMessage("Homes are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -88,7 +81,7 @@ public class Home extends Feature {
                             sender.sendMessage(Component.text("You do not have a home.").color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
-                        int time = KamsTweaks.getInstance().getConfig().getInt("teleportation.timer");
+                        int time = KamsTweaks.get().getConfig().getInt("teleportation.timer");
                         sender.sendMessage(
                                 Component.text("Teleporting to your home")
                                         .color(NamedTextColor.GOLD)
@@ -108,7 +101,7 @@ public class Home extends Feature {
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.homes"))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.homes.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.homes.enabled", true)) {
                         sender.sendPlainMessage("Homes are disabled.");
                         return Command.SINGLE_SUCCESS;
                     }

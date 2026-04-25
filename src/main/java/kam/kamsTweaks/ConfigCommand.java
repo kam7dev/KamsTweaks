@@ -13,7 +13,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -56,7 +55,7 @@ public class ConfigCommand {
         @Override
         public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
             return command.then(Commands.literal(name).executes(ctx -> {
-                String val = KamsTweaks.getInstance().getConfig().getString(configId, default_);
+                String val = KamsTweaks.get().getConfig().getString(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", StringArgumentType.word()).suggests((ctx, builder) -> {
@@ -70,8 +69,8 @@ public class ConfigCommand {
                     ctx.getSource().getSender().sendMessage("Invalid value. Valid options are " + String.join(", ", List.of(options)) + ".");
                     return Command.SINGLE_SUCCESS;
                 }
-                KamsTweaks.getInstance().getConfig().set(configId, val);
-                KamsTweaks.getInstance().saveConfig();
+                KamsTweaks.get().getConfig().set(configId, val);
+                KamsTweaks.get().saveConfig();
                 if (callback != null) callback.accept(val);
                 ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
                 return Command.SINGLE_SUCCESS;
@@ -99,13 +98,13 @@ public class ConfigCommand {
         @Override
         public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
             return command.then(Commands.literal(name).executes(ctx -> {
-                boolean val = KamsTweaks.getInstance().getConfig().getBoolean(configId, default_);
+                boolean val = KamsTweaks.get().getConfig().getBoolean(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", BoolArgumentType.bool()).executes(ctx -> {
                 Boolean val = ctx.getArgument("value", Boolean.class);
-                KamsTweaks.getInstance().getConfig().set(configId, val);
-                KamsTweaks.getInstance().saveConfig();
+                KamsTweaks.get().getConfig().set(configId, val);
+                KamsTweaks.get().saveConfig();
                 if (callback != null) callback.accept(val);
                 ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
                 return Command.SINGLE_SUCCESS;
@@ -133,13 +132,13 @@ public class ConfigCommand {
         @Override
         public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
             return command.then(Commands.literal(name).executes(ctx -> {
-                int val = KamsTweaks.getInstance().getConfig().getInt(configId, default_);
+                int val = KamsTweaks.get().getConfig().getInt(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", IntegerArgumentType.integer()).executes(ctx -> {
                 Integer val = ctx.getArgument("value", Integer.class);
-                KamsTweaks.getInstance().getConfig().set(configId, val);
-                KamsTweaks.getInstance().saveConfig();
+                KamsTweaks.get().getConfig().set(configId, val);
+                KamsTweaks.get().saveConfig();
                 ctx.getSource().getSender().sendMessage("Set value of " + name + " to " + val + ".");
                 if (callback != null) callback.accept(val);
                 ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
@@ -156,11 +155,11 @@ public class ConfigCommand {
         commands.registrar().register(
                 Commands.literal("kamstweaks").then(command)
                         .then(Commands.literal("version").executes(ctx -> {
-                            ctx.getSource().getSender().sendMessage("KamsTweaks is on version " + KamsTweaks.getInstance().getPluginMeta().getVersion());
+                            ctx.getSource().getSender().sendMessage("KamsTweaks is on version " + KamsTweaks.get().getPluginMeta().getVersion());
                             return Command.SINGLE_SUCCESS;
                         }))
                         .then(Commands.literal("save").executes(ctx -> {
-                            KamsTweaks.getInstance().save();
+                            KamsTweaks.get().save();
                             ctx.getSource().getSender().sendMessage(Component.text("Saved KamsTweaks.").color(NamedTextColor.GREEN));
                             return Command.SINGLE_SUCCESS;
                         }).requires(source -> source.getSender().hasPermission("kamstweaks.save")))
@@ -168,9 +167,10 @@ public class ConfigCommand {
                             ctx.getSource().getSender().sendMessage("There are " + Logger.excs.size() + " exceptions.");
                             return Command.SINGLE_SUCCESS;
                         }).then(Commands.argument("id", IntegerArgumentType.integer(0, Logger.excs.size() - 1)).executes(ctx -> {
-                            //noinspection CallToPrintStackTrace
-                            Logger.excs.get(ctx.getArgument("id", Integer.class)).printStackTrace();
-                            ctx.getSource().getSender().sendMessage("Printed to console.");
+                            var e = Logger.excs.get(ctx.getArgument("id", Integer.class));
+                            var msg = e + "\n" + e.fillInStackTrace();
+                            Logger.error("Stack trace print requested by " + ctx.getSource().getSender().getName() + ": \n" + msg);
+                            ctx.getSource().getSender().sendMessage(msg);
                             return Command.SINGLE_SUCCESS;
                         }).requires(source -> source.getSender().hasPermission("kamstweaks.logger")))
                         .then(Commands.literal("clear").executes(ctx -> {

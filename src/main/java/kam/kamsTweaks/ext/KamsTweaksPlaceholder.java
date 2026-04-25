@@ -29,7 +29,7 @@ public class KamsTweaksPlaceholder extends PlaceholderExpansion {
     @Override
     @NotNull
     public String getVersion() {
-        return KamsTweaks.getInstance().getPluginMeta().getVersion();
+        return KamsTweaks.get().getPluginMeta().getVersion();
     }
 
 

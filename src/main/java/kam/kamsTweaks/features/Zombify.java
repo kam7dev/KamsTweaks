@@ -19,7 +19,7 @@ public class Zombify extends Feature {
 
     @EventHandler
     void onEntityDeath(EntityDeathEvent e) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("zombify.enabled", true)) return;
+        if (!KamsTweaks.get().getConfig().getBoolean("zombify.enabled", true)) return;
         if (e.getEntity() instanceof Villager villager && e.getDamageSource().getDirectEntity() instanceof Zombie) {
             e.setCancelled(true);
             villager.zombify();

@@ -29,11 +29,6 @@ public class PlayerPVPToggle extends Feature {
     }
 
     @Override
-    public void shutdown() {
-
-    }
-
-    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         commands.registrar().register(Commands.literal("pvp")
                 .then(Commands.literal("on")
@@ -65,14 +60,13 @@ public class PlayerPVPToggle extends Feature {
     @Override
     public void loadData() {
         pvp.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         if (config.contains("player-pvp.enabled")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("player-pvp.enabled")).getKeys(false)) {
                 try {
                     pvp.put(UUID.fromString(key), config.getBoolean("player-pvp.enabled." + key));
                 } catch (Exception e) {
-                    Logger.excs.add(e);
-                    Logger.warn(e.getMessage());
+                    Logger.handleException(e);
                 }
             }
         }
@@ -80,7 +74,7 @@ public class PlayerPVPToggle extends Feature {
 
     @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         config.set("player-pvp", null);
         pvp.forEach((uuid, en) -> {
             if (en != null) config.set("player-pvp.enabled." + uuid, en);

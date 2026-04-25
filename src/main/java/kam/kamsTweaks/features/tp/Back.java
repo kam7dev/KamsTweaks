@@ -28,22 +28,12 @@ import java.util.UUID;
 
 public class Back extends Feature {
     @Override
-    public void setup() {
-
-    }
-
-    @Override
-    public void shutdown() {
-
-    }
-
-    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("back")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.back"))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.getInstance().getConfig().getBoolean("teleportation.back.enabled", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.back.enabled", true)) {
                         sender.sendPlainMessage("/back is disabled.");
                         return Command.SINGLE_SUCCESS;
                     }
@@ -62,7 +52,7 @@ public class Back extends Feature {
                             sender.sendMessage(Component.text("You have not teleported anywhere recently.").color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
-                        int time = KamsTweaks.getInstance().getConfig().getInt("teleportation.timer");
+                        int time = KamsTweaks.get().getConfig().getInt("teleportation.timer");
                         sender.sendMessage(
                                 Component.text("Returning to previous location").color(NamedTextColor.GOLD)
                                         .append(Component.text(time > 0 ? " in " : ".").color(NamedTextColor.GOLD))
@@ -82,7 +72,7 @@ public class Back extends Feature {
     public void loadData() {
         var tpf = TeleportFeatures.get();
         tpf.locations.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         if (config.contains("back-locs")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("back-locs")).getKeys(false)) {
                 try {
@@ -93,8 +83,7 @@ public class Back extends Feature {
                     if (loc.getWorld() == null) continue;
                     tpf.locations.put(owner, loc);
                 } catch (Exception e) {
-                    Logger.excs.add(e);
-                    Logger.warn(e.getMessage());
+                    Logger.handleException(e);
                 }
             }
         }
@@ -102,7 +91,7 @@ public class Back extends Feature {
 
     @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         config.set("back-locs", null);
 
         TeleportFeatures.get().locations.forEach((uuid, loc) -> {

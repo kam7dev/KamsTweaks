@@ -46,7 +46,7 @@ public class SeedDispenser extends Feature {
     @EventHandler(priority = EventPriority.HIGH)
     public void onDispense(BlockDispenseEvent e) {
         if (e.isCancelled()) return;
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
+        if (!KamsTweaks.get().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
         Block block = e.getBlock();
         if (block.getType() == Material.DISPENSER) {
             Directional directional = (Directional) block.getBlockData();
@@ -78,7 +78,7 @@ public class SeedDispenser extends Feature {
                     }
                     // sometimes it just flat out doesnt work, so run it again next tick
                     // no this does not repeat if it does run, because of the return in the statement
-                    Bukkit.getServer().getScheduler().runTask(KamsTweaks.getInstance(), () -> {
+                    Bukkit.getServer().getScheduler().runTask(KamsTweaks.get(), () -> {
                         ItemStack[] contents2 = container.getInventory().getContents();
                         for (int i = 0; i < contents2.length; i++) {
                             ItemStack slot = contents2[i];

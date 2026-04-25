@@ -106,9 +106,9 @@ public class TPA extends Feature {
                 }
             }
         };
-        Bukkit.getPluginManager().registerEvents(listener, KamsTweaks.getInstance());
+        Bukkit.getPluginManager().registerEvents(listener, KamsTweaks.get());
 
-        int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.getInstance(), () -> {
+        int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> {
             sender.sendMessage(Component.text("Your request to ").color(NamedTextColor.GOLD)
                     .append(target.displayName().color(NamedTextColor.RED))
                     .append(Component.text(" has expired.").color(NamedTextColor.GOLD)));
@@ -147,7 +147,7 @@ public class TPA extends Feature {
         HandlerList.unregisterAll(req.listener);
         tpas.remove(requester);
 
-        double time = KamsTweaks.getInstance().getConfig().getDouble("teleportation.timer");
+        double time = KamsTweaks.get().getConfig().getDouble("teleportation.timer");
 
         if (req.here) {
             handler.scheduleTeleport(acceptor, requester, time);
@@ -199,16 +199,6 @@ public class TPA extends Feature {
         target.sendMessage(Component.text("Teleport request cancelled because ").color(NamedTextColor.GOLD)
                 .append(reason));
         TeleportFeatures.get().teleportations.remove(sender);
-    }
-
-    @Override
-    public void setup() {
-
-    }
-
-    @Override
-    public void shutdown() {
-
     }
 
     @Override
@@ -325,7 +315,7 @@ public class TPA extends Feature {
     @Override
     public void loadData() {
         tpAuto.clear();
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         if (config.contains("tpa-settings.tp-auto")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("tpa-settings.tp-auto")).getKeys(false)) {
                 try {
@@ -333,8 +323,7 @@ public class TPA extends Feature {
                     Boolean playerTPAuto = config.getBoolean("tpa-settings.tp-auto." + key);
                     tpAuto.put(player, playerTPAuto);
                 } catch (Exception e) {
-                    Logger.excs.add(e);
-                    Logger.warn(e.getMessage());
+                    Logger.handleException(e);
                 }
             }
         }
@@ -350,8 +339,7 @@ public class TPA extends Feature {
                     }
                     tpBlock.put(player, playerTPBlock);
                 } catch (Exception e) {
-                    Logger.excs.add(e);
-                    Logger.warn(e.getMessage());
+                    Logger.handleException(e);
                 }
             }
         }
@@ -359,7 +347,7 @@ public class TPA extends Feature {
 
     @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         config.set("tpa-settings", null);
         tpAuto.forEach((uuid, tpauto) -> {
             if (tpauto != null) config.set("tpa-settings.tp-auto." + uuid, tpauto);

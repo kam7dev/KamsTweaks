@@ -50,7 +50,7 @@ public class Graves extends Feature {
     @Override
     public void setup() {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("graves.enabled", "graves.enabled", true, "kamstweaks.configure"));
-        Bukkit.getScheduler().runTaskTimer(KamsTweaks.getInstance(), new Runnable() {
+        Bukkit.getScheduler().runTaskTimer(KamsTweaks.get(), new Runnable() {
             long lastTime = System.currentTimeMillis();
 
             @Override
@@ -62,9 +62,6 @@ public class Graves extends Feature {
             }
         }, 20L, 20L); // 20L = 1 second in ticks
     }
-
-    @Override
-    public void shutdown() {}
 
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
@@ -284,7 +281,7 @@ public class Graves extends Feature {
 
     @EventHandler
     public void onDie(PlayerDeathEvent event) {
-        if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
+        if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
             return;
 
         Player player = event.getPlayer();
@@ -298,7 +295,7 @@ public class Graves extends Feature {
     }
 
     void tp() {
-        Bukkit.getScheduler().runTaskLater(KamsTweaks.getInstance(), () -> graves.forEach((id, grave) -> {
+        Bukkit.getScheduler().runTaskLater(KamsTweaks.get(), () -> graves.forEach((id, grave) -> {
             if (grave.stand != null && !grave.stand.getLocation().equals(grave.location)) {
                 grave.stand.teleport(grave.location.clone().addRotation(90, 0).subtract(0, 1.4375, 0));
             }
@@ -441,7 +438,7 @@ public class Graves extends Feature {
                 if (grave.getInventory().isEmpty()) {
                     if (grave.stand != null) grave.stand.remove();
                     rem.set(id);
-                    KamsTweaks.getInstance().save();
+                    KamsTweaks.get().save();
                 }
             }
         });
@@ -455,7 +452,7 @@ public class Graves extends Feature {
             NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
             if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
             e.setCancelled(true);
-            if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
+            if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
                 return;
             @SuppressWarnings("DataFlowIssue")
             int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
@@ -516,7 +513,7 @@ public class Graves extends Feature {
             NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
             if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
             e.setCancelled(true);
-            if (!KamsTweaks.getInstance().getConfig().getBoolean("graves.enabled", true))
+            if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
                 return;
             @SuppressWarnings("DataFlowIssue")
             int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
@@ -689,8 +686,7 @@ public class Graves extends Feature {
                                     action.getClass().getMethod("queue").invoke(action);
                                 }
                             } catch (Exception e) {
-                                Logger.excs.add(e);
-                                Logger.error("Failed to send message to discord: " + e.getMessage());
+                                Logger.handleException(e);
                             }
                         }
                         break;
@@ -743,7 +739,7 @@ public class Graves extends Feature {
 
     @Override
     public void saveData() {
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         config.set("graves", null);
         graves.forEach((id, grave) -> {
             Inventories.saveInventory(grave.getInventory(), config, "graves." + id);
@@ -762,7 +758,7 @@ public class Graves extends Feature {
     public void loadData() {
         graves.clear();
         highest = 0;
-        FileConfiguration config = KamsTweaks.getInstance().getDataConfig();
+        FileConfiguration config = KamsTweaks.get().getDataConfig();
         if (config.contains("graves")) {
             for (String key : Objects.requireNonNull(config.getConfigurationSection("graves")).getKeys(false)) {
                 try {
@@ -790,8 +786,7 @@ public class Graves extends Feature {
                         }
                     }
                 } catch (Exception e) {
-                    Logger.excs.add(e);
-                    Logger.warn(e.getMessage());
+                    Logger.handleException(e);
                 }
             }
         }
