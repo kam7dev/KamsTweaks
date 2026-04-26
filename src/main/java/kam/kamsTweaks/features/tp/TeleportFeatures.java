@@ -119,13 +119,14 @@ public class TeleportFeatures extends Feature {
         if (vehicle != null) {
             var passengers = vehicle.getPassengers();
             for (var passenger : passengers) {
-                if (Claims.get().entityClaims.containsKey(passenger.getUniqueId())) {
-                    var claim = Claims.get().entityClaims.get(passenger.getUniqueId());
-                    if (!claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) {
-                        player.sendMessage(Component.text("Cancelled teleport because you don't have permission to ").append(Component.text("kill").color(NamedTextColor.AQUA).decorate(TextDecoration.UNDERLINED).clickEvent(ClickEvent.callback(audience -> audience.sendMessage(Component.text("It requires the damage permission because teleporting the mob would allow a method of killing a claimed entity.")))), Component.text(" an entity in this vehicle.")));
-                        return;
-                    }
-                }
+                // TODO
+//                if (Claims.get().entityClaims.containsKey(passenger.getUniqueId())) {
+//                    var claim = Claims.get().entityClaims.get(passenger.getUniqueId());
+//                    if (!claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) {
+//                        player.sendMessage(Component.text("Cancelled teleport because you don't have permission to ").append(Component.text("kill").color(NamedTextColor.AQUA).decorate(TextDecoration.UNDERLINED).clickEvent(ClickEvent.callback(audience -> audience.sendMessage(Component.text("It requires the damage permission because teleporting the mob would allow a method of killing a claimed entity.")))), Component.text(" an entity in this vehicle.")));
+//                        return;
+//                    }
+//                }
             }
         }
         onCooldown.put(player, KamsTweaks.get().getConfig().getInt("teleportation.cooldown"));

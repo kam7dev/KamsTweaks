@@ -26,7 +26,8 @@ public class Claims extends Feature {
     final List<UUID> hasMessaged = new ArrayList<>();
 
     // just a helper cause its nicer
-    public void message(Player player, Component message) {
+    public void message(Entity player, Component message) {
+        if (!(player instanceof Player)) return;
         if (hasMessaged.contains(player.getUniqueId()))
             return;
         hasMessaged.add(player.getUniqueId());
@@ -43,7 +44,7 @@ public class Claims extends Feature {
 
         landClaims.setup(this);
         entityClaims.setup(this);
-        protections.setup(this);
+//        protections.setup(this);
 //        dialogGui.setup(this);
 
         Bukkit.getServer().getPluginManager().registerEvents(protections, KamsTweaks.get());

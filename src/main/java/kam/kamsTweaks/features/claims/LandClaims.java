@@ -2,6 +2,7 @@ package kam.kamsTweaks.features.claims;
 
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import kam.kamsTweaks.*;
+import kam.kamsTweaks.features.Names;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2;
@@ -47,6 +48,19 @@ public class LandClaims implements Listener {
                 }
             }
         }, 20, 20);
+
+        var testClaim = new LandClaim(null, new Location(Bukkit.getServer().getWorlds().getFirst(), -10, 50, -10), new Location(Bukkit.getServer().getWorlds().getFirst(), 10, 150, 10));
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.LECTERN_INSERT, OptBool.FALSE);
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.LECTERN_TAKE, OptBool.FALSE);
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.DRAIN_CAULDRON, OptBool.FALSE);
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.DAMAGE_ANVIL, OptBool.FALSE);
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.EMPTY_BUCKETS, OptBool.FALSE);
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.FILL_BUCKETS, OptBool.FALSE);
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.ITEM_FRAME_ITEM_ROTATE, OptBool.FALSE);
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.ITEM_FRAME_ITEM_PLACE, OptBool.FALSE);
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.ARMOR_STAND_ITEM_TAKE, OptBool.FALSE);
+        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.ARMOR_STAND_ITEM_PLACE, OptBool.FALSE);
+        claims.add(testClaim);
     }
 
     public @Nullable LandClaim getClaim(Location where) {
@@ -60,7 +74,7 @@ public class LandClaims implements Listener {
         LandClaims.LandClaim ret = null;
         for (var claim : claims) {
             if (claim.inBounds(where)) {
-                if (ret == null || claim.priority > ret.priority) {
+                if (ret == null || claim.config.priority > ret.config.priority) {
                     ret = claim;
                 }
             }
@@ -69,10 +83,12 @@ public class LandClaims implements Listener {
     }
 
     public enum LandPermission {
-        INTERACT_BLOCK("Interact with Blocks"),
-        INTERACT_DOOR("Interact with Doors"),
+        BLOCK_INTERACT("Interact with Blocks"),
         BLOCK_BREAK("Break Blocks"),
-        BLOCK_PLACE("Place Blocks");
+        BLOCK_PLACE("Place Blocks"),
+        DOOR_INTERACT("Interact with Doors"),
+
+        ;
 
         public final String label;
         LandPermission(String label) {
@@ -91,6 +107,11 @@ public class LandClaims implements Listener {
         EMPTY_BUCKETS("Empty Buckets"),
         FILL_BUCKETS("Fill Buckets"),
 
+        ITEM_FRAME_ITEM_ROTATE("Rotate Items in Frames"),
+        ITEM_FRAME_ITEM_PLACE("Place Items in Frames"),
+        ARMOR_STAND_ITEM_TAKE("Take from Armor Stands"),
+        ARMOR_STAND_ITEM_PLACE("Place onto Armor Stands"),
+
         ;
 
         public final String label;
@@ -100,21 +121,23 @@ public class LandClaims implements Listener {
     }
 
     public static class Permissions implements Cloneable{
-        Entity who;
-        Map<LandPermission, OptBool> bools;
-        Map<AdvancedLandPermission, OptBool> advancedBools;
+        public LandClaim claim;
+        public Entity who;
+        Map<LandPermission, OptBool> bools = new HashMap<>();
+        Map<AdvancedLandPermission, OptBool> advancedBools = new HashMap<>();
 
-        public Permissions(Entity who) {
+        public Permissions(LandClaim claim, Entity who) {
+            this.claim = claim;
             this.who = who;
         }
 
         public static Permissions defaultPerms;
         static {
-            defaultPerms = new Permissions(null);
+            defaultPerms = new Permissions(null, null);
             defaultPerms.bools.put(LandPermission.BLOCK_BREAK, OptBool.FALSE);
             defaultPerms.bools.put(LandPermission.BLOCK_PLACE, OptBool.FALSE);
-            defaultPerms.bools.put(LandPermission.INTERACT_BLOCK, OptBool.FALSE);
-            defaultPerms.bools.put(LandPermission.INTERACT_DOOR, OptBool.TRUE);
+            defaultPerms.bools.put(LandPermission.BLOCK_INTERACT, OptBool.FALSE);
+            defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.TRUE);
 //            defaultPerms.advancedBools.put(AdvancedLandPermission.S, OptBool.FALSE);
         }
 
@@ -137,18 +160,26 @@ public class LandClaims implements Listener {
         }
     }
 
+    public static class ClaimConfig {
+        public String name = "Unnamed Claim";
+        public Integer priority = 0;
+
+        public boolean canGrassGrow = true;
+        public boolean canTreesGrow = true;
+    }
+
     public static class LandClaim {
         public OfflinePlayer owner;
         public static int nextId;
         public int id;
-        public String name = "Unnamed claim";
 
         Location start;
         Location end;
-        Integer priority = 0;
         Integer claimCount = 0;
 
-        public Map<Entity, Permissions> perms;
+        public ClaimConfig config;
+
+        public Map<UUID, Permissions> perms = new HashMap<>();
         public Permissions defaultPerms = Permissions.defaultPerms.clone();
         public Permissions defaultEntityPerms = Permissions.defaultPerms.clone();
 
@@ -168,16 +199,23 @@ public class LandClaims implements Listener {
             this.end = end;
         }
 
-        public boolean hasPermission(Entity who, LandPermission perm) {
+        public boolean hasPermission(Object who, LandPermission perm) {
             // no player
             if (who == null) return defaultPerms.getBoolPermission(perm) == OptBool.TRUE;
 
+            UUID uuid;
+            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            else if (who instanceof Entity e) uuid = e.getUniqueId();
+            else {
+                return defaultPerms.getBoolPermission(perm) == OptBool.TRUE;
+            }
+
             // owner
-            if (owner.getUniqueId().equals(who.getUniqueId())) return true;
+            if (owner != null && owner.getUniqueId().equals(uuid)) return true;
 
             // explicit perms
-            if (perms.containsKey(who)) {
-                var info = perms.get(who);
+            if (perms.containsKey(uuid)) {
+                var info = perms.get(uuid);
                 var has = info.getBoolPermission(perm);
                 if (has != OptBool.DEFAULT) {
                     return has == OptBool.TRUE;
@@ -185,7 +223,7 @@ public class LandClaims implements Listener {
             }
 
             // default entity permissions
-            if (!(who instanceof Player)) {
+            if (!(who instanceof OfflinePlayer)) {
                 var has = defaultEntityPerms.getBoolPermission(perm);
                 if (has != OptBool.DEFAULT) {
                     return has == OptBool.TRUE;
@@ -196,16 +234,23 @@ public class LandClaims implements Listener {
             return defaultPerms.getBoolPermission(perm) == OptBool.TRUE;
         }
 
-        public OptBool hasPermission(Entity who, AdvancedLandPermission perm) {
+        public OptBool hasPermission(Object who, AdvancedLandPermission perm) {
             // no player
             if (who == null) return defaultPerms.getBoolPermission(perm);
 
+            UUID uuid;
+            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            else if (who instanceof Entity e) uuid = e.getUniqueId();
+            else {
+                return defaultPerms.getBoolPermission(perm);
+            }
+
             // owner
-            if (owner.getUniqueId().equals(who.getUniqueId())) return OptBool.DEFAULT;
+            if (owner != null && owner.getUniqueId().equals(uuid)) return OptBool.DEFAULT;
 
             // explicit perms
-            if (perms.containsKey(who)) {
-                var info = perms.get(who);
+            if (perms.containsKey(uuid)) {
+                var info = perms.get(uuid);
                 var has = info.getBoolPermission(perm);
                 if (has != OptBool.DEFAULT) {
                     return has;
@@ -213,7 +258,7 @@ public class LandClaims implements Listener {
             }
 
             // default entity permissions
-            if (!(who instanceof Player)) {
+            if (!(who instanceof OfflinePlayer)) {
                 var has = defaultEntityPerms.getBoolPermission(perm);
                 if (has != OptBool.DEFAULT) {
                     return has;
@@ -224,12 +269,14 @@ public class LandClaims implements Listener {
             return defaultPerms.getBoolPermission(perm);
         }
 
-        public boolean hasPermissions(Entity who, LandPermission gen, AdvancedLandPermission... perms) {
+        public record MPRes(boolean result, String message) {}
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted") // what is it talking about
+        public MPRes hasPermissions(Object who, LandPermission gen, AdvancedLandPermission... perms) {
             for (var perm : perms) {
                 var has = hasPermission(who, perm);
-                if (has != OptBool.DEFAULT) return has == OptBool.TRUE;
+                if (has != OptBool.DEFAULT) return new MPRes(has == OptBool.TRUE, perm.label);
             }
-            return hasPermission(who, gen);
+            return new MPRes(hasPermission(who, gen), gen.label);
         }
 
         boolean intersects(LandClaim other) {
@@ -313,6 +360,11 @@ public class LandClaims implements Listener {
             return location.getBlockX() >= minX && location.getBlockX() <= maxX
                     && location.getBlockY() >= minY && location.getBlockY() <= maxY
                     && location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
+        }
+
+        public Component getOwnerName() {
+            if (owner == null) return Component.text("the server");
+            return Names.instance.getRenderedName(owner);
         }
     }
 
