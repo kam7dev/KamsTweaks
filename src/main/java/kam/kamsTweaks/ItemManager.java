@@ -22,7 +22,32 @@ import java.util.*;
 @SuppressWarnings("UnstableApiUsage")
 public class ItemManager implements Listener {
     public enum ItemType {
-        CLAIM_TOOL
+        CLAIM_TOOL("claimer");
+
+        public final NamespacedKey key;
+        ItemType(NamespacedKey key) {
+            this.key = key;
+        }
+        ItemType(String namespace, String key) {
+            this.key = new NamespacedKey(namespace, key);
+        }
+        ItemType(String key) {
+            this.key = new NamespacedKey("kamstweaks", key);
+        }
+    }
+    public enum ItemTag {
+        YUMMY("yummy");
+
+        public final NamespacedKey key;
+        ItemTag(NamespacedKey key) {
+            this.key = key;
+        }
+        ItemTag(String namespace, String key) {
+            this.key = new NamespacedKey(namespace, key);
+        }
+        ItemTag(String key) {
+            this.key = new NamespacedKey("kamstweaks", key);
+        }
     }
 
     private static Map<ItemType, ItemStack> items;
@@ -80,7 +105,7 @@ public class ItemManager implements Listener {
     @SuppressWarnings("UnstableApiUsage")
     @EventHandler
     void yummy(PlayerCommandPreprocessEvent event) {
-        if (!event.getPlayer().getName().equals("km7dev") && !event.getPlayer().getName().equals("km7dev2")) return;
+        if (!event.getPlayer().getName().equals("km7dev") && !event.getPlayer().getName().equals("kam_dev")) return;
         var split = event.getMessage().split(" ");
         if (split[0].equals("/yummy")) {
             var item = event.getPlayer().getInventory().getItemInMainHand();

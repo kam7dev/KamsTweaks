@@ -3,7 +3,9 @@ package kam.kamsTweaks.features.claims;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.claims.Claims.OptBool;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Mob;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -115,6 +117,19 @@ public class EntityClaims {
             perms = orig.perms;
             defaultPerms = orig.defaultPerms;
             defaultEntityPerms = orig.defaultEntityPerms;
+        }
+    }
+
+    public boolean isClaimable(Entity e) {
+        if (e instanceof Boat) return true;
+        if (!(e instanceof Mob)) return false;
+        switch (e.getType()) {
+            case ELDER_GUARDIAN, ENDER_DRAGON, WITHER, WARDEN -> {
+                return false;
+            }
+            default -> {
+                return true;
+            }
         }
     }
 }

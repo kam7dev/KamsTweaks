@@ -3,10 +3,13 @@ package kam.kamsTweaks.features.claims;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
+import kam.kamsTweaks.features.claims.gui.Homepage;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.configuration.file.*;
 import org.bukkit.entity.*;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.jetbrains.annotations.*;
 
 import java.io.*;
@@ -14,7 +17,6 @@ import java.util.*;
 
 public class Claims extends Feature {
     public ClaimProtections protections = new ClaimProtections();
-    public ClaimsDialogGui dialogGui = new ClaimsDialogGui();
     public LandClaims landClaims = new LandClaims();
     public EntityClaims entityClaims = new EntityClaims();
 
@@ -24,15 +26,6 @@ public class Claims extends Feature {
     FileConfiguration claimsConfig;
 
     final List<UUID> hasMessaged = new ArrayList<>();
-
-    // just a helper cause its nicer
-    public void message(Entity player, Component message) {
-        if (!(player instanceof Player)) return;
-        if (hasMessaged.contains(player.getUniqueId()))
-            return;
-        hasMessaged.add(player.getUniqueId());
-        player.sendActionBar(message);
-    }
 
     @Override
     public void setup() {
@@ -56,6 +49,16 @@ public class Claims extends Feature {
 
     }
 
+    @Override
+    public void loadData() {
+
+    }
+
+    @Override
+    public void saveData() {
+
+    }
+
     private void setupFile() {
         claimsFile = new File(KamsTweaks.get().getDataFolder(), "claims.yml");
         if (!claimsFile.exists()) {
@@ -65,27 +68,26 @@ public class Claims extends Feature {
         claimsConfig = YamlConfiguration.loadConfiguration(claimsFile);
     }
 
-    public boolean isClaimable(Entity e) {
-        if (e instanceof Boat) return true;
-        if (!(e instanceof Mob)) return false;
-        switch (e.getType()) {
-            case ELDER_GUARDIAN, ENDER_DRAGON, WITHER, WARDEN -> {
-                return false;
-            }
-            default -> {
-                return true;
-            }
+    public boolean useClaimTool(PlayerInteractEvent event) {
+        assert event.getItem() != null;
+        if (event.getItem().getPersistentDataContainer().has(ItemManager.ItemTag.YUMMY.key)) {
+            if (event.getAction() != Action.RIGHT_CLICK_AIR) event.setCancelled(true);
+            return true;
         }
+        if (event.getAction() == Action.RIGHT_CLICK_AIR) {
+            new Homepage(event.getPlayer()).show();
+            return true;
+        }
+        return false;
     }
 
-    @Override
-    public void loadData() {
-
-    }
-
-    @Override
-    public void saveData() {
-
+    // just a helper cause its nicer
+    public void message(Entity player, Component message) {
+        if (!(player instanceof Player)) return;
+        if (hasMessaged.contains(player.getUniqueId()))
+            return;
+        hasMessaged.add(player.getUniqueId());
+        player.sendActionBar(message);
     }
 
     public enum OptBool {

@@ -50,16 +50,6 @@ public class LandClaims implements Listener {
         }, 20, 20);
 
         var testClaim = new LandClaim(null, new Location(Bukkit.getServer().getWorlds().getFirst(), -10, 50, -10), new Location(Bukkit.getServer().getWorlds().getFirst(), 10, 150, 10));
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.LECTERN_INSERT, OptBool.FALSE);
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.LECTERN_TAKE, OptBool.FALSE);
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.DRAIN_CAULDRON, OptBool.FALSE);
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.DAMAGE_ANVIL, OptBool.FALSE);
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.EMPTY_BUCKETS, OptBool.FALSE);
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.FILL_BUCKETS, OptBool.FALSE);
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.ITEM_FRAME_ITEM_ROTATE, OptBool.FALSE);
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.ITEM_FRAME_ITEM_PLACE, OptBool.FALSE);
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.ARMOR_STAND_ITEM_TAKE, OptBool.FALSE);
-        testClaim.defaultPerms.advancedBools.put(AdvancedLandPermission.ARMOR_STAND_ITEM_PLACE, OptBool.FALSE);
         claims.add(testClaim);
     }
 
@@ -99,18 +89,19 @@ public class LandClaims implements Listener {
     public enum AdvancedLandPermission {
         LECTERN_INSERT("Place into Lecterns"),
         LECTERN_TAKE("Take from Lecterns"),
-
         DRAIN_CAULDRON("Drain Cauldrons"),
-
         DAMAGE_ANVIL("Damage Anvils"),
 
         EMPTY_BUCKETS("Empty Buckets"),
         FILL_BUCKETS("Fill Buckets"),
 
         ITEM_FRAME_ITEM_ROTATE("Rotate Items in Frames"),
-        ITEM_FRAME_ITEM_PLACE("Place Items in Frames"),
+        ITEM_FRAME_ITEM_TAKE("Take Items from Frames"),
+        ITEM_FRAME_ITEM_PLACE("Place Items into Frames"),
         ARMOR_STAND_ITEM_TAKE("Take from Armor Stands"),
         ARMOR_STAND_ITEM_PLACE("Place onto Armor Stands"),
+
+
 
         ;
 
@@ -160,12 +151,28 @@ public class LandClaims implements Listener {
         }
     }
 
+    public enum ConfigEnum1 {
+        None("None"),
+        FromInside("From Inside Claim"),
+        All("All");
+
+        public final String label;
+        ConfigEnum1(String label) {
+            this.label = label;
+        }
+    }
+
     public static class ClaimConfig {
         public String name = "Unnamed Claim";
         public Integer priority = 0;
 
-        public boolean canGrassGrow = true;
-        public boolean canTreesGrow = true;
+        // TODO: these
+        public ConfigEnum1 grassSpread = ConfigEnum1.FromInside;
+        public ConfigEnum1 fireSpread = ConfigEnum1.FromInside;
+        public ConfigEnum1 waterFlow = ConfigEnum1.FromInside;
+        public ConfigEnum1 hopperTransfer = ConfigEnum1.FromInside; // from outside
+        public ConfigEnum1 gravity = ConfigEnum1.FromInside;
+        public ConfigEnum1 treesGrow = ConfigEnum1.FromInside;
     }
 
     public static class LandClaim {
@@ -177,7 +184,7 @@ public class LandClaims implements Listener {
         Location end;
         Integer claimCount = 0;
 
-        public ClaimConfig config;
+        public ClaimConfig config = new ClaimConfig();
 
         public Map<UUID, Permissions> perms = new HashMap<>();
         public Permissions defaultPerms = Permissions.defaultPerms.clone();
@@ -363,7 +370,7 @@ public class LandClaims implements Listener {
         }
 
         public Component getOwnerName() {
-            if (owner == null) return Component.text("the server");
+            if (owner == null) return Component.text("the server").color(NamedTextColor.GOLD);
             return Names.instance.getRenderedName(owner);
         }
     }

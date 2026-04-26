@@ -2,6 +2,7 @@ package kam.kamsTweaks.features.claims;
 
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.SeedDispenser;
 import kam.kamsTweaks.utils.LocationUtils;
 import kam.kamsTweaks.features.claims.LandClaims.*;
@@ -12,7 +13,7 @@ import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.block.data.*;
 import org.bukkit.entity.*;
-import org.bukkit.entity.minecart.StorageMinecart;
+import org.bukkit.entity.minecart.*;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 import org.bukkit.persistence.PersistentDataType;
@@ -162,10 +163,11 @@ public class LandProtections implements Listener {
             Material.LECTERN, Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL
     );
 
+    @SuppressWarnings("deprecation")
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         if (e.getItem() != null && ItemManager.getType(e.getItem()) == ItemManager.ItemType.CLAIM_TOOL) {
-            //TODO if (useClaimTool(e)) return;
+            if (claims.instance.useClaimTool(e)) return;
         }
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
             return;
@@ -318,15 +320,10 @@ public class LandProtections implements Listener {
             return;
         Block tree = event.getLocation().getBlock();
         LandClaim in = claims.getClaim(tree.getLocation());
-        if (in != null && !in.config.canTreesGrow) return;
         for (BlockState state : event.getBlocks()) {
             var block = state.getBlock();
             LandClaim to = claims.getClaim(block.getLocation());
             if (to == null) continue;
-            if (!to.config.canTreesGrow) {
-                event.setCancelled(false);
-                return;
-            }
             if (!to.hasPermission(in == null ? null : in.owner, LandPermission.BLOCK_PLACE)) {
                 event.setCancelled(true);
                 return;
@@ -379,7 +376,7 @@ public class LandProtections implements Listener {
             plrs = plrs.append(plr);
         }
         if (player != null && !plrs.children().isEmpty())
-            message(player, Component.text("You don't have permission place blocks here! (Claim(s) owned by ").append(plrs, Component.text(")")));
+            message(player, Component.text("You don't have permission to place blocks here! (Claim(s) owned by ").append(plrs, Component.text(")")));
         e.getBlocks().removeAll(toProtect);
     }
 
@@ -556,9 +553,21 @@ public class LandProtections implements Listener {
             Location loc = LocationUtils.deserializeBlockPos(Objects.requireNonNull(entity.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING)));
             origin = claims.getClaim(loc);
         }
-        if (!claim.hasPermission(entity, LandPermission.BLOCK_BREAK) && (origin == null || !origin.hasPermission(entity, LandPermission.BLOCK_PLACE))) {
-            message(entity, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
-            e.setCancelled(true);
+        if (entity instanceof ItemFrame frame && !frame.getItem().isEmpty()) {
+            var res = claim.hasPermissions(entity, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE);
+            if (!res.result()) {
+                if (origin == null || !origin.hasPermissions(entity, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE).result())  {
+                    message(entity, Component.text("You don't have permission to " + res.message() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                    e.setCancelled(true);
+                }
+            }
+        } else {
+            if (!claim.hasPermission(entity, LandPermission.BLOCK_BREAK)) {
+                if (origin == null || !origin.hasPermission(entity, LandPermission.BLOCK_BREAK)) {
+                    message(entity, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                    e.setCancelled(true);
+                }
+            }
         }
     }
 
@@ -566,7 +575,7 @@ public class LandProtections implements Listener {
     public void onEntityKaboom(EntityExplodeEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
             return;
-        if (e.getEntity() instanceof TNTPrimed tnt && tnt.getSource() instanceof Entity) {
+        if (e.getEntity() instanceof TNTPrimed tnt) {
             Entity source;
             if (tnt.getSource() instanceof Entity entity) source = entity;
             else source = null;
@@ -720,7 +729,7 @@ public class LandProtections implements Listener {
                     LandClaim claim = claims.getClaim(event.getBlock().getLocation());
                     if (event.getIgnitingEntity() instanceof Entity entity) {
                         if (claim != null && !claim.hasPermission(entity, LandPermission.BLOCK_PLACE)) {
-                            message(entity, Component.text("You don't have permission to place blocks here! (Claim owned by ").append(to.getOwnerName(), Component.text(")")));
+                            message(entity, Component.text("You don't have permission to place blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
                             event.setCancelled(true);
                         }
                     } else {
@@ -799,8 +808,8 @@ public class LandProtections implements Listener {
     public void onSpread(BlockSpreadEvent event) {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
             return;
-        LandClaim to = claims.getClaim(event.getBlock().getLocation());
         LandClaim in = claims.getClaim(event.getSource().getLocation());
+        LandClaim to = claims.getClaim(event.getBlock().getLocation());
         if (to == null) return;
         if (!to.hasPermission(in == null ? null : in.owner, LandPermission.BLOCK_PLACE)) {
             event.setCancelled(true);
@@ -961,6 +970,190 @@ public class LandProtections implements Listener {
                     }
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void onItemDamage(EntityDamageByEntityEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        if (!(event.getEntity() instanceof Item)) return;
+        Entity damager = event.getDamager();
+        LandClaim claim = claims.getClaim(event.getEntity().getLocation());
+        if (damager instanceof TNTPrimed tnt) {
+            if (tnt.getSource() instanceof Entity entity) {
+                if (claim != null && !claim.hasPermission(entity, LandPermission.BLOCK_BREAK)) {
+                    event.setCancelled(true);
+                }
+            } else {
+                if (claim != null && !claim.hasPermission(null, LandPermission.BLOCK_BREAK)) {
+                    event.setCancelled(true);
+                }
+            }
+        } else if (damager instanceof EnderCrystal || damager instanceof Creeper || damager instanceof ExplosiveMinecart) {
+            if (claim != null && !claim.hasPermission(damager, LandPermission.BLOCK_BREAK)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onMobInteract(EntityInteractEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        if (event.getEntity() instanceof Player)
+            return;
+        LandClaim claim = claims.getClaim(event.getBlock().getLocation());
+        if (event.getBlock().getType() == Material.FARMLAND) {
+            if (claim != null && !claim.hasPermission(null, LandPermission.BLOCK_BREAK)) {
+                event.setCancelled(true);
+            }
+        } else if (event.getEntity() instanceof ArmorStand stand && stand.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "grave"))) {
+            event.setCancelled(true);
+        } else {
+            if (claim != null && !claim.hasPermission(null, LandPermission.BLOCK_INTERACT)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerTrample(PlayerInteractEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        if (event.getAction() != Action.PHYSICAL)
+            return;
+        if (event.getClickedBlock() == null)
+            return;
+        Player player = event.getPlayer();
+        LandClaim claim = claims.getClaim(event.getClickedBlock().getLocation());
+        if (event.getClickedBlock().getType() == Material.FARMLAND || event.getClickedBlock().getType() == Material.TURTLE_EGG) {
+            if (claim != null && !claim.hasPermission(player, LandPermission.BLOCK_BREAK)) {
+                message(player, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                event.setCancelled(true);
+            }
+        } else {
+            if (claim != null && !claim.hasPermission(player, LandPermission.BLOCK_INTERACT)) {
+                message(player, Component.text("You don't have permission to interact with blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        if (event.getEntityType() == EntityType.SHEEP || event.getEntityType() == EntityType.BEE)
+            return;
+        LandClaim claim = claims.getClaim(event.getBlock().getLocation());
+        if (event.getEntity() instanceof Player player) {
+            if (claim != null && !claim.hasPermission(player, LandPermission.BLOCK_BREAK)) {
+                message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                event.setCancelled(true);
+            }
+        } else if (event.getEntityType() == EntityType.ENDERMAN) {
+            if (claim != null && !claim.hasPermission(null, LandPermission.BLOCK_BREAK)) {
+                event.setCancelled(true);
+            }
+        } else if (event.getEntity() instanceof ArmorStand stand && stand.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "grave"))) {
+            event.setCancelled(true);
+        } else if (event.getEntity() instanceof FallingBlock fb) {
+            if (event.getTo() == org.bukkit.Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
+                var newClaim = claims.getClaim(event.getBlock().getRelative(BlockFace.DOWN).getLocation());
+
+                if (claim != null && !claim.hasPermission(newClaim != null ? newClaim.owner : null, LandPermission.BLOCK_BREAK)) {
+                    event.setCancelled(true);
+                    fb.remove();
+                }
+
+                if (newClaim != null && !newClaim.hasPermission(claim != null ? claim.owner : null, LandPermission.BLOCK_BREAK)) {
+                    event.setCancelled(true);
+                    org.bukkit.inventory.ItemStack drop = new org.bukkit.inventory.ItemStack(event.getBlockData().getMaterial());
+                    org.bukkit.inventory.meta.ItemMeta meta = drop.getItemMeta();
+                    if (meta instanceof org.bukkit.inventory.meta.BlockDataMeta bdMeta) {
+                        bdMeta.setBlockData(event.getBlockData());
+                        drop.setItemMeta(bdMeta);
+                    }
+                    fb.getWorld().dropItemNaturally(fb.getLocation(), drop);
+                    fb.remove();
+                }
+                fb.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING, LocationUtils.serializeBlockPos(fb.getLocation()));
+            } else {
+                LandClaim orig = null;
+                if (fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
+                    Location origin = LocationUtils.deserializeBlockPos(Objects.requireNonNull(fb.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)));
+                    orig = claims.getClaim(origin);
+                }
+                if (claim != null && !claim.hasPermission(orig != null ? orig.owner : null, LandPermission.BLOCK_BREAK)) {
+                    event.setCancelled(true);
+                    org.bukkit.inventory.ItemStack drop = new org.bukkit.inventory.ItemStack(event.getBlockData().getMaterial());
+                    org.bukkit.inventory.meta.ItemMeta meta = drop.getItemMeta();
+                    if (meta instanceof org.bukkit.inventory.meta.BlockDataMeta bdMeta) {
+                        bdMeta.setBlockData(event.getBlockData());
+                        drop.setItemMeta(bdMeta);
+                    }
+                    fb.getWorld().dropItemNaturally(fb.getLocation(), drop);
+                    fb.remove();
+                }
+            }
+        } else {
+            if (claim != null && !claim.hasPermission(null, LandPermission.BLOCK_INTERACT)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityBlockForm(EntityBlockFormEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        LandClaim claim = claims.getClaim(event.getBlock().getLocation());
+        if (claim != null && !claim.hasPermission(event.getEntity(), LandPermission.BLOCK_PLACE)) {
+            message(event.getEntity(), Component.text("You don't have permission to place blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onHopperPull(InventoryMoveItemEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        try {
+            if (event.getSource().getHolder() == null || event.getDestination().getHolder() == null)
+                return;
+            LandClaim in;
+            LandClaim to;
+            if (event.getSource().getHolder() instanceof BlockInventoryHolder holder) {
+                in = claims.getClaim(holder.getBlock().getLocation());
+            } else if (event.getSource().getHolder() instanceof DoubleChest chest) {
+                in = claims.getClaim(chest.getLocation());
+            } else if (event.getSource().getHolder() instanceof HopperMinecart minecart) {
+                in = claims.getClaim(minecart.getLocation());
+            } else if (event.getSource().getHolder() instanceof StorageMinecart minecart) {
+                in = claims.getClaim(minecart.getLocation());
+            } else {
+                return;
+            }
+            if (event.getDestination().getHolder() instanceof BlockInventoryHolder holder) {
+                to = claims.getClaim(holder.getBlock().getLocation());
+            } else if (event.getSource().getHolder() instanceof DoubleChest chest) {
+                to = claims.getClaim(chest.getLocation());
+            } else if (event.getDestination().getHolder() instanceof HopperMinecart minecart) {
+                to = claims.getClaim(minecart.getLocation());
+            } else if (event.getDestination().getHolder() instanceof StorageMinecart minecart) {
+                to = claims.getClaim(minecart.getLocation());
+            } else {
+                return;
+            }
+            if (in != null && !in.hasPermission(to != null ? to.owner : null, LandPermission.BLOCK_INTERACT)) {
+                event.setCancelled(true);
+            }
+            if (to != null && !to.hasPermission(in != null ? in.owner : null, LandPermission.BLOCK_INTERACT)) {
+                event.setCancelled(true);
+            }
+        } catch (Exception e) {
+            Logger.handleException(e);
         }
     }
 }
