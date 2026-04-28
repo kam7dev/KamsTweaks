@@ -8,11 +8,14 @@ import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.*;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.ChatFilter;
+import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.claims.LandClaims.*;
 import net.kyori.adventure.text.*;
 import net.kyori.adventure.text.event.*;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import java.util.*;
 
@@ -64,7 +67,7 @@ public class LandClaimPage extends GuiLayer {
             super(who);
             this.claim = claim;
             dialog = Dialog.create(builder -> {
-                var base = DialogBase.builder(Component.text("Edit Claim:\n").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)));
+                var base = DialogBase.builder(Component.text("Edit Claim: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)));
                 if (claim.owner == null || claim.owner.getUniqueId() != who.getUniqueId()) {
                     base.body(List.of(DialogBody.plainMessage(
                             Component.text("Careful! This claim is owned by ").append(
@@ -74,8 +77,12 @@ public class LandClaimPage extends GuiLayer {
                 }
                 var dia = builder.empty().base(base.build());
 
-                var editBtn = ActionButton.builder(Component.text("Permissions")).action(DialogAction.customClick((view, audience) -> {
+                var defaultBtn = ActionButton.builder(Component.text("Default Permissions")).action(DialogAction.customClick((view, audience) -> {
 
+                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+
+                var permBtn = ActionButton.builder(Component.text("Permissions")).action(DialogAction.customClick((view, audience) -> {
+                    new UserListPage(who, claim).show();
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
                 var settingsBtn = ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> {
@@ -86,7 +93,33 @@ public class LandClaimPage extends GuiLayer {
 
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                dia.type(DialogType.multiAction(List.of(editBtn, settingsBtn, deleteBtn), null, 1));
+                dia.type(DialogType.multiAction(List.of(defaultBtn, permBtn, settingsBtn, deleteBtn), null, 1));
+            });
+        }
+    }
+
+    public static class UserListPage extends GuiLayer {
+        LandClaim claim;
+        public UserListPage(Player who, LandClaim claim) {
+            super(who);
+            this.claim = claim;
+            dialog = Dialog.create(builder -> {
+                var base = DialogBase.builder(Component.text("Edit Permissions: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)));
+
+                var plrs = Bukkit.getOfflinePlayers();
+                Arrays.sort(plrs, Comparator.comparing(OfflinePlayer::getName, Comparator.nullsLast(String::compareTo)));
+                List<ActionButton> btns = new ArrayList<>();
+                for (var plr : plrs) {
+                    var name = Names.instance.getRenderedName(plr);
+                    var btn = ActionButton.builder(name);
+                    btn.action(DialogAction.customClick((view, audience) -> {
+
+                    }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build()));
+                    btns.add(btn.build());
+                }
+
+                var dia = builder.empty().base(base.build());
+                dia.type(DialogType.multiAction(btns, null, 3));
             });
         }
     }
@@ -97,7 +130,7 @@ public class LandClaimPage extends GuiLayer {
             super(who);
             this.claim = claim;
             dialog = Dialog.create(builder -> {
-                var base = DialogBase.builder(Component.text("Edit Claim Settings:\n").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)));
+                var base = DialogBase.builder(Component.text("Edit Claim Settings: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)));
 
                 var nameInp = DialogInput.text("name", Component.text("Name")).initial(claim.config.name).build();
                 var prioDrag = DialogInput.numberRange("prio", Component.text("Priority"), -100, 100).step(1f).initial(claim.config.priority.floatValue()).build();
