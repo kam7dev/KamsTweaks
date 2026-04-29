@@ -283,4 +283,14 @@ public class Names extends Feature {
         if (!KamsTweaks.get().getConfig().getBoolean("nicknames.enabled", true)) return Component.text(pName);
         return data.getOrDefault(player.getUniqueId(), Component.text(pName));
     }
+
+    public Component getRenderedName(@NotNull OfflinePlayer player, boolean appendage) {
+        if (appendage && data.containsKey(player.getUniqueId())) return getRenderedName(player).append(Component.text(" ("), Component.text(Objects.requireNonNullElse(player.getName(), "Unknown")), Component.text(")"));
+        return getRenderedName(player);
+    }
+
+    public Component getEntityRenderedName(@NotNull Entity entity) {
+        if (entity instanceof Player player) return getRenderedName(player);
+        return entity.name().append(Component.text(" ("), Component.translatable(entity.getType().translationKey()), Component.text(")"));
+    }
 }

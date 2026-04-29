@@ -73,10 +73,10 @@ public class LandClaims implements Listener {
     }
 
     public enum LandPermission {
+        DOOR_INTERACT("Interact with Doors"),
         BLOCK_INTERACT("Interact with Blocks"),
         BLOCK_BREAK("Break Blocks"),
         BLOCK_PLACE("Place Blocks"),
-        DOOR_INTERACT("Interact with Doors"),
 
         ;
 
@@ -113,11 +113,11 @@ public class LandClaims implements Listener {
 
     public static class Permissions implements Cloneable{
         public LandClaim claim;
-        public Entity who;
+        public UUID who;
         Map<LandPermission, OptBool> bools = new HashMap<>();
         Map<AdvancedLandPermission, OptBool> advancedBools = new HashMap<>();
 
-        public Permissions(LandClaim claim, Entity who) {
+        public Permissions(LandClaim claim, UUID who) {
             this.claim = claim;
             this.who = who;
         }
@@ -132,12 +132,20 @@ public class LandClaims implements Listener {
 //            defaultPerms.advancedBools.put(AdvancedLandPermission.S, OptBool.FALSE);
         }
 
-        OptBool getBoolPermission(LandPermission perm) {
+        public OptBool getBoolPermission(LandPermission perm) {
             return bools.getOrDefault(perm, OptBool.DEFAULT);
         }
 
-        OptBool getBoolPermission(AdvancedLandPermission perm) {
+        public OptBool getBoolPermission(AdvancedLandPermission perm) {
             return advancedBools.getOrDefault(perm, OptBool.DEFAULT);
+        }
+
+        public void setBoolPermission(LandPermission perm, OptBool value) {
+            bools.put(perm, value);
+        }
+
+        public void setBoolPermission(AdvancedLandPermission perm, OptBool value) {
+            advancedBools.put(perm, value);
         }
 
         @Override
@@ -189,6 +197,15 @@ public class LandClaims implements Listener {
         public Map<UUID, Permissions> perms = new HashMap<>();
         public Permissions defaultPerms = Permissions.defaultPerms.clone();
         public Permissions defaultEntityPerms = Permissions.defaultPerms.clone();
+
+        public Permissions getPerms(UUID who) {
+            if (!perms.containsKey(who)) {
+                var p = new Permissions(this, who);
+                perms.put(who, p);
+                return p;
+            }
+            return perms.get(who);
+        }
 
         public LandClaim(OfflinePlayer owner, Location start, Location end) {
             this.id = nextId;
