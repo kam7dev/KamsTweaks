@@ -1,19 +1,30 @@
 package kam.kamsTweaks.features.claims;
 
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.Names;
+import kam.kamsTweaks.features.claims.gui.LandClaimPage;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import kam.kamsTweaks.features.claims.Claims.OptBool;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 
 import java.util.*;
 
@@ -53,6 +64,70 @@ public class LandClaims implements Listener {
         claims.add(testClaim);
     }
 
+    public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands, LiteralArgumentBuilder<CommandSourceStack> baseCmd) {
+        Command<CommandSourceStack> bcb = ctx -> {
+            var sender = ctx.getSource().getSender();
+            var executor = ctx.getSource().getExecutor();
+            if (executor instanceof Player player) {
+                new LandClaimPage(player).show();
+
+                if (player != sender) {
+                    sender.sendMessage(Component.text("Showed land claims gui to ").append(Names.instance.getRenderedName(player), Component.text(".")).color(NamedTextColor.GOLD));
+                }
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        };
+
+        var land = Commands.literal("lc").executes(bcb);
+        var baseLand = Commands.literal("land").executes(bcb);
+
+        var create = Commands.literal("create").executes(ctx -> {
+            var sender = ctx.getSource().getSender();
+            var executor = ctx.getSource().getExecutor();
+            if (executor != sender) {
+                sender.sendMessage(Component.text("You can't start claiming for someone else.").color(NamedTextColor.RED));
+                return Command.SINGLE_SUCCESS;
+            }
+            if (executor instanceof Player player) {
+                startClaiming(player);
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        });
+
+//        create.then(Commands.argument("pos1", ArgumentTypes.blockPosition()).then(Commands.argument("pos2", ArgumentTypes.blockPosition()).executes(ctx -> {
+//
+//            return Command.SINGLE_SUCCESS;
+//        })));
+
+        var cancel = Commands.literal("cancel").executes(ctx -> {
+            var sender = ctx.getSource().getSender();
+            var executor = ctx.getSource().getExecutor();
+            if (executor != sender) {
+                sender.sendMessage(Component.text("You can't stop claiming for someone else.").color(NamedTextColor.RED));
+                return Command.SINGLE_SUCCESS;
+            }
+            if (executor instanceof Player player) {
+                stopClaiming(player);
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        });
+
+        land.then(create);
+        baseLand.then(create);
+
+        land.then(cancel);
+        baseLand.then(cancel);
+
+        baseCmd.then(baseLand);
+        commands.registrar().register(land.build());
+    }
+
     public @Nullable LandClaim getClaim(Location where) {
         return getClaim(where, false);
     }
@@ -70,6 +145,24 @@ public class LandClaims implements Listener {
             }
         }
         return ret;
+    }
+
+    public void startClaiming(Player who) {
+        if (currentlyClaiming.containsKey(who)) {
+            who.sendMessage(Component.text("You're already claiming land. (run ").append(Component.text("/claims land cancel").clickEvent(ClickEvent.runCommand("claims land cancel")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(" to cancel)")).color(NamedTextColor.RED));
+        } else {
+            who.sendMessage(Component.text("Right click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(")")).color(NamedTextColor.GOLD));
+            currentlyClaiming.put(who, new LandClaim(who, null, null));
+        }
+    }
+
+    public void stopClaiming(Player who) {
+        if (currentlyClaiming.containsKey(who)) {
+            who.sendMessage(Component.text("Stopped claiming.").color(NamedTextColor.GOLD));
+            currentlyClaiming.remove(who);
+        } else {
+            who.sendMessage(Component.text("You aren't currently claiming land. (run ").append(Component.text("/claims land create").clickEvent(ClickEvent.runCommand("claims land cancel")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(" or use the claim tool to start)")).color(NamedTextColor.RED));
+        }
     }
 
     public enum LandPermission {
@@ -184,13 +277,13 @@ public class LandClaims implements Listener {
     }
 
     public static class LandClaim {
-        public OfflinePlayer owner;
+        public @Nullable OfflinePlayer owner;
         public static int nextId;
         public int id;
 
-        Location start;
-        Location end;
-        Integer claimCount = 0;
+        public Location start;
+        public Location end;
+        public int claimCount = 0;
 
         public ClaimConfig config = new ClaimConfig();
 
@@ -207,7 +300,7 @@ public class LandClaims implements Listener {
             return perms.get(who);
         }
 
-        public LandClaim(OfflinePlayer owner, Location start, Location end) {
+        public LandClaim(@Nullable OfflinePlayer owner, Location start, Location end) {
             this.id = nextId;
             nextId++;
             this.owner = owner;
@@ -215,12 +308,26 @@ public class LandClaims implements Listener {
             this.end = end;
         }
 
-        public LandClaim(OfflinePlayer owner, int id, Location start, Location end) {
+        public LandClaim(@Nullable OfflinePlayer owner, int id, Location start, Location end) {
             nextId = Math.max(nextId, id + 1);
             this.id = id;
             this.owner = owner;
             this.start = start;
             this.end = end;
+        }
+
+        public Location getMin() {
+            return new Location(start.getWorld(), Math.min(start.x(), end.x()), Math.min(start.y(), end.y()), Math.min(start.z(), end.z()));
+        }
+
+        public Location getMax() {
+            return new Location(start.getWorld(), Math.max(start.x(), end.x()), Math.max(start.y(), end.y()), Math.max(start.z(), end.z()));
+        }
+
+        public Vector3f getSize() {
+            var max = getMax();
+            var min = getMin();
+            return new Vector3f((float) Math.abs(max.getBlockX() - min.getBlockX()), (float) Math.abs(max.getBlockY() - min.getBlockY()), (float) Math.abs(max.getBlockZ() - min.getBlockZ()));
         }
 
         public boolean hasPermission(Object who, LandPermission perm) {
@@ -392,7 +499,59 @@ public class LandClaims implements Listener {
         }
     }
 
-    public static OfflinePlayer isBlockLocked(Player player, Location start, Location end) {
+    public static void showArea(Player player, Location corner1, Location corner2, double step, int durationTicks, Color color) {
+        double minX = Math.min(corner1.getX(), corner2.getX());
+        double maxX = Math.max(corner1.getX(), corner2.getX()) + 1;
+
+        double minY = Math.min(corner1.getY(), corner2.getY());
+        double maxY = Math.max(corner1.getY(), corner2.getY()) + 1;
+
+        double minZ = Math.min(corner1.getZ(), corner2.getZ());
+        double maxZ = Math.max(corner1.getZ(), corner2.getZ()) + 1;
+
+        World world = corner1.getWorld(); // Assumes both corners are in same world
+
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                try {
+                    if (ticks >= durationTicks || !player.isOnline()) {
+                        this.cancel();
+                        return;
+                    }
+                    ticks++;
+                    if (ticks % 9 != 0) return;
+
+                    var ploc = player.getLocation();
+                    if (!world.equals(ploc.getWorld())) return;
+
+                    for (double x = minX; x <= maxX; x += step) {
+                        for (double y = minY; y <= maxY; y += step) {
+                            for (double z = minZ; z <= maxZ; z += step) {
+                                int faces = 0;
+                                if (x == minX || x == maxX) faces++;
+                                if (y == minY || y == maxY) faces++;
+                                if (z == minZ || z == maxZ) faces++;
+
+                                if (faces >= 2) {
+                                    Location loc = new Location(world, x, y, z);
+                                    if (ploc.distance(loc) > 100) continue;
+                                    player.spawnParticle(Particle.DUST, loc, 0, 0, 0, 0, 0, new Particle.DustOptions(color, 1.0F));
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception exception) {
+                    Logger.excs.add(exception);
+                    Logger.error(exception.getMessage());
+                }
+            }
+        }.runTaskTimer(KamsTweaks.get(), 0L, 1L);
+    }
+
+    public static OfflinePlayer getBlockLockerOwner(Player player, Location start, Location end) {
         if (Bukkit.getPluginManager().isPluginEnabled("BlockLocker")) {
             if (start.getWorld() != end.getWorld()) return null;
             var world = start.getWorld();

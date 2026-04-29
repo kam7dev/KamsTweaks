@@ -8,49 +8,109 @@ import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.*;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.ChatFilter;
 import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.claims.Claims;
+import kam.kamsTweaks.features.claims.LandClaims;
 import kam.kamsTweaks.features.claims.LandClaims.*;
 import net.kyori.adventure.text.*;
 import net.kyori.adventure.text.event.*;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
+
 import java.util.*;
 
 @SuppressWarnings("UnstableApiUsage")
 public class LandClaimPage extends GuiLayer {
-    public LandClaimPage(Player who) {
-        super(who);
+    LandClaim target;
+    void init() {
+        if (target == null) {
+            this.target = Claims.get().landClaims.getClaim(who.getLocation());
+        }
         dialog = Dialog.create(builder -> {
             var base = DialogBase.builder(Component.text("Land Claims"));
             var dia = builder.empty().base(base.build());
 
-            var createBtn = ActionButton.builder(Component.text("Create a Claim")).action(DialogAction.customClick((view, audience) -> {
+            var btns = new ArrayList<ActionButton>();
 
-            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            int totalClaims = 0;
+            for (var claim : Claims.get().landClaims.claims) {
+                if (claim.owner != null && who.getUniqueId().equals(claim.owner.getUniqueId())) totalClaims += claim.claimCount;
+            }
 
-            var editBtn = ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
-                new EditPage(who, Claims.get().landClaims.claims.getFirst()).show();
-            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30)) {
+                var createBtn = ActionButton.builder(Component.text("Create a Claim")).action(DialogAction.customClick((view, audience) -> {
+                    Claims.get().landClaims.startClaiming(who);
+                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                btns.add(createBtn);
+            }
+
+            if (target != null) {
+                if ((target.owner != null && target.owner.getUniqueId().equals(who.getUniqueId())) || who.hasPermission("kamstweaks.claims.manage")) {
+                    var editBtn = ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
+                        new EditPage(who, target).show();
+                    }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                    btns.add(editBtn);
+                }
+            }
 
             var viewBtn = ActionButton.builder(Component.text("View All Claims")).action(DialogAction.customClick((view, audience) -> {
-
+                for (var claim : Claims.get().landClaims.claims) {
+                    Color c;
+                    if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId())) {
+                        c = Color.GREEN;
+                    } else {
+                        if (claim.hasPermission(who, LandPermission.BLOCK_BREAK) && claim.hasPermission(who, LandPermission.BLOCK_PLACE) && claim.hasPermission(who, LandPermission.BLOCK_INTERACT)) {
+                            c = Color.AQUA;
+                        } else if (claim.hasPermission(who, LandPermission.BLOCK_BREAK) || claim.hasPermission(who, LandPermission.BLOCK_PLACE)) {
+                            c = Color.FUCHSIA;
+                        } else if (claim.hasPermission(who, LandPermission.BLOCK_INTERACT)) {
+                            c = Color.PURPLE;
+                        } else if (claim.hasPermission(who, LandPermission.DOOR_INTERACT)) {
+                            c = Color.ORANGE;
+                        } else {
+                            c = Color.RED;
+                        }
+                    }
+                    LandClaims.showArea(who, claim.start, claim.end, 1, 200, c);
+                }
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            btns.add(viewBtn);
 
             var listBtn = ActionButton.builder(Component.text("List Your Claims")).action(DialogAction.customClick((view, audience) -> {
 
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            btns.add(listBtn);
 
             var deleteBtn = ActionButton.builder(Component.text("Delete ALL of Your Claims")).action(DialogAction.customClick((view, audience) -> {
 
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            btns.add(deleteBtn);
 
-            dia.type(DialogType.multiAction(List.of(createBtn, editBtn, viewBtn, listBtn, deleteBtn), null, 1));
+            dia.type(DialogType.multiAction(btns, null, 1));
         });
+    }
+
+    public LandClaimPage(Player who) {
+        super(who);
+        init();
+    }
+
+    public LandClaimPage(Player who, LandClaim target) {
+        super(who);
+        this.target = target;
+        init();
     }
 
     @Override
@@ -70,7 +130,7 @@ public class LandClaimPage extends GuiLayer {
             this.claim = claim;
             dialog = Dialog.create(builder -> {
                 var base = DialogBase.builder(Component.text("Edit Claim: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)));
-                if (claim.owner == null || claim.owner.getUniqueId() != who.getUniqueId()) {
+                if (claim.owner == null || !claim.owner.getUniqueId().equals(who.getUniqueId())) {
                     base.body(List.of(DialogBody.plainMessage(
                             Component.text("Careful! This claim is owned by ").append(
                                     claim.getOwnerName(),

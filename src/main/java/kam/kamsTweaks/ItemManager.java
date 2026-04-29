@@ -60,7 +60,8 @@ public class ItemManager implements Listener {
             ItemStack item = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("Claim Tool").color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+                meta.displayName(Component.translatable("kamstweaks.item.claim_tool", "Claim Tool").decoration(TextDecoration.ITALIC, false));
+                meta.lore(List.of(Component.translatable("enchantment.minecraft.protection").append(Component.space(), Component.translatable("enchantment.level.5")).color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
                 meta.setEnchantmentGlintOverride(true);
                 meta.setMaxStackSize(64);
                 NamespacedKey key = new NamespacedKey("kamstweaks", "item");

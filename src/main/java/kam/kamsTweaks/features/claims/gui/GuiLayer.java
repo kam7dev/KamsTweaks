@@ -13,9 +13,6 @@ public abstract class GuiLayer {
     protected GuiLayer(Player who) {
         this.who = who;
     }
-    protected GuiLayer(Audience who) {
-        this.who = getPlayer(who);
-    }
     public void show() {
         if (who == null) return;
         if (dialog == null) {
