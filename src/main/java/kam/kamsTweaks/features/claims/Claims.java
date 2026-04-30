@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.Names;
+import kam.kamsTweaks.features.claims.gui.FLAlertLayer;
 import kam.kamsTweaks.features.claims.gui.Homepage;
 import kam.kamsTweaks.features.claims.gui.LandClaimPage;
 import net.kyori.adventure.text.Component;
@@ -116,105 +117,10 @@ public class Claims extends Feature {
         }
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             assert event.getClickedBlock() != null;
-            var loc = event.getClickedBlock().getLocation();
-            if (landClaims.currentlyClaiming.containsKey(plr)) {
-                var claim = landClaims.currentlyClaiming.get(plr);
-                if (claim.start == null) {
-                    var blOwner = LandClaims.getBlockLockerOwner(event.getPlayer(), loc, loc);
-                    if (blOwner != null) {
-                        event.getPlayer().sendMessage(Component.text("This is a locked block owned by ")
-                                .append(Names.instance.getRenderedName(blOwner), Component.text(".")).color(NamedTextColor.RED));
-                        return true;
-                    }
-                    for (var c : landClaims.claims) {
-                        if (c.inBounds(loc)) {
-                            if (c.owner == null || (!c.owner.getUniqueId().equals(event.getPlayer().getUniqueId()))) {
-                                Component name;
-                                if (c.owner == null) {
-                                    name = Component.text("the server").color(NamedTextColor.GOLD);
-                                } else {
-                                    name = Names.instance.getRenderedName(c.owner);
-                                }
-                                event.getPlayer().sendMessage(Component.text("This land is already claimed by ")
-                                        .append(name, Component.text(".")).color(NamedTextColor.RED));
-                                return true;
-                            }
-                        }
-                    }
-                    claim.start = loc;
-                    event.getPlayer()
-                            .sendMessage(Component.text("Now click the other corner with your claim tool. (If you lost it, run ")
-                                    .append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool"))
-                                            .color(NamedTextColor.YELLOW))
-                                    .append(Component.text(")").color(NamedTextColor.BLUE)).color(NamedTextColor.BLUE));
-                } else {
-                    if (claim.start.getWorld() != loc.getWorld()) {
-                        event.getPlayer().sendMessage(
-                                Component.text("You can't claim across dimensions - go back to the dimension you started in!")
-                                        .color(NamedTextColor.RED));
-                        return true;
-                    }
-                    plr.sendMessage(Component.text("Running claim checks asynchronously to prevent server lag. Depending on the claim size this may take a minute."));
-                    Bukkit.getAsyncScheduler().runNow(KamsTweaks.get(), task -> {
-                        var maxArea = KamsTweaks.get().getConfig().getInt("land-claims.max-claim-size", 50000);
-                        var has = Math.abs(claim.start.x() - loc.x()) * Math.abs(claim.start.y() - loc.y())
-                                * Math.abs(claim.start.z() - loc.z());
-                        var value = Math.ceil(has / maxArea);
-                        Logger.info("Z");
-                        if (value > 1) {
-                            Logger.info("T");
-                            var total = 0;
-                            for (var c : landClaims.claims) {
-                                if (c.owner != null && c.owner.getUniqueId() == plr.getUniqueId()) total++;
-                            }
-                            var maxCt = KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30);
-                            if (total + value >= maxCt) {
-                                var diff = (value + total - maxCt);
-                                event.getPlayer().sendMessage(Component.text("You can't claim more than " + maxArea + " blocks in an unextended claim - you are trying to claim " + has + ". You need " + diff + " more unused claim" + (diff == 1 ? "" : "s") + " for an extension (costs " + value + ").").color(NamedTextColor.RED));
-                            } else {
-                                Logger.info("Test");
-                            }
-                            return;
-                        }
-                        var blOwner = LandClaims.getBlockLockerOwner(event.getPlayer(), claim.start, loc);
-                        if (blOwner != null) {
-                            event.getPlayer().sendMessage(Component.text("This land contains a locked block owned by ")
-                                    .append(Names.instance.getRenderedName(blOwner), Component.text(".")).color(NamedTextColor.RED));
-                            return;
-                        }
-                        claim.end = loc;
-                        for (var other : landClaims.claims) {
-                            if (claim.intersects(other)) {
-                                if (other.owner == null || !other.owner.getUniqueId().equals(event.getPlayer().getUniqueId())) {
-                                    Component name;
-                                    if (other.owner == null) {
-                                        name = Component.text("the server").color(NamedTextColor.GOLD);
-                                    } else {
-                                        name = Names.instance.getRenderedName(other.owner);
-                                    }
-                                    event.getPlayer().sendMessage(Component.text("This land intersects a claim by ")
-                                            .append(name, Component.text(".")).color(NamedTextColor.RED));
-                                    return;
-                                } else if (other.owner.getUniqueId().equals(event.getPlayer().getUniqueId())
-                                        && other.config.priority >= claim.config.priority) {
-                                    claim.config.priority = other.config.priority + 1;
-                                }
-                            }
-                        }
-                        landClaims.claims.add(claim);
-                        landClaims.currentlyClaiming.remove(event.getPlayer());
-                        event.getPlayer().sendMessage(Component.text("Territory claimed (").color(NamedTextColor.GREEN).append(
-                                Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(")").color(NamedTextColor.GREEN)));
-                    });
-                    return true;
-                }
-
-                return true;
-            }
-            new LandClaimPage(event.getPlayer(), landClaims.getClaim(event.getClickedBlock().getLocation())).show();
+            landClaims.handleTool(plr, event.getClickedBlock().getLocation());
         }
         if (event.getAction() == Action.RIGHT_CLICK_AIR) {
-            new Homepage(event.getPlayer()).show();
+            new Homepage(plr).show();
             return true;
         }
         return false;
