@@ -15,6 +15,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -83,7 +84,9 @@ public class LandClaims implements Listener {
         var land = Commands.literal("lc").executes(bcb);
         var baseLand = Commands.literal("land").executes(bcb);
 
-        var create = Commands.literal("create").executes(ctx -> {
+        List<LiteralArgumentBuilder<CommandSourceStack>> cmdList = new ArrayList<>();
+
+        cmdList.add(Commands.literal("create").executes(ctx -> {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
@@ -96,14 +99,14 @@ public class LandClaims implements Listener {
             }
             sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
-        });
+        }));
 
 //        create.then(Commands.argument("pos1", ArgumentTypes.blockPosition()).then(Commands.argument("pos2", ArgumentTypes.blockPosition()).executes(ctx -> {
 //
 //            return Command.SINGLE_SUCCESS;
 //        })));
 
-        var cancel = Commands.literal("cancel").executes(ctx -> {
+        cmdList.add(Commands.literal("cancel").executes(ctx -> {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
@@ -116,13 +119,24 @@ public class LandClaims implements Listener {
             }
             sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
-        });
+        }));
 
-        land.then(create);
-        baseLand.then(create);
+        cmdList.add(Commands.literal("list").executes(ctx -> {
+            var sender = ctx.getSource().getSender();
+            var executor = ctx.getSource().getExecutor();
+            if (executor instanceof Player player) {
+                listClaims(player, sender);
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }));
 
-        land.then(cancel);
-        baseLand.then(cancel);
+
+        for (var thing : cmdList) {
+            land.then(thing);
+            baseLand.then(thing);
+        }
 
         baseCmd.then(baseLand);
         commands.registrar().register(land.build());
@@ -148,9 +162,18 @@ public class LandClaims implements Listener {
     }
 
     public void startClaiming(Player who) {
+
         if (currentlyClaiming.containsKey(who)) {
             who.sendMessage(Component.text("You're already claiming land. (run ").append(Component.text("/claims land cancel").clickEvent(ClickEvent.runCommand("claims land cancel")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(" to cancel)")).color(NamedTextColor.RED));
         } else {
+            var total = 0;
+            for (var c : claims) {
+                if (c.owner != null && c.owner.getUniqueId() == who.getUniqueId()) total += c.slots;
+            }
+            if (total + 1 > KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30)) {
+                who.sendMessage(Component.text("You have used all of your claim slots. Delete some to free up slots.").color(NamedTextColor.RED));
+                return;
+            }
             who.sendMessage(Component.text("Right click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(")")).color(NamedTextColor.GOLD));
             currentlyClaiming.put(who, new LandClaim(who, null, null));
         }
@@ -191,9 +214,10 @@ public class LandClaims implements Listener {
         int has = (Math.abs(claim.start.getBlockX() - loc.getBlockX()) + 1) * (Math.abs(claim.start.getBlockY() - loc.getBlockY()) + 1)
                 * (Math.abs(claim.start.getBlockZ() - loc.getBlockZ()) + 1);
         int value = (int) Math.ceil((double) has / maxArea);
+        claim.slots = value;
         var total = 0;
         for (var c : claims) {
-            if (c.owner != null && c.owner.getUniqueId() == who.getUniqueId()) total++;
+            if (c.owner != null && c.owner.getUniqueId() == who.getUniqueId()) total += c.slots;
         }
         var maxCt = KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30);
         if (value > 1) {
@@ -208,11 +232,11 @@ public class LandClaims implements Listener {
                 if (!second) {
                     finishClaiming(who, claim, loc);
                 }
-            }
-            ).show();
+            }).show();
         } else if (total + 1 > maxCt) {
             who.sendMessage(Component.text("You have used all of your claim slots. Delete some to free up slots.").color(NamedTextColor.RED));
         } else {
+            Logger.info(total + " - " + maxCt);
             finishClaiming(who, claim, loc);
         }
     }
@@ -381,7 +405,7 @@ public class LandClaims implements Listener {
 
         public Location start;
         public Location end;
-        public int claimCount = 0;
+        public int slots = 0;
 
         public ClaimConfig config = new ClaimConfig();
 
@@ -426,6 +450,12 @@ public class LandClaims implements Listener {
             var max = getMax();
             var min = getMin();
             return new Vector3f((float) Math.abs(max.getBlockX() - min.getBlockX()), (float) Math.abs(max.getBlockY() - min.getBlockY()), (float) Math.abs(max.getBlockZ() - min.getBlockZ()));
+        }
+
+        public Claims.ManagementType getManagementType(Player who) {
+            if (owner != null && who.getUniqueId() == owner.getUniqueId()) return Claims.ManagementType.Owner;
+            if (who.hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
+            return Claims.ManagementType.None;
         }
 
         public boolean hasPermission(Object who, LandPermission perm) {
@@ -595,6 +625,11 @@ public class LandClaims implements Listener {
             if (owner == null) return Component.text("the server").color(NamedTextColor.GOLD);
             return Names.instance.getRenderedName(owner);
         }
+
+        public String getOwnerUsername() {
+            if (owner == null) return "the server";
+            return owner.getName();
+        }
     }
 
     public static void showArea(Player player, Location corner1, Location corner2, double step, int durationTicks, Color color) {
@@ -647,6 +682,30 @@ public class LandClaims implements Listener {
                 }
             }
         }.runTaskTimer(KamsTweaks.get(), 0L, 1L);
+    }
+
+    public void listClaims(OfflinePlayer who, CommandSender reciever) {
+        Component msg = Component.empty();
+        int i = 0;
+        for (LandClaim claim : claims) {
+            if (claim.owner != null && who.getUniqueId().equals(claim.owner.getUniqueId())) {
+                i++;
+                msg = msg.append(Component.newline(),
+                        Component.text("("), Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(") "),
+                        Component.text(claim.config.name).color(NamedTextColor.AQUA),
+                        Component.text(" (priority "), Component.text(claim.config.priority).color(NamedTextColor.YELLOW), Component.text("): "),
+                        Component.text(claim.start.getBlockX() + ", " + claim.start.getBlockY() + ", " + claim.start.getBlockZ()).color(NamedTextColor.GREEN),
+                        Component.text(" to "), Component.text(claim.end.getBlockX() + ", " + claim.end.getBlockY() + ", " + claim.end.getBlockZ()).color(NamedTextColor.GREEN),
+                        Component.text(" in "), Component.text(claim.start.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE),
+                        claim.slots > 1 ? (Component.text(" (").append(Component.text(claim.slots).color(NamedTextColor.YELLOW), Component.text(" slots)"))) : Component.empty());
+            }
+        }
+
+        reciever.sendMessage(Component.text().append(who == reciever ? Component.text("You have ") : Names.instance.getRenderedName(who).append(Component.text(" has ")), Component.text(i).color(NamedTextColor.GOLD), Component.text(" land claims"), Component.text("."), msg));
+    }
+
+    public void listClaims(Player who) {
+        listClaims(who, who);
     }
 
     @EventHandler

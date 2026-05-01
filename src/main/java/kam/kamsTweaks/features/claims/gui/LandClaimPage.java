@@ -20,14 +20,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.util.Transformation;
-import org.joml.AxisAngle4f;
-import org.joml.Vector3f;
 
 import java.util.*;
 
@@ -46,7 +41,7 @@ public class LandClaimPage extends GuiLayer {
 
             int totalClaims = 0;
             for (var claim : Claims.get().landClaims.claims) {
-                if (claim.owner != null && who.getUniqueId().equals(claim.owner.getUniqueId())) totalClaims += claim.claimCount;
+                if (claim.owner != null && who.getUniqueId().equals(claim.owner.getUniqueId())) totalClaims += claim.slots;
             }
 
             if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30)) {
@@ -56,13 +51,11 @@ public class LandClaimPage extends GuiLayer {
                 btns.add(createBtn);
             }
 
-            if (target != null) {
-                if ((target.owner != null && target.owner.getUniqueId().equals(who.getUniqueId())) || who.hasPermission("kamstweaks.claims.manage")) {
-                    var editBtn = ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
-                        new EditPage(who, target).show();
-                    }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
-                    btns.add(editBtn);
-                }
+            if (target != null && target.getManagementType(who) != Claims.ManagementType.None) {
+                var editBtn = ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
+                    new EditPage(who, target).show();
+                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                btns.add(editBtn);
             }
 
             var viewBtn = ActionButton.builder(Component.text("View All Claims")).action(DialogAction.customClick((view, audience) -> {
@@ -89,7 +82,7 @@ public class LandClaimPage extends GuiLayer {
             btns.add(viewBtn);
 
             var listBtn = ActionButton.builder(Component.text("List Your Claims")).action(DialogAction.customClick((view, audience) -> {
-
+                Claims.get().landClaims.listClaims(who);
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
             btns.add(listBtn);
 
@@ -156,7 +149,24 @@ public class LandClaimPage extends GuiLayer {
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
                 var deleteBtn = ActionButton.builder(Component.text("Delete")).action(DialogAction.customClick((view, audience) -> {
-
+                    new FLAlertLayer(who, Component.text("Delete claim?"),
+                            Component.text("Are you sure you want to delete this land claim?"),
+                            Component.text("Yes").color(NamedTextColor.GREEN), Component.text("No").color(NamedTextColor.RED), second -> {
+                        if (second) {
+                            show();
+                        } else {
+                            var mt = claim.getManagementType(who);
+                            if (mt == Claims.ManagementType.None) {
+                                who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
+                                return;
+                            } else if (mt == Claims.ManagementType.Op) {
+                                KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Deleted " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+                                Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
+                            }
+                            Claims.get().landClaims.claims.remove(claim);
+                            who.sendMessage(Component.text("Deleted claim successfully.").color(NamedTextColor.GREEN));
+                        }
+                    }).show();
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
                 dia.type(DialogType.multiAction(List.of(defaultBtn, entityBtn, permBtn, settingsBtn, deleteBtn), null, 1));
@@ -212,6 +222,14 @@ public class LandClaimPage extends GuiLayer {
                         Component.text("Click to confirm your changes."),
                         100,
                         DialogAction.customClick((view, audience) -> {
+                            var mt = claim.getManagementType(who);
+                            if (mt == Claims.ManagementType.None) {
+                                who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
+                                return;
+                            } else if (mt == Claims.ManagementType.Op) {
+                                KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited settings for " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+                                Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
+                            }
                             claim.config.priority = Objects.requireNonNullElse(view.getFloat("prio"), 0).intValue();
 //                            claim.config.treesGrow = Objects.requireNonNullElse(view.getBoolean("tree"), true);
 //                            claim.config.grassSpread = Objects.requireNonNullElse(view.getBoolean("grass"), true);
@@ -339,6 +357,14 @@ public class LandClaimPage extends GuiLayer {
                                 Component.text("Click to confirm your changes."),
                                 100,
                                 DialogAction.customClick((view, audience) -> {
+                                    var mt = claim.getManagementType(who);
+                                    if (mt == Claims.ManagementType.None) {
+                                        who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
+                                        return;
+                                    } else if (mt == Claims.ManagementType.Op) {
+                                        KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited permissions for " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+                                        Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
+                                    }
                                     if (isAdvanced) {
                                         for (var opt : AdvancedLandPermission.values()) {
                                             perms.setBoolPermission(opt, Claims.OptBool.valueOf(Objects.requireNonNullElse(view.getText(opt.name()), "DEFAULT")));

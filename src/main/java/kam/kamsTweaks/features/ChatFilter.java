@@ -13,7 +13,6 @@ import java.util.regex.Pattern;
 import github.scarsz.discordsrv.util.DiscordUtil;
 import kam.kamsTweaks.utils.Pair;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.SignChangeEvent;
@@ -168,11 +167,7 @@ public class ChatFilter extends Feature {
 
     public static void warnStaff(String message) {
         Logger.warn(message);
-        Bukkit.getOperators().forEach(offlinePlayer -> {
-            if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() instanceof Player player) {
-                player.sendMessage(Component.text(message).color(NamedTextColor.RED));
-            }
-        });
+        KamsTweaks.get().sendToOps(Component.text(message).color(NamedTextColor.RED));
         Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
         if (dsPlugin != null && dsPlugin.isEnabled()) {
             try {

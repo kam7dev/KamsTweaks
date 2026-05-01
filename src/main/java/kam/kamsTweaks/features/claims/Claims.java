@@ -5,11 +5,8 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.Names;
-import kam.kamsTweaks.features.claims.gui.FLAlertLayer;
 import kam.kamsTweaks.features.claims.gui.Homepage;
-import kam.kamsTweaks.features.claims.gui.LandClaimPage;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.configuration.file.*;
@@ -139,6 +136,12 @@ public class Claims extends Feature {
         TRUE,
         FALSE,
         DEFAULT,
+    }
+
+    public enum ManagementType {
+        Owner,
+        Op,
+        None
     }
 
     public static Claims get() {
