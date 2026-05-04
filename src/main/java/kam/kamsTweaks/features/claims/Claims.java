@@ -30,9 +30,12 @@ public class Claims extends Feature {
 
     final List<UUID> hasMessaged = new ArrayList<>();
 
+    public Claims() {
+        instance = this;
+    }
+
     @Override
     public void setup() {
-        instance = this;
 
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("land-claims.enabled", "land-claims.enabled", true, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("land-claims.max-claims", "land-claims.max-claims", 30, "kamstweaks.configure"));
@@ -88,12 +91,13 @@ public class Claims extends Feature {
 
     @Override
     public void loadData() {
-
+        setupFile();
+        landClaims.load();
     }
 
     @Override
     public void saveData() {
-
+        landClaims.save();
     }
 
     private void setupFile() {

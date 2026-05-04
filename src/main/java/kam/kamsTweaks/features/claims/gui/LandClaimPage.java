@@ -44,9 +44,16 @@ public class LandClaimPage extends GuiLayer {
                 if (claim.owner != null && who.getUniqueId().equals(claim.owner.getUniqueId())) totalClaims += claim.slots;
             }
 
-            if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30)) {
+            if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30) && !Claims.get().landClaims.currentlyClaiming.containsKey(who)) {
                 var createBtn = ActionButton.builder(Component.text("Create a Claim")).action(DialogAction.customClick((view, audience) -> {
-                    Claims.get().landClaims.startClaiming(who);
+                    Claims.get().landClaims.startClaiming(who, true);
+                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                btns.add(createBtn);
+            }
+
+            if (Claims.get().landClaims.currentlyClaiming.containsKey(who)) {
+                var createBtn = ActionButton.builder(Component.text("Cancel Claiming")).action(DialogAction.customClick((view, audience) -> {
+                    Claims.get().landClaims.stopClaiming(who);
                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
                 btns.add(createBtn);
             }
@@ -59,25 +66,8 @@ public class LandClaimPage extends GuiLayer {
             }
 
             var viewBtn = ActionButton.builder(Component.text("View All Claims")).action(DialogAction.customClick((view, audience) -> {
-                for (var claim : Claims.get().landClaims.claims) {
-                    Color c;
-                    if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId())) {
-                        c = Color.GREEN;
-                    } else {
-                        if (claim.hasPermission(who, LandPermission.BLOCK_BREAK) && claim.hasPermission(who, LandPermission.BLOCK_PLACE) && claim.hasPermission(who, LandPermission.BLOCK_INTERACT)) {
-                            c = Color.AQUA;
-                        } else if (claim.hasPermission(who, LandPermission.BLOCK_BREAK) || claim.hasPermission(who, LandPermission.BLOCK_PLACE)) {
-                            c = Color.FUCHSIA;
-                        } else if (claim.hasPermission(who, LandPermission.BLOCK_INTERACT)) {
-                            c = Color.PURPLE;
-                        } else if (claim.hasPermission(who, LandPermission.DOOR_INTERACT)) {
-                            c = Color.ORANGE;
-                        } else {
-                            c = Color.RED;
-                        }
-                    }
-                    LandClaims.showArea(who, claim.start, claim.end, 1, 200, c);
-                }
+                Claims.get().landClaims.showClaims(who);
+                who.sendMessage(Component.text("Nearby claims are being highlighted."));
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
             btns.add(viewBtn);
 
@@ -87,7 +77,16 @@ public class LandClaimPage extends GuiLayer {
             btns.add(listBtn);
 
             var deleteBtn = ActionButton.builder(Component.text("Delete ALL of Your Claims")).action(DialogAction.customClick((view, audience) -> {
-
+                new FLAlertLayer(who, Component.text("Delete ALL of your land claims?"),
+                        Component.text("Are you sure you want to ALL of your land claims?").append(Component.text(" This is irreversible.", NamedTextColor.RED)),
+                        Component.text("Yes").color(NamedTextColor.GREEN), Component.text("No").color(NamedTextColor.RED), second -> {
+                    if (second) {
+                        show();
+                    } else {
+                        Claims.get().landClaims.claims.removeIf(claim -> claim.owner == who);
+                        who.sendMessage(Component.text("Deleted all of your claims successfully.").color(NamedTextColor.GREEN));
+                    }
+                }).show();
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
             btns.add(deleteBtn);
 

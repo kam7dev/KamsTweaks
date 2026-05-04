@@ -5,11 +5,14 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.claims.gui.FLAlertLayer;
 import kam.kamsTweaks.features.claims.gui.LandClaimPage;
+import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -29,6 +32,7 @@ import org.joml.Vector3f;
 
 import java.util.*;
 
+@SuppressWarnings("UnstableApiUsage")
 public class LandClaims implements Listener {
     public List<LandClaim> claims = new ArrayList<>();
 
@@ -65,6 +69,113 @@ public class LandClaims implements Listener {
         claims.add(testClaim);
     }
 
+    public void save() {
+
+    }
+
+    public void load() {
+        claims.clear();
+        loadLegacy();
+    }
+
+    public void loadLegacy() {
+        var claimsConfig = Claims.get().claimsConfig;
+        // V2 syntax
+        if (claimsConfig.contains("claims")) {
+            for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims")).getKeys(false)) {
+                try {
+                    String ownerStr = claimsConfig.getString("claims." + key + ".owner");
+                    UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
+                    String corner1Str = claimsConfig.getString("claims." + key + ".corner1");
+                    assert corner1Str != null;
+                    Location corner1 = LocationUtils.deserializeBlockPos(corner1Str);
+                    if (corner1.getWorld() == null) continue;
+                    String corner2Str = claimsConfig.getString("claims." + key + ".corner2");
+                    assert corner2Str != null;
+                    Location corner2 = LocationUtils.deserializeBlockPos(corner2Str);
+                    LandClaim claim;
+                    if (claimsConfig.contains("claims." + key + ".id")) {
+                        claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), claimsConfig.getInt("claims." + key + ".id"), corner1, corner2);
+                    } else {
+                        claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), corner1, corner2);
+                    }
+                    if (claimsConfig.contains("claims." + key + ".name")) {
+                        claim.config.name = claimsConfig.getString("claims." + key + ".name");
+                    }
+                    if (claimsConfig.contains("claims." + key + ".prio")) {
+                        claim.config.priority = claimsConfig.getInt("claims." + key + ".prio");
+                    }
+                    try {
+                        if (claimsConfig.contains("claims." + key + ".defaults")) {
+                            claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.FALSE);
+                            for (String def : Objects.requireNonNull(claimsConfig.getStringList("claims." + key + ".defaults"))) {
+                                switch (def) {
+                                    case "INTERACT_DOOR":  {
+                                        claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.TRUE);
+                                    }
+                                    case "INTERACT_BLOCK":  {
+                                        claim.defaultPerms.bools.put(LandPermission.BLOCK_INTERACT, OptBool.TRUE);
+                                        claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.TRUE);
+                                    }
+                                    case "BLOCK_BREAK":  {
+                                        claim.defaultPerms.bools.put(LandPermission.BLOCK_BREAK, OptBool.TRUE);
+                                    }
+                                    case "BLOCK_PLACE":  {
+                                        claim.defaultPerms.bools.put(LandPermission.BLOCK_PLACE, OptBool.TRUE);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (NullPointerException e) {
+                        Logger.excs.add(e);
+                        Logger.warn(e.getMessage());
+                        claim.defaultPerms.bools = new HashMap<>();
+                    }
+
+//                    try {
+//                        if (claimsConfig.contains("claims." + key + ".permissions")) {
+//                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".permissions")).getKeys(false)) {
+//                                List<ClaimPermission> perms = new ArrayList<>();
+//                                for (String perm : Objects.requireNonNull(claimsConfig.getStringList("claims." + key + ".permissions." + uuid))) {
+//                                    perms.add(ClaimPermission.valueOf(perm));
+//                                }
+//                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
+//                            }
+//                        } else if (claimsConfig.contains("claims." + key + ".perms")) {
+//                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".perms")).getKeys(false)) {
+//                                List<ClaimPermission> perms = new ArrayList<>();
+//                                switch (Objects.requireNonNull(claimsConfig.getString("claims." + key + ".perms." + uuid))) {
+//                                    case "BLOCKS":
+//                                        perms.add(ClaimPermission.BLOCK_PLACE);
+//                                        perms.add(ClaimPermission.BLOCK_BREAK);
+//                                        perms.add(ClaimPermission.INTERACT_BLOCK);
+//                                        break;
+//                                    case "INTERACT":
+//                                        perms.add(ClaimPermission.INTERACT_BLOCK);
+//                                        break;
+//                                    case "NONE":
+//                                        break;
+//                                    // doors is also done here
+//                                    default:
+//                                        perms.add(ClaimPermission.INTERACT_DOOR);
+//                                        break;
+//                                }
+//                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
+//                            }
+//                        }
+//                    } catch (Exception e) {
+//                        Logger.excs.add(e);
+//                        Logger.warn(e.getMessage());
+//                    }
+                    claims.add(claim);
+                } catch (Exception e) {
+                    Logger.excs.add(e);
+                    Logger.warn(e.getMessage());
+                }
+            }
+        }
+    }
+
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands, LiteralArgumentBuilder<CommandSourceStack> baseCmd) {
         Command<CommandSourceStack> bcb = ctx -> {
             var sender = ctx.getSource().getSender();
@@ -86,7 +197,7 @@ public class LandClaims implements Listener {
 
         List<LiteralArgumentBuilder<CommandSourceStack>> cmdList = new ArrayList<>();
 
-        cmdList.add(Commands.literal("create").executes(ctx -> {
+        var create = Commands.literal("create").executes(ctx -> {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
@@ -94,17 +205,34 @@ public class LandClaims implements Listener {
                 return Command.SINGLE_SUCCESS;
             }
             if (executor instanceof Player player) {
-                startClaiming(player);
+                startClaiming(player, true);
                 return Command.SINGLE_SUCCESS;
             }
             sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
-        }));
+        });
+        cmdList.add(create);
 
-//        create.then(Commands.argument("pos1", ArgumentTypes.blockPosition()).then(Commands.argument("pos2", ArgumentTypes.blockPosition()).executes(ctx -> {
-//
-//            return Command.SINGLE_SUCCESS;
-//        })));
+        create.then(Commands.argument("pos1", ArgumentTypes.blockPosition()).then(Commands.argument("pos2", ArgumentTypes.blockPosition()).executes(ctx -> {
+            var sender = ctx.getSource().getSender();
+            var executor = ctx.getSource().getExecutor();
+            if (executor != sender) {
+                sender.sendMessage(Component.text("You can't create claims for someone else.").color(NamedTextColor.RED));
+                return Command.SINGLE_SUCCESS;
+            }
+            if (executor instanceof Player player) {
+                if (!startClaiming(player, false)) return Command.SINGLE_SUCCESS;
+                var claim = currentlyClaiming.get(player);
+                var pos1 = ctx.getArgument("pos1", BlockPositionResolver.class).resolve(ctx.getSource());
+                var pos2 = ctx.getArgument("pos2", BlockPositionResolver.class).resolve(ctx.getSource());
+                if (!setCorner1(player, claim, pos1.toLocation(player.getWorld()), false)) return Command.SINGLE_SUCCESS;
+                if (!setCorner2(player, claim, pos2.toLocation(claim.start.getWorld()))) return Command.SINGLE_SUCCESS;
+
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        })));
 
         cmdList.add(Commands.literal("cancel").executes(ctx -> {
             var sender = ctx.getSource().getSender();
@@ -126,6 +254,22 @@ public class LandClaims implements Listener {
             var executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
                 listClaims(player, sender);
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }));
+
+        cmdList.add(Commands.literal("view").executes(ctx -> {
+            var sender = ctx.getSource().getSender();
+            var executor = ctx.getSource().getExecutor();
+            if (executor instanceof Player player) {
+                Claims.get().landClaims.showClaims(player);
+                if (sender == player) {
+                    sender.sendMessage(Component.text("Nearby claims are being highlighted."));
+                } else {
+                    sender.sendMessage(Component.text("Highlighting nearby claims for ").append(Names.instance.getRenderedName(player), Component.text(".")));
+                }
                 return Command.SINGLE_SUCCESS;
             }
             sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
@@ -161,8 +305,7 @@ public class LandClaims implements Listener {
         return ret;
     }
 
-    public void startClaiming(Player who) {
-
+    public boolean startClaiming(Player who, boolean sMessage) {
         if (currentlyClaiming.containsKey(who)) {
             who.sendMessage(Component.text("You're already claiming land. (run ").append(Component.text("/claims land cancel").clickEvent(ClickEvent.runCommand("claims land cancel")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(" to cancel)")).color(NamedTextColor.RED));
         } else {
@@ -172,11 +315,12 @@ public class LandClaims implements Listener {
             }
             if (total + 1 > KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30)) {
                 who.sendMessage(Component.text("You have used all of your claim slots. Delete some to free up slots.").color(NamedTextColor.RED));
-                return;
+                return false;
             }
-            who.sendMessage(Component.text("Right click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(")")).color(NamedTextColor.GOLD));
+            if (sMessage) who.sendMessage(Component.text("Right click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(")")).color(NamedTextColor.GOLD));
             currentlyClaiming.put(who, new LandClaim(who, null, null));
         }
+        return true;
     }
 
     public void stopClaiming(Player who) {
@@ -188,7 +332,7 @@ public class LandClaims implements Listener {
         }
     }
 
-    public void setCorner1(Player who, LandClaim claim, Location loc) {
+    public boolean setCorner1(Player who, LandClaim claim, Location loc, boolean sMessage) {
         for (var c : claims) {
             if (c.inBounds(loc)) {
                 if (c.owner == null || (!c.owner.getUniqueId().equals(who.getUniqueId()))) {
@@ -199,17 +343,18 @@ public class LandClaims implements Listener {
                         name = Names.instance.getRenderedName(c.owner);
                     }
                     who.sendMessage(Component.text("This land is already claimed by ").append(name, Component.text(".")).color(NamedTextColor.RED));
-                    return;
+                    return false;
                 }
             }
         }
         claim.start = loc;
-        who.sendMessage(Component.text("Now click the other corner with your claim tool. (If you lost it, run ").append(
+        if (sMessage) who.sendMessage(Component.text("Now click the other corner with your claim tool. (If you lost it, run ").append(
                 Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW),
                 Component.text(")").color(NamedTextColor.BLUE)).color(NamedTextColor.BLUE));
+        return true;
     }
 
-    public void setCorner2(Player who, LandClaim claim, Location loc) {
+    public boolean setCorner2(Player who, LandClaim claim, Location loc) {
         var maxArea = KamsTweaks.get().getConfig().getInt("land-claims.max-claim-size", 50000);
         int has = (Math.abs(claim.start.getBlockX() - loc.getBlockX()) + 1) * (Math.abs(claim.start.getBlockY() - loc.getBlockY()) + 1)
                 * (Math.abs(claim.start.getBlockZ() - loc.getBlockZ()) + 1);
@@ -224,7 +369,7 @@ public class LandClaims implements Listener {
             if (total + value > maxCt) {
                 var diff = (value + total - maxCt);
                 who.sendMessage(Component.text("You can't claim more than " + maxArea + " blocks in an unextended claim, while you are trying to claim " + has + ". You need " + diff + " more claim slot" + (diff == 1 ? "" : "s") + " for an extension (costs " + value + ").").color(NamedTextColor.RED));
-                return;
+                return false;
             }
             new FLAlertLayer(who, Component.text("Extend claim?"),
                     Component.text("This claim is larger than " + maxArea + " blocks. Do you want to use " + (value - 1) + " extra claim slot" + (value == 2 ? "" : "s") + " to extend it?"),
@@ -235,10 +380,10 @@ public class LandClaims implements Listener {
             }).show();
         } else if (total + 1 > maxCt) {
             who.sendMessage(Component.text("You have used all of your claim slots. Delete some to free up slots.").color(NamedTextColor.RED));
-        } else {
-            Logger.info(total + " - " + maxCt);
-            finishClaiming(who, claim, loc);
+            return false;
         }
+        finishClaiming(who, claim, loc);
+        return true;
     }
 
     public void finishClaiming(Player who, LandClaim claim, Location loc) {
@@ -271,7 +416,7 @@ public class LandClaims implements Listener {
         if (currentlyClaiming.containsKey(plr)) {
             var claim = currentlyClaiming.get(plr);
             if (claim.start == null) {
-                setCorner1(plr, claim, loc);
+                setCorner1(plr, claim, loc, true);
             } else {
                 if (claim.start.getWorld() != loc.getWorld()) {
                     plr.sendMessage(
@@ -706,6 +851,28 @@ public class LandClaims implements Listener {
 
     public void listClaims(Player who) {
         listClaims(who, who);
+    }
+
+    public void showClaims(Player who) {
+        for (var claim : Claims.get().landClaims.claims) {
+            Color c;
+            if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId())) {
+                c = Color.GREEN;
+            } else {
+                if (claim.hasPermission(who, LandPermission.BLOCK_BREAK) && claim.hasPermission(who, LandPermission.BLOCK_PLACE) && claim.hasPermission(who, LandPermission.BLOCK_INTERACT)) {
+                    c = Color.AQUA;
+                } else if (claim.hasPermission(who, LandPermission.BLOCK_BREAK) || claim.hasPermission(who, LandPermission.BLOCK_PLACE)) {
+                    c = Color.FUCHSIA;
+                } else if (claim.hasPermission(who, LandPermission.BLOCK_INTERACT)) {
+                    c = Color.PURPLE;
+                } else if (claim.hasPermission(who, LandPermission.DOOR_INTERACT)) {
+                    c = Color.ORANGE;
+                } else {
+                    c = Color.RED;
+                }
+            }
+            LandClaims.showArea(who, claim.start, claim.end, 1, 200, c);
+        }
     }
 
     @EventHandler
