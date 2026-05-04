@@ -112,16 +112,20 @@ public class LandClaims implements Listener {
                                 switch (def) {
                                     case "INTERACT_DOOR":  {
                                         claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.TRUE);
+                                        break;
                                     }
                                     case "INTERACT_BLOCK":  {
                                         claim.defaultPerms.bools.put(LandPermission.BLOCK_INTERACT, OptBool.TRUE);
                                         claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.TRUE);
+                                        break;
                                     }
                                     case "BLOCK_BREAK":  {
                                         claim.defaultPerms.bools.put(LandPermission.BLOCK_BREAK, OptBool.TRUE);
+                                        break;
                                     }
                                     case "BLOCK_PLACE":  {
                                         claim.defaultPerms.bools.put(LandPermission.BLOCK_PLACE, OptBool.TRUE);
+                                        break;
                                     }
                                 }
                             }
