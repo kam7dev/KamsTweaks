@@ -44,17 +44,17 @@ public class EntityClaims {
         public static Permissions defaultPerms;
         static {
             defaultPerms = new Permissions(null);
-            defaultPerms.bools.put(EntityPermission.INTERACT, OptBool.FALSE);
-            defaultPerms.bools.put(EntityPermission.DAMAGE, OptBool.FALSE);
-//            defaultPerms.advancedBools.put(AdvancedEntityPermission.S, OptBool.FALSE);
+            defaultPerms.bools.put(EntityPermission.INTERACT, OptBool.False);
+            defaultPerms.bools.put(EntityPermission.DAMAGE, OptBool.False);
+//            defaultPerms.advancedBools.put(AdvancedEntityPermission.S, OptBool.False);
         }
 
         OptBool getBoolPermission(EntityPermission perm) {
-            return bools.getOrDefault(perm, OptBool.DEFAULT);
+            return bools.getOrDefault(perm, OptBool.Default);
         }
 
         OptBool getBoolPermission(AdvancedEntityPermission perm) {
-            return advancedBools.getOrDefault(perm, OptBool.DEFAULT);
+            return advancedBools.getOrDefault(perm, OptBool.Default);
         }
 
         @Override

@@ -19,6 +19,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -64,70 +65,163 @@ public class LandClaims implements Listener {
                 }
             }
         }, 20, 20);
+    }
 
-        var testClaim = new LandClaim(null, new Location(Bukkit.getServer().getWorlds().getFirst(), -10, 50, -10), new Location(Bukkit.getServer().getWorlds().getFirst(), 10, 150, 10));
-        claims.add(testClaim);
+    void savePerms(FileConfiguration config, String path, Permissions perms) {
+        if (perms.who != null) config.set(path + ".who", perms.who.toString());
+        perms.bools.forEach((perm, val) -> config.set(path + ".bools." + perm.name(), val.name()));
+        perms.advancedBools.forEach((perm, val) -> config.set(path + ".advbools." + perm.name(), val.name()));
     }
 
     public void save() {
+        var cfg = Claims.get().claimsConfig;
+//        cfg.set("claims", null);
+        var primary = Bukkit.getWorlds().getFirst().getUID();
+        cfg.set("claimsv3." + primary, null);
 
+        for (var claim : claims) {
+            var path = "claimsv3." + primary + "." + claim.id;
+            cfg.set(path + ".id", claim.id);
+            if (claim.owner != null) cfg.set(path + ".owner", claim.owner.getUniqueId().toString());
+            cfg.set(path + ".start", LocationUtils.serializeBlockPos(claim.start));
+            cfg.set(path + ".end", LocationUtils.serializeBlockPos(claim.end));
+            cfg.set(path + ".slots", claim.slots);
+
+            cfg.set(path + ".config.name", claim.config.name);
+            cfg.set(path + ".config.prio", claim.config.priority);
+            cfg.set(path + ".config.grass-spread", claim.config.grassSpread.name());
+            cfg.set(path + ".config.fire-spread", claim.config.fireSpread.name());
+            cfg.set(path + ".config.water-flow", claim.config.waterFlow.name());
+            cfg.set(path + ".config.hopper-transfer", claim.config.hopperTransfer.name());
+            cfg.set(path + ".config.gravity", claim.config.gravity.name());
+            cfg.set(path + ".config.trees-grow", claim.config.treesGrow.name());
+
+            savePerms(cfg, path + ".default", claim.defaultPerms);
+            savePerms(cfg, path + ".entity", claim.defaultEntityPerms);
+            claim.perms.forEach((uuid, perms) -> savePerms(cfg, path + ".perms." + uuid, perms));
+        }
+    }
+
+    // i got tired of typing the long thing
+    <T> @NotNull T nonNull(@Nullable T t) {
+        return Objects.requireNonNull(t);
+    }
+
+    void loadPerms(FileConfiguration config, String path, Permissions perms) {
+        try {
+            var who = config.getString(path + ".who");
+            if (who != null) perms.who = UUID.fromString(who);
+            if (config.contains(path + ".bools")) {
+                for (var ps : nonNull(config.getConfigurationSection(path  + ".bools")).getKeys(false)) {
+                    var perm = LandPermission.valueOf(ps);
+                    perms.bools.put(perm, OptBool.valueOf(config.getString(path + ".bools." + ps)));
+                }
+            }
+            if (config.contains(path + ".advbools")) {
+                for (var ps : nonNull(config.getConfigurationSection(path  + ".advbools")).getKeys(false)) {
+                    var perm = AdvancedLandPermission.valueOf(ps);
+                    perms.advancedBools.put(perm, OptBool.valueOf(config.getString(path + ".advbools." + ps)));
+                }
+            }
+        } catch (Exception e) {
+            Logger.error("Failed loading perms from " + path + ".");
+            Logger.handleException(e);
+        }
     }
 
     public void load() {
         claims.clear();
+        var cfg = Claims.get().claimsConfig;
+        var primary = Bukkit.getWorlds().getFirst().getUID();
+        if (cfg.contains("claimsv3." + primary)) {
+            for (var key : nonNull(cfg.getConfigurationSection("claimsv3." + primary)).getKeys(false)) {
+                try {
+                    var path = "claimsv3." + primary + "." + key;
+                    var uuid = cfg.contains(path + ".owner") ? UUID.fromString(nonNull(cfg.getString(path + ".owner"))) : null;
+                    var id = cfg.getInt(path + ".id");
+                    var start = LocationUtils.deserializeBlockPos(nonNull(cfg.getString(path + ".start")));
+                    var end = LocationUtils.deserializeBlockPos(nonNull(cfg.getString(path + ".end")));
+                    var claim = new LandClaim(uuid != null ? Bukkit.getOfflinePlayer(uuid) : null, id, start, end);
+                    claim.slots = nonNull(cfg.getInt(path + ".slots"));
+
+                    claim.config.name = nonNull(cfg.getString(path + ".config.name"));
+                    claim.config.priority = nonNull(cfg.getInt(path + ".config.priority"));
+                    claim.config.grassSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.grass-spread")));
+                    claim.config.fireSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.fire-spread")));
+                    claim.config.waterFlow = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.water-flow")));
+                    claim.config.hopperTransfer = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.hopper-transfer")));
+                    claim.config.gravity = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.gravity")));
+                    claim.config.treesGrow = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.trees-grow")));
+
+                    loadPerms(cfg, path + ".default", claim.defaultPerms);
+                    loadPerms(cfg, path + ".entity", claim.defaultEntityPerms);
+                    if (cfg.contains(path + ".perms")) {
+                        for (var perm : nonNull(cfg.getConfigurationSection(path + ".perms")).getKeys(false)) {
+                            loadPerms(cfg, path + ".perms." + uuid, claim.getPerms(UUID.fromString(nonNull(perm + ".who"))));
+                        }
+                    }
+
+                    claims.add(claim);
+                } catch (Exception e) {
+                    Logger.handleException(e);
+                }
+            }
+        }
         loadLegacy();
     }
 
     public void loadLegacy() {
-        var claimsConfig = Claims.get().claimsConfig;
+        var cfg = Claims.get().claimsConfig;
         // V2 syntax
-        if (claimsConfig.contains("claims")) {
-            for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims")).getKeys(false)) {
+        if (cfg.contains("claims")) {
+            // TODO: Find why this doesn't load.
+            for (String key : Objects.requireNonNull(cfg.getConfigurationSection("claims")).getKeys(false)) {
                 try {
-                    String ownerStr = claimsConfig.getString("claims." + key + ".owner");
+                    String ownerStr = cfg.getString("claims." + key + ".owner");
                     UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
-                    String corner1Str = claimsConfig.getString("claims." + key + ".corner1");
+                    String corner1Str = cfg.getString("claims." + key + ".corner1");
                     assert corner1Str != null;
                     Location corner1 = LocationUtils.deserializeBlockPos(corner1Str);
                     if (corner1.getWorld() == null) continue;
-                    String corner2Str = claimsConfig.getString("claims." + key + ".corner2");
+                    String corner2Str = cfg.getString("claims." + key + ".corner2");
                     assert corner2Str != null;
                     Location corner2 = LocationUtils.deserializeBlockPos(corner2Str);
                     LandClaim claim;
-                    if (claimsConfig.contains("claims." + key + ".id")) {
-                        claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), claimsConfig.getInt("claims." + key + ".id"), corner1, corner2);
+                    if (cfg.contains("claims." + key + ".id")) {
+                        claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), cfg.getInt("claims." + key + ".id"), corner1, corner2);
                     } else {
                         claim = new LandClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), corner1, corner2);
                     }
-                    if (claimsConfig.contains("claims." + key + ".name")) {
-                        claim.config.name = claimsConfig.getString("claims." + key + ".name");
+                    if (cfg.contains("claims." + key + ".name")) {
+                        claim.config.name = cfg.getString("claims." + key + ".name");
                     }
-                    if (claimsConfig.contains("claims." + key + ".prio")) {
-                        claim.config.priority = claimsConfig.getInt("claims." + key + ".prio");
+                    if (cfg.contains("claims." + key + ".prio")) {
+                        claim.config.priority = cfg.getInt("claims." + key + ".prio");
                     }
                     try {
-                        if (claimsConfig.contains("claims." + key + ".defaults")) {
-                            claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.FALSE);
-                            for (String def : Objects.requireNonNull(claimsConfig.getStringList("claims." + key + ".defaults"))) {
+                        if (cfg.contains("claims." + key + ".defaults")) {
+                            claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.False);
+                            for (String def : Objects.requireNonNull(cfg.getStringList("claims." + key + ".defaults"))) {
                                 switch (def) {
                                     case "INTERACT_DOOR":  {
-                                        claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.TRUE);
+                                        claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.True);
                                         break;
                                     }
                                     case "INTERACT_BLOCK":  {
-                                        claim.defaultPerms.bools.put(LandPermission.BLOCK_INTERACT, OptBool.TRUE);
-                                        claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.TRUE);
+                                        claim.defaultPerms.bools.put(LandPermission.BLOCK_INTERACT, OptBool.True);
+                                        claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.True);
                                         break;
                                     }
                                     case "BLOCK_BREAK":  {
-                                        claim.defaultPerms.bools.put(LandPermission.BLOCK_BREAK, OptBool.TRUE);
+                                        claim.defaultPerms.bools.put(LandPermission.BLOCK_BREAK, OptBool.True);
                                         break;
                                     }
                                     case "BLOCK_PLACE":  {
-                                        claim.defaultPerms.bools.put(LandPermission.BLOCK_PLACE, OptBool.TRUE);
+                                        claim.defaultPerms.bools.put(LandPermission.BLOCK_PLACE, OptBool.True);
                                         break;
                                     }
                                 }
+                                claim.defaultEntityPerms = claim.defaultPerms.clone();
                             }
                         }
                     } catch (NullPointerException e) {
@@ -136,41 +230,40 @@ public class LandClaims implements Listener {
                         claim.defaultPerms.bools = new HashMap<>();
                     }
 
-//                    try {
-//                        if (claimsConfig.contains("claims." + key + ".permissions")) {
-//                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".permissions")).getKeys(false)) {
-//                                List<ClaimPermission> perms = new ArrayList<>();
-//                                for (String perm : Objects.requireNonNull(claimsConfig.getStringList("claims." + key + ".permissions." + uuid))) {
-//                                    perms.add(ClaimPermission.valueOf(perm));
-//                                }
-//                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
-//                            }
-//                        } else if (claimsConfig.contains("claims." + key + ".perms")) {
-//                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("claims." + key + ".perms")).getKeys(false)) {
-//                                List<ClaimPermission> perms = new ArrayList<>();
-//                                switch (Objects.requireNonNull(claimsConfig.getString("claims." + key + ".perms." + uuid))) {
-//                                    case "BLOCKS":
-//                                        perms.add(ClaimPermission.BLOCK_PLACE);
-//                                        perms.add(ClaimPermission.BLOCK_BREAK);
-//                                        perms.add(ClaimPermission.INTERACT_BLOCK);
-//                                        break;
-//                                    case "INTERACT":
-//                                        perms.add(ClaimPermission.INTERACT_BLOCK);
-//                                        break;
-//                                    case "NONE":
-//                                        break;
-//                                    // doors is also done here
-//                                    default:
-//                                        perms.add(ClaimPermission.INTERACT_DOOR);
-//                                        break;
-//                                }
-//                                claim.perms.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)), perms);
-//                            }
-//                        }
-//                    } catch (Exception e) {
-//                        Logger.excs.add(e);
-//                        Logger.warn(e.getMessage());
-//                    }
+                    try {
+                        if (cfg.contains("claims." + key + ".permissions")) {
+                            for (String uuidStr : Objects.requireNonNull(cfg.getConfigurationSection("claims." + key + ".permissions")).getKeys(false)) {
+                                var uuid = UUID.fromString(uuidStr);
+                                var perms = claim.getPerms(uuid);
+                                perms.bools.put(LandPermission.DOOR_INTERACT, OptBool.False);
+                                for (String def : Objects.requireNonNull(cfg.getStringList("claims." + key + ".permissions." + uuidStr))) {
+                                    switch (def) {
+                                        case "INTERACT_DOOR":  {
+                                            perms.bools.put(LandPermission.DOOR_INTERACT, OptBool.True);
+                                            break;
+                                        }
+                                        case "INTERACT_BLOCK":  {
+                                            perms.bools.put(LandPermission.BLOCK_INTERACT, OptBool.True);
+                                            perms.bools.put(LandPermission.DOOR_INTERACT, OptBool.True);
+                                            break;
+                                        }
+                                        case "BLOCK_BREAK":  {
+                                            perms.bools.put(LandPermission.BLOCK_BREAK, OptBool.True);
+                                            break;
+                                        }
+                                        case "BLOCK_PLACE":  {
+                                            perms.bools.put(LandPermission.BLOCK_PLACE, OptBool.True);
+                                            break;
+                                        }
+                                    }
+                                    claim.defaultEntityPerms = claim.defaultPerms.clone();
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        Logger.excs.add(e);
+                        Logger.warn(e.getMessage());
+                    }
                     claims.add(claim);
                 } catch (Exception e) {
                     Logger.excs.add(e);
@@ -178,6 +271,7 @@ public class LandClaims implements Listener {
                 }
             }
         }
+        cfg.set("claims", null);
     }
 
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands, LiteralArgumentBuilder<CommandSourceStack> baseCmd) {
@@ -437,7 +531,7 @@ public class LandClaims implements Listener {
     }
 
     public enum LandPermission {
-        DOOR_INTERACT("Interact with Doors"),
+        DOOR_INTERACT("Interact with Doors", OptBool.True),
         BLOCK_INTERACT("Interact with Blocks"),
         BLOCK_BREAK("Break Blocks"),
         BLOCK_PLACE("Place Blocks"),
@@ -445,8 +539,15 @@ public class LandClaims implements Listener {
         ;
 
         public final String label;
+        public final OptBool defaultValue;
+
+        LandPermission(String label, OptBool defaultValue) {
+            this.label = label;
+            this.defaultValue = defaultValue;
+        }
         LandPermission(String label) {
             this.label = label;
+            this.defaultValue = OptBool.False;
         }
     }
 
@@ -470,14 +571,22 @@ public class LandClaims implements Listener {
         ;
 
         public final String label;
+        public final OptBool defaultValue;
+
+        AdvancedLandPermission(String label, OptBool defaultValue) {
+            this.label = label;
+            this.defaultValue = defaultValue;
+        }
         AdvancedLandPermission(String label) {
             this.label = label;
+            this.defaultValue = OptBool.False;
         }
     }
 
-    public static class Permissions implements Cloneable{
+    public static class Permissions implements Cloneable {
         public LandClaim claim;
         public UUID who;
+        boolean isClaimDefault = false;
         Map<LandPermission, OptBool> bools = new HashMap<>();
         Map<AdvancedLandPermission, OptBool> advancedBools = new HashMap<>();
 
@@ -486,22 +595,33 @@ public class LandClaims implements Listener {
             this.who = who;
         }
 
-        public static Permissions defaultPerms;
-        static {
-            defaultPerms = new Permissions(null, null);
-            defaultPerms.bools.put(LandPermission.BLOCK_BREAK, OptBool.FALSE);
-            defaultPerms.bools.put(LandPermission.BLOCK_PLACE, OptBool.FALSE);
-            defaultPerms.bools.put(LandPermission.BLOCK_INTERACT, OptBool.FALSE);
-            defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.TRUE);
-//            defaultPerms.advancedBools.put(AdvancedLandPermission.S, OptBool.FALSE);
+        public Permissions(LandClaim claim, boolean isClaimDefault) {
+            this.claim = claim;
+            this.isClaimDefault = isClaimDefault;
         }
 
         public OptBool getBoolPermission(LandPermission perm) {
-            return bools.getOrDefault(perm, OptBool.DEFAULT);
+            if (isClaimDefault) return bools.getOrDefault(perm, perm.defaultValue);
+            return bools.getOrDefault(perm, OptBool.Default);
+        }
+
+        public OptBool getBoolPermission(LandPermission perm, Permissions backup) {
+            if (isClaimDefault) return bools.getOrDefault(perm, perm.defaultValue);
+            var ret = bools.getOrDefault(perm, OptBool.Default);
+            if (backup != null && ret == OptBool.Default) ret = backup.getBoolPermission(perm);
+            return ret;
         }
 
         public OptBool getBoolPermission(AdvancedLandPermission perm) {
-            return advancedBools.getOrDefault(perm, OptBool.DEFAULT);
+            if (isClaimDefault) return advancedBools.getOrDefault(perm, perm.defaultValue);
+            return advancedBools.getOrDefault(perm, OptBool.Default);
+        }
+
+        public OptBool getBoolPermission(AdvancedLandPermission perm, Permissions backup) {
+            if (isClaimDefault) return advancedBools.getOrDefault(perm, perm.defaultValue);
+            var ret = advancedBools.getOrDefault(perm, OptBool.Default);
+            if (backup != null && ret == OptBool.Default) ret = backup.getBoolPermission(perm);
+            return ret;
         }
 
         public void setBoolPermission(LandPermission perm, OptBool value) {
@@ -559,8 +679,8 @@ public class LandClaims implements Listener {
         public ClaimConfig config = new ClaimConfig();
 
         public Map<UUID, Permissions> perms = new HashMap<>();
-        public Permissions defaultPerms = Permissions.defaultPerms.clone();
-        public Permissions defaultEntityPerms = Permissions.defaultPerms.clone();
+        public Permissions defaultPerms = new Permissions(this, true).clone();
+        public Permissions defaultEntityPerms = new Permissions(this, null).clone();
 
         public Permissions getPerms(UUID who) {
             if (!perms.containsKey(who)) {
@@ -609,13 +729,13 @@ public class LandClaims implements Listener {
 
         public boolean hasPermission(Object who, LandPermission perm) {
             // no player
-            if (who == null) return defaultPerms.getBoolPermission(perm) == OptBool.TRUE;
+            if (who == null) return defaultPerms.getBoolPermission(perm) == OptBool.True;
 
             UUID uuid;
             if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
             else if (who instanceof Entity e) uuid = e.getUniqueId();
             else {
-                return defaultPerms.getBoolPermission(perm) == OptBool.TRUE;
+                return defaultPerms.getBoolPermission(perm) == OptBool.True;
             }
 
             // owner
@@ -625,21 +745,21 @@ public class LandClaims implements Listener {
             if (perms.containsKey(uuid)) {
                 var info = perms.get(uuid);
                 var has = info.getBoolPermission(perm);
-                if (has != OptBool.DEFAULT) {
-                    return has == OptBool.TRUE;
+                if (has != OptBool.Default) {
+                    return has == OptBool.True;
                 }
             }
 
             // default entity permissions
             if (!(who instanceof OfflinePlayer)) {
                 var has = defaultEntityPerms.getBoolPermission(perm);
-                if (has != OptBool.DEFAULT) {
-                    return has == OptBool.TRUE;
+                if (has != OptBool.Default) {
+                    return has == OptBool.True;
                 }
             }
 
             // default permissions
-            return defaultPerms.getBoolPermission(perm) == OptBool.TRUE;
+            return defaultPerms.getBoolPermission(perm) == OptBool.True;
         }
 
         public OptBool hasPermission(Object who, AdvancedLandPermission perm) {
@@ -654,13 +774,13 @@ public class LandClaims implements Listener {
             }
 
             // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) return OptBool.DEFAULT;
+            if (owner != null && owner.getUniqueId().equals(uuid)) return OptBool.Default;
 
             // explicit perms
             if (perms.containsKey(uuid)) {
                 var info = perms.get(uuid);
                 var has = info.getBoolPermission(perm);
-                if (has != OptBool.DEFAULT) {
+                if (has != OptBool.Default) {
                     return has;
                 }
             }
@@ -668,7 +788,7 @@ public class LandClaims implements Listener {
             // default entity permissions
             if (!(who instanceof OfflinePlayer)) {
                 var has = defaultEntityPerms.getBoolPermission(perm);
-                if (has != OptBool.DEFAULT) {
+                if (has != OptBool.Default) {
                     return has;
                 }
             }
@@ -682,7 +802,7 @@ public class LandClaims implements Listener {
         public MPRes hasPermissions(Object who, LandPermission gen, AdvancedLandPermission... perms) {
             for (var perm : perms) {
                 var has = hasPermission(who, perm);
-                if (has != OptBool.DEFAULT) return new MPRes(has == OptBool.TRUE, perm.label);
+                if (has != OptBool.Default) return new MPRes(has == OptBool.True, perm.label);
             }
             return new MPRes(hasPermission(who, gen), gen.label);
         }

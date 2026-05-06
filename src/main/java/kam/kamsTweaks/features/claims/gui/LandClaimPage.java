@@ -12,14 +12,12 @@ import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.ChatFilter;
 import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.claims.Claims;
-import kam.kamsTweaks.features.claims.LandClaims;
 import kam.kamsTweaks.features.claims.LandClaims.*;
 import net.kyori.adventure.text.*;
 import net.kyori.adventure.text.event.*;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -274,6 +272,26 @@ public class LandClaimPage extends GuiLayer {
         boolean isAdvanced = false;
         Permissions perms;
 
+        void save(DialogResponseView view) {
+            var mt = claim.getManagementType(who);
+            if (mt == Claims.ManagementType.None) {
+                who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
+                return;
+            } else if (mt == Claims.ManagementType.Op) {
+                KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited permissions for " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+                Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
+            }
+            if (isAdvanced) {
+                for (var opt : AdvancedLandPermission.values()) {
+                    perms.setBoolPermission(opt, Claims.OptBool.valueOf(Objects.requireNonNullElse(view.getText(opt.name()), "Default")));
+                }
+            } else {
+                for (var opt : LandPermission.values()) {
+                    perms.setBoolPermission(opt, Claims.OptBool.valueOf(Objects.requireNonNullElse(view.getText(opt.name()), "Default")));
+                }
+            }
+        }
+
         void init() {
             dialog = Dialog.create(builder -> {
                 var base = DialogBase.builder(switch(mode) {
@@ -294,34 +312,34 @@ public class LandClaimPage extends GuiLayer {
 
                 List<DialogInput> opts = new ArrayList<>();
                 switch(mode) {
-                    case DEFAULT, ENTITY_DEFAULT:
+                    case DEFAULT:
                         if (isAdvanced) {
                             for (var perm : AdvancedLandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("TRUE", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.TRUE);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("FALSE", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) != Claims.OptBool.TRUE);
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) != Claims.OptBool.True);
                                 opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(onEntry, offEntry)).build());
                             }
                         } else {
                             for (var perm : LandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("TRUE", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.TRUE);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("FALSE", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) != Claims.OptBool.TRUE);
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) != Claims.OptBool.True);
                                 opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(onEntry, offEntry)).build());
                             }
                         }
                         break;
-                    case OFFLINE_PLAYER: {
+                    case OFFLINE_PLAYER, ENTITY_DEFAULT: {
                         if (isAdvanced) {
                             for (var perm : AdvancedLandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("TRUE", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.TRUE);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("FALSE", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.FALSE);
-                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("DEFAULT", Component.text("Default (" + (claim.defaultPerms.getBoolPermission(perm) == Claims.OptBool.TRUE ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.DEFAULT);
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
+                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", Component.text("Default (" + (claim.defaultPerms.getBoolPermission(perm) == Claims.OptBool.True ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
                                 opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(defaultEntry, onEntry, offEntry)).build());
                             }
                         } else {
                             for (var perm : LandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("TRUE", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.TRUE);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("FALSE", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.FALSE);
-                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("DEFAULT", Component.text("Default (" + (claim.defaultPerms.getBoolPermission(perm) == Claims.OptBool.TRUE ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.DEFAULT);
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
+                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", Component.text("Default (" + (claim.defaultPerms.getBoolPermission(perm) == Claims.OptBool.True ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
                                 opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(defaultEntry, onEntry, offEntry)).build());
                             }
                         }
@@ -330,16 +348,16 @@ public class LandClaimPage extends GuiLayer {
                     case ENTITY: {
                         if (isAdvanced) {
                             for (var perm : AdvancedLandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("TRUE", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.TRUE);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("FALSE", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.FALSE);
-                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("DEFAULT", Component.text("Default (" + (claim.defaultEntityPerms.getBoolPermission(perm) == Claims.OptBool.TRUE ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.DEFAULT);
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
+                                 var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", Component.text("Default (" + (claim.defaultEntityPerms.getBoolPermission(perm, claim.defaultPerms) == Claims.OptBool.True ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
                                 opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(defaultEntry, onEntry, offEntry)).build());
                             }
                         } else {
                             for (var perm : LandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("TRUE", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.TRUE);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("FALSE", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.FALSE);
-                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("DEFAULT", Component.text("Default (" + (claim.defaultEntityPerms.getBoolPermission(perm) == Claims.OptBool.TRUE ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.DEFAULT);
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
+                                 var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", Component.text("Default (" + (claim.defaultEntityPerms.getBoolPermission(perm, claim.defaultPerms) == Claims.OptBool.True ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
                                 opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(defaultEntry, onEntry, offEntry)).build());
                             }
                         }
@@ -356,23 +374,7 @@ public class LandClaimPage extends GuiLayer {
                                 Component.text("Click to confirm your changes."),
                                 100,
                                 DialogAction.customClick((view, audience) -> {
-                                    var mt = claim.getManagementType(who);
-                                    if (mt == Claims.ManagementType.None) {
-                                        who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
-                                        return;
-                                    } else if (mt == Claims.ManagementType.Op) {
-                                        KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited permissions for " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
-                                        Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
-                                    }
-                                    if (isAdvanced) {
-                                        for (var opt : AdvancedLandPermission.values()) {
-                                            perms.setBoolPermission(opt, Claims.OptBool.valueOf(Objects.requireNonNullElse(view.getText(opt.name()), "DEFAULT")));
-                                        }
-                                    } else {
-                                        for (var opt : LandPermission.values()) {
-                                            perms.setBoolPermission(opt, Claims.OptBool.valueOf(Objects.requireNonNullElse(view.getText(opt.name()), "DEFAULT")));
-                                        }
-                                    }
+                                    save(view);
                                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                         ),
                         ActionButton.create(
@@ -386,6 +388,7 @@ public class LandClaimPage extends GuiLayer {
                                 Component.text("Click to edit regular options."),
                                 100,
                                 DialogAction.customClick((view, audience) -> {
+                                    save(view);
                                     switch(mode) {
                                         case DEFAULT, ENTITY_DEFAULT -> new PermissionPage(who, claim, mode, false).show();
                                         case OFFLINE_PLAYER -> new PermissionPage(who, claim, player, false).show();
@@ -397,6 +400,7 @@ public class LandClaimPage extends GuiLayer {
                                 Component.text("Click to edit advanced options."),
                                 100,
                                 DialogAction.customClick((view, audience) -> {
+                                    save(view);
                                     switch(mode) {
                                         case DEFAULT, ENTITY_DEFAULT -> new PermissionPage(who, claim, mode, true).show();
                                         case OFFLINE_PLAYER -> new PermissionPage(who, claim, player, true).show();

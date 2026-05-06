@@ -97,7 +97,13 @@ public class Claims extends Feature {
 
     @Override
     public void saveData() {
+        setupFile();
         landClaims.save();
+        try {
+            claimsConfig.save(claimsFile);
+        } catch (Exception e) {
+            Logger.handleException(e);
+        }
     }
 
     private void setupFile() {
@@ -137,9 +143,9 @@ public class Claims extends Feature {
     }
 
     public enum OptBool {
-        TRUE,
-        FALSE,
-        DEFAULT,
+        True,
+        False,
+        Default,
     }
 
     public enum ManagementType {
