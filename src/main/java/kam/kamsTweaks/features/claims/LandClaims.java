@@ -2,6 +2,7 @@ package kam.kamsTweaks.features.claims;
 
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -89,12 +90,12 @@ public class LandClaims implements Listener {
 
             cfg.set(path + ".config.name", claim.config.name);
             cfg.set(path + ".config.prio", claim.config.priority);
-            cfg.set(path + ".config.grass-spread", claim.config.grassSpread.name());
-            cfg.set(path + ".config.fire-spread", claim.config.fireSpread.name());
-            cfg.set(path + ".config.water-flow", claim.config.waterFlow.name());
-            cfg.set(path + ".config.hopper-transfer", claim.config.hopperTransfer.name());
-            cfg.set(path + ".config.gravity", claim.config.gravity.name());
-            cfg.set(path + ".config.trees-grow", claim.config.treesGrow.name());
+//            cfg.set(path + ".config.grass-spread", claim.config.grassSpread.name());
+//            cfg.set(path + ".config.fire-spread", claim.config.fireSpread.name());
+//            cfg.set(path + ".config.water-flow", claim.config.waterFlow.name());
+//            cfg.set(path + ".config.hopper-transfer", claim.config.hopperTransfer.name());
+//            cfg.set(path + ".config.gravity", claim.config.gravity.name());
+//            cfg.set(path + ".config.trees-grow", claim.config.treesGrow.name());
 
             savePerms(cfg, path + ".default", claim.defaultPerms);
             savePerms(cfg, path + ".entity", claim.defaultEntityPerms);
@@ -103,7 +104,7 @@ public class LandClaims implements Listener {
     }
 
     // i got tired of typing the long thing
-    <T> @NotNull T nonNull(@Nullable T t) {
+    public static <T> @NotNull T nonNull(@Nullable T t) {
         return Objects.requireNonNull(t);
     }
 
@@ -142,22 +143,22 @@ public class LandClaims implements Listener {
                     var start = LocationUtils.deserializeBlockPos(nonNull(cfg.getString(path + ".start")));
                     var end = LocationUtils.deserializeBlockPos(nonNull(cfg.getString(path + ".end")));
                     var claim = new LandClaim(uuid != null ? Bukkit.getOfflinePlayer(uuid) : null, id, start, end);
-                    claim.slots = nonNull(cfg.getInt(path + ".slots"));
+                    claim.slots = cfg.getInt(path + ".slots");
 
                     claim.config.name = nonNull(cfg.getString(path + ".config.name"));
-                    claim.config.priority = nonNull(cfg.getInt(path + ".config.priority"));
-                    claim.config.grassSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.grass-spread")));
-                    claim.config.fireSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.fire-spread")));
-                    claim.config.waterFlow = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.water-flow")));
-                    claim.config.hopperTransfer = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.hopper-transfer")));
-                    claim.config.gravity = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.gravity")));
-                    claim.config.treesGrow = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.trees-grow")));
+                    claim.config.priority = cfg.getInt(path + ".config.priority");
+//                    claim.config.grassSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.grass-spread")));
+//                    claim.config.fireSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.fire-spread")));
+//                    claim.config.waterFlow = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.water-flow")));
+//                    claim.config.hopperTransfer = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.hopper-transfer")));
+//                    claim.config.gravity = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.gravity")));
+//                    claim.config.treesGrow = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.trees-grow")));
 
                     loadPerms(cfg, path + ".default", claim.defaultPerms);
                     loadPerms(cfg, path + ".entity", claim.defaultEntityPerms);
                     if (cfg.contains(path + ".perms")) {
                         for (var perm : nonNull(cfg.getConfigurationSection(path + ".perms")).getKeys(false)) {
-                            loadPerms(cfg, path + ".perms." + uuid, claim.getPerms(UUID.fromString(nonNull(perm + ".who"))));
+                            loadPerms(cfg, path + ".perms." + uuid, claim.getPerms(UUID.fromString(perm + ".who")));
                         }
                     }
 
@@ -311,6 +312,33 @@ public class LandClaims implements Listener {
         });
         cmdList.add(create);
 
+        var delete = Commands.literal("delete").then(Commands.argument("id", IntegerArgumentType.integer()).suggests((ctx, builder) -> {
+            if (!(ctx.getSource().getSender() instanceof Player player))
+                return builder.buildFuture();
+            for (var claim : claims) {
+                if (claim.owner != null && player.getUniqueId().equals(claim.owner.getUniqueId())) {
+                    builder.suggest(claim.id);
+                }
+            }
+            return builder.buildFuture();
+        }).executes(ctx -> {
+            var sender = ctx.getSource().getSender();
+            var executor = ctx.getSource().getExecutor();
+            var id = ctx.getArgument("id", Integer.class);
+            if (executor instanceof Player player) {
+                var claim = getClaim(id);
+                if (claim == null) {
+                    sender.sendMessage(Component.text("This claim doesn't exist.").color(NamedTextColor.RED));
+                    return Command.SINGLE_SUCCESS;
+                }
+                deleteClaim(claim, player);
+                return Command.SINGLE_SUCCESS;
+            }
+            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }));
+        cmdList.add(delete);
+
         create.then(Commands.argument("pos1", ArgumentTypes.blockPosition()).then(Commands.argument("pos2", ArgumentTypes.blockPosition()).executes(ctx -> {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
@@ -401,6 +429,10 @@ public class LandClaims implements Listener {
             }
         }
         return ret;
+    }
+
+    public @Nullable LandClaim getClaim(int id) {
+        return claims.stream().filter(carnet -> id == carnet.id).findFirst().orElse(null);
     }
 
     public boolean startClaiming(Player who, boolean sMessage) {
@@ -530,6 +562,19 @@ public class LandClaims implements Listener {
         new LandClaimPage(plr, getClaim(loc)).show();
     }
 
+    public void deleteClaim(LandClaim claim, Player who) {
+        var mt = claim.getManagementType(who);
+        if (mt == Claims.ManagementType.None) {
+            who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
+            return;
+        } else if (mt == Claims.ManagementType.Op) {
+            KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Deleted " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+            Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
+        }
+        claims.remove(claim);
+        who.sendMessage(Component.text("Deleted claim successfully.").color(NamedTextColor.GREEN));
+    }
+
     public enum LandPermission {
         DOOR_INTERACT("Interact with Doors", OptBool.True),
         BLOCK_INTERACT("Interact with Blocks"),
@@ -643,28 +688,28 @@ public class LandClaims implements Listener {
         }
     }
 
-    public enum ConfigEnum1 {
-        None("None"),
-        FromInside("From Inside Claim"),
-        All("All");
-
-        public final String label;
-        ConfigEnum1(String label) {
-            this.label = label;
-        }
-    }
+//    public enum ConfigEnum1 {
+//        None("None"),
+//        FromInside("From Inside Claim"),
+//        All("All");
+//
+//        public final String label;
+//        ConfigEnum1(String label) {
+//            this.label = label;
+//        }
+//    }
 
     public static class ClaimConfig {
         public String name = "Unnamed Claim";
         public Integer priority = 0;
 
-        // TODO: these
-        public ConfigEnum1 grassSpread = ConfigEnum1.FromInside;
-        public ConfigEnum1 fireSpread = ConfigEnum1.FromInside;
-        public ConfigEnum1 waterFlow = ConfigEnum1.FromInside;
-        public ConfigEnum1 hopperTransfer = ConfigEnum1.FromInside; // from outside
-        public ConfigEnum1 gravity = ConfigEnum1.FromInside;
-        public ConfigEnum1 treesGrow = ConfigEnum1.FromInside;
+//        // TODO: these
+//        public ConfigEnum1 grassSpread = ConfigEnum1.FromInside;
+//        public ConfigEnum1 fireSpread = ConfigEnum1.FromInside;
+//        public ConfigEnum1 waterFlow = ConfigEnum1.FromInside;
+//        public ConfigEnum1 hopperTransfer = ConfigEnum1.FromInside; // from outside
+//        public ConfigEnum1 gravity = ConfigEnum1.FromInside;
+//        public ConfigEnum1 treesGrow = ConfigEnum1.FromInside;
     }
 
     public static class LandClaim {
@@ -978,7 +1023,7 @@ public class LandClaims implements Listener {
     }
 
     public void showClaims(Player who) {
-        for (var claim : Claims.get().landClaims.claims) {
+        for (var claim : claims) {
             Color c;
             if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId())) {
                 c = Color.GREEN;

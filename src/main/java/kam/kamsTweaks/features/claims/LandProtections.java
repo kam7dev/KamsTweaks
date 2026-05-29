@@ -533,16 +533,13 @@ public class LandProtections implements Listener {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Entity entity = e.getEntity();
-        /* TODO
         if (e.getDamageSource().getCausingEntity() instanceof Entity damager) {
-            if (claims.entityClaims.containsKey(damager.getUniqueId())) {
-                var claim = claims.entityClaims.get(damager.getUniqueId());
-                if (!claim.canAggro) {
-                    e.setCancelled(true);
-                    return;
-                }
+            var claim = Claims.get().entityClaims.getClaim(damager);
+            if (claim != null && !claim.config.canAggro) {
+                e.setCancelled(true);
+                return;
             }
-        }*/
+        }
         if (!(entity instanceof Hangable || entity instanceof Hanging || entity instanceof ArmorStand
                 || entity instanceof Boat || entity instanceof Minecart))
             return;
@@ -746,9 +743,21 @@ public class LandProtections implements Listener {
                         event.setCancelled(true);
                     }
                 } else {
-                    // TODO: block handling
-                    if (to != null && !to.hasPermission(null, LandPermission.BLOCK_PLACE)) {
+                    if (to == null) return;
+                    LandClaim in = event.getIgnitingBlock() != null ? claims.getClaim(event.getIgnitingBlock().getLocation()) : null;
+
+                    if (!to.hasPermission(in == null ? null : in.owner, LandPermission.BLOCK_PLACE)) {
                         event.setCancelled(true);
+                        return;
+                    }
+
+                    // claim in claims check
+                    if (in != null) {
+                        var placeTo = to.hasPermission(null, LandPermission.BLOCK_PLACE);
+                        var placeIn = in.hasPermission(null, LandPermission.BLOCK_PLACE);
+                        if (placeIn != placeTo && !placeTo) {
+                            event.setCancelled(true);
+                        }
                     }
                 }
             }

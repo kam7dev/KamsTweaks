@@ -19,7 +19,6 @@ import java.io.*;
 import java.util.*;
 
 public class Claims extends Feature {
-    public ClaimProtections protections = new ClaimProtections();
     public LandClaims landClaims = new LandClaims();
     public EntityClaims entityClaims = new EntityClaims();
 
@@ -43,10 +42,7 @@ public class Claims extends Feature {
 
         landClaims.setup(this);
         entityClaims.setup(this);
-//        protections.setup(this);
-//        dialogGui.setup(this);
 
-        Bukkit.getServer().getPluginManager().registerEvents(protections, KamsTweaks.get());
         Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), hasMessaged::clear, 1, 1);
     }
 
@@ -84,6 +80,7 @@ public class Claims extends Feature {
         });
 
         landClaims.registerCommands(commands, claimCmd);
+        entityClaims.registerCommands(commands, claimCmd);
 
         claimCmd.then(getTool);
         commands.registrar().register(claimCmd.build());

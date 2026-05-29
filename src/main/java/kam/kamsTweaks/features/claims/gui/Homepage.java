@@ -25,7 +25,7 @@ public class Homepage extends GuiLayer {
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
             var ecBtn = ActionButton.builder(Component.text("Entity Claims")).action(DialogAction.customClick((view, audience) -> {
-
+                new EntityClaimPage(who).show();
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
             var infoBtn = ActionButton.builder(Component.text("Claim Tool info")).action(DialogAction.customClick((view, audience) -> {
