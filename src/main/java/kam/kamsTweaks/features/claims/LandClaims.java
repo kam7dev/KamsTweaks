@@ -78,10 +78,10 @@ public class LandClaims implements Listener {
         var cfg = Claims.get().claimsConfig;
 //        cfg.set("claims", null);
         var primary = Bukkit.getWorlds().getFirst().getUID();
-        cfg.set("claimsv3." + primary, null);
+        cfg.set("landv3." + primary, null);
 
         for (var claim : claims) {
-            var path = "claimsv3." + primary + "." + claim.id;
+            var path = "landv3." + primary + "." + claim.id;
             cfg.set(path + ".id", claim.id);
             if (claim.owner != null) cfg.set(path + ".owner", claim.owner.getUniqueId().toString());
             cfg.set(path + ".start", LocationUtils.serializeBlockPos(claim.start));
@@ -134,10 +134,10 @@ public class LandClaims implements Listener {
         claims.clear();
         var cfg = Claims.get().claimsConfig;
         var primary = Bukkit.getWorlds().getFirst().getUID();
-        if (cfg.contains("claimsv3." + primary)) {
-            for (var key : nonNull(cfg.getConfigurationSection("claimsv3." + primary)).getKeys(false)) {
+        if (cfg.contains("landv3." + primary)) {
+            for (var key : nonNull(cfg.getConfigurationSection("landv3." + primary)).getKeys(false)) {
                 try {
-                    var path = "claimsv3." + primary + "." + key;
+                    var path = "landv3." + primary + "." + key;
                     var uuid = cfg.contains(path + ".owner") ? UUID.fromString(nonNull(cfg.getString(path + ".owner"))) : null;
                     var id = cfg.getInt(path + ".id");
                     var start = LocationUtils.deserializeBlockPos(nonNull(cfg.getString(path + ".start")));

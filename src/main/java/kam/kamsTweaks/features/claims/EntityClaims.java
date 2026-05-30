@@ -19,12 +19,14 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import static kam.kamsTweaks.features.claims.LandClaims.nonNull;
 
 import java.util.*;
 
@@ -139,6 +141,171 @@ public class EntityClaims {
         commands.registrar().register(entity.build());
     }
 
+    void savePerms(FileConfiguration config, String path, Permissions perms) {
+        if (perms.who != null) config.set(path + ".who", perms.who.toString());
+        perms.bools.forEach((perm, val) -> config.set(path + ".bools." + perm.name(), val.name()));
+        perms.advancedBools.forEach((perm, val) -> config.set(path + ".advbools." + perm.name(), val.name()));
+    }
+
+    public void save() {
+        var cfg = Claims.get().claimsConfig;
+        var primary = Bukkit.getWorlds().getFirst().getUID();
+        cfg.set("entityv3." + primary, null);
+
+        claims.forEach((uuid, claim) -> {
+            var path = "entityv3." + primary + "." + claim.entity;
+            cfg.set(path + ".id", claim.id);
+            if (claim.owner != null) cfg.set(path + ".owner", claim.owner.getUniqueId().toString());
+
+            cfg.set(path + ".config.aggro", claim.config.canAggro);
+
+            savePerms(cfg, path + ".default", claim.defaultPerms);
+            savePerms(cfg, path + ".entity", claim.defaultEntityPerms);
+            claim.perms.forEach((u, perms) -> savePerms(cfg, path + ".perms." + u, perms));
+        });
+    }
+
+    void loadPerms(FileConfiguration config, String path, Permissions perms) {
+        try {
+            var who = config.getString(path + ".who");
+            if (who != null) perms.who = UUID.fromString(who);
+            if (config.contains(path + ".bools")) {
+                for (var ps : nonNull(config.getConfigurationSection(path  + ".bools")).getKeys(false)) {
+                    var perm = EntityPermission.valueOf(ps);
+                    perms.bools.put(perm, OptBool.valueOf(config.getString(path + ".bools." + ps)));
+                }
+            }
+            if (config.contains(path + ".advbools")) {
+                for (var ps : nonNull(config.getConfigurationSection(path  + ".advbools")).getKeys(false)) {
+                    var perm = AdvancedEntityPermission.valueOf(ps);
+                    perms.advancedBools.put(perm, OptBool.valueOf(config.getString(path + ".advbools." + ps)));
+                }
+            }
+        } catch (Exception e) {
+            Logger.error("Failed loading perms from " + path + ".");
+            Logger.handleException(e);
+        }
+    }
+
+    void loadLegacy() {
+        var claimsConfig = Claims.get().claimsConfig;
+        if (claimsConfig.contains("entities")) {
+            for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities")).getKeys(false)) {
+                try {
+                    UUID entity = UUID.fromString(key);
+                    String ownerStr = claimsConfig.getString("entities." + key + ".owner");
+                    UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
+                    EntityClaim claim;
+                    if (claimsConfig.contains("entities." + key + ".id")) {
+                        claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), claimsConfig.getInt("entities." + key + ".id"), entity);
+                    } else {
+                        claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), entity);
+                    }
+                    try {
+                        if (claimsConfig.contains("entities." + key + ".defaults")) {
+                            for (String def : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".defaults"))) {
+                                switch(def) {
+                                    case "INTERACT_ENTITY": {
+                                        claim.defaultPerms.bools.put(EntityPermission.INTERACT, OptBool.True);
+                                        break;
+                                    }
+                                    case "DAMAGE_ENTITY": {
+                                        claim.defaultPerms.bools.put(EntityPermission.DAMAGE, OptBool.True);
+                                        break;
+                                    }
+                                }
+                            }
+                        } else if (claimsConfig.contains("entities." + key + ".default")) {
+                            switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".default"))) {
+                                case "INTERACT":
+                                    claim.defaultPerms.bools.put(EntityPermission.INTERACT, OptBool.True);
+                                    break;
+                                case "KILL":
+                                    claim.defaultPerms.bools.put(EntityPermission.DAMAGE, OptBool.True);
+                                    break;
+                            }
+                        }
+                    } catch (NullPointerException e) {
+                        Logger.excs.add(e);
+                        Logger.warn(e.getMessage());
+
+                    }
+
+                    try {
+                        if (claimsConfig.contains("entities." + key + ".permissions")) {
+                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions")).getKeys(false)) {
+                                var perms = claim.getPerms(UUID.fromString(uuid));
+                                for (String def : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".permissions." + uuid))) {
+                                    switch(def) {
+                                        case "INTERACT_ENTITY": {
+                                            perms.bools.put(EntityPermission.INTERACT, OptBool.True);
+                                            break;
+                                        }
+                                        case "DAMAGE_ENTITY": {
+                                            perms.bools.put(EntityPermission.DAMAGE, OptBool.True);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                             
+                        } else if (claimsConfig.contains("entities." + key + ".perms")) {
+                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
+                                var perms = claim.getPerms(UUID.fromString(uuid));
+                                switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".perms." + uuid))) {
+                                    case "INTERACT":
+                                        perms.bools.put(EntityPermission.INTERACT, OptBool.True);
+                                        break;
+                                    case "KILL":
+                                        perms.bools.put(EntityPermission.DAMAGE, OptBool.True);
+                                        break;
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        Logger.excs.add(e);
+                        Logger.warn(e.getMessage());
+                    }
+                    claims.put(UUID.fromString(key), claim);
+                } catch (Exception e) {
+                    Logger.excs.add(e);
+                    Logger.warn(e.getMessage());
+                }
+            }
+        }
+    }
+
+    public void load() {
+        claims.clear();
+        var cfg = Claims.get().claimsConfig;
+        var primary = Bukkit.getWorlds().getFirst().getUID();
+        if (cfg.contains("entityv3." + primary)) {
+            for (var key : nonNull(cfg.getConfigurationSection("entityv3." + primary)).getKeys(false)) {
+                try {
+                    var path = "entityv3." + primary + "." + key;
+                    var oUuid = UUID.fromString(key);
+                    var uuid = cfg.contains(path + ".owner") ? UUID.fromString(nonNull(cfg.getString(path + ".owner"))) : null;
+                    var id = cfg.getInt(path + ".id");
+                    var claim = new EntityClaim(oUuid != null ? Bukkit.getOfflinePlayer(oUuid) : null, id, uuid);
+                    claim.config.canAggro = cfg.getBoolean(path + ".config.aggro");
+
+                    loadPerms(cfg, path + ".default", claim.defaultPerms);
+                    loadPerms(cfg, path + ".entity", claim.defaultEntityPerms);
+                    if (cfg.contains(path + ".perms")) {
+                        for (var perm : nonNull(cfg.getConfigurationSection(path + ".perms")).getKeys(false)) {
+                            loadPerms(cfg, path + ".perms." + uuid, claim.getPerms(UUID.fromString(perm + ".who")));
+                        }
+                    }
+
+                    claims.put(uuid, claim);
+                } catch (Exception e) {
+                    Logger.handleException(e);
+                }
+            }
+        }
+        loadLegacy();
+    }
+
     public void listClaims(Player who, CommandSender reciever) {
         var ref = new Object() {
             Component msg = Component.empty();
@@ -203,8 +370,8 @@ public class EntityClaims {
             who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
             return;
         } else if (mt == Claims.ManagementType.Op) {
-            KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Deleted " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
-            Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
+            KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Deleted " + claim.getOwnerUsername() + "'s entity claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+            Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s entity claim.");
         }
         claims.remove(claim.entity);
         who.sendMessage(Component.text("Deleted claim successfully.").color(NamedTextColor.GREEN));

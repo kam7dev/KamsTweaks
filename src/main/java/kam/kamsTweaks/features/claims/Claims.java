@@ -90,12 +90,14 @@ public class Claims extends Feature {
     public void loadData() {
         setupFile();
         landClaims.load();
+        entityClaims.load();
     }
 
     @Override
     public void saveData() {
         setupFile();
         landClaims.save();
+        entityClaims.save();
         try {
             claimsConfig.save(claimsFile);
         } catch (Exception e) {
