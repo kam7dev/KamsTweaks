@@ -150,10 +150,10 @@ public class EntityClaims {
     public void save() {
         var cfg = Claims.get().claimsConfig;
         var primary = Bukkit.getWorlds().getFirst().getUID();
-        cfg.set("entityv3." + primary, null);
+        cfg.set(primary + ".entityv3", null);
 
         claims.forEach((uuid, claim) -> {
-            var path = "entityv3." + primary + "." + claim.entity;
+            var path = primary + ".entityv3." + claim.entity;
             cfg.set(path + ".id", claim.id);
             if (claim.owner != null) cfg.set(path + ".owner", claim.owner.getUniqueId().toString());
 
@@ -188,22 +188,22 @@ public class EntityClaims {
     }
 
     void loadLegacy() {
-        var claimsConfig = Claims.get().claimsConfig;
-        if (claimsConfig.contains("entities")) {
-            for (String key : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities")).getKeys(false)) {
+        var cfg = Claims.get().claimsConfig;
+        if (cfg.contains("entities")) {
+            for (String key : Objects.requireNonNull(cfg.getConfigurationSection("entities")).getKeys(false)) {
                 try {
                     UUID entity = UUID.fromString(key);
-                    String ownerStr = claimsConfig.getString("entities." + key + ".owner");
+                    String ownerStr = cfg.getString("entities." + key + ".owner");
                     UUID owner = ownerStr == null ? null : UUID.fromString(ownerStr);
                     EntityClaim claim;
-                    if (claimsConfig.contains("entities." + key + ".id")) {
-                        claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), claimsConfig.getInt("entities." + key + ".id"), entity);
+                    if (cfg.contains("entities." + key + ".id")) {
+                        claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), cfg.getInt("entities." + key + ".id"), entity);
                     } else {
                         claim = new EntityClaim(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), entity);
                     }
                     try {
-                        if (claimsConfig.contains("entities." + key + ".defaults")) {
-                            for (String def : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".defaults"))) {
+                        if (cfg.contains("entities." + key + ".defaults")) {
+                            for (String def : Objects.requireNonNull(cfg.getStringList("entities." + key + ".defaults"))) {
                                 switch(def) {
                                     case "INTERACT_ENTITY": {
                                         claim.defaultPerms.bools.put(EntityPermission.INTERACT, OptBool.True);
@@ -215,8 +215,8 @@ public class EntityClaims {
                                     }
                                 }
                             }
-                        } else if (claimsConfig.contains("entities." + key + ".default")) {
-                            switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".default"))) {
+                        } else if (cfg.contains("entities." + key + ".default")) {
+                            switch (Objects.requireNonNull(cfg.getString("entities." + key + ".default"))) {
                                 case "INTERACT":
                                     claim.defaultPerms.bools.put(EntityPermission.INTERACT, OptBool.True);
                                     break;
@@ -232,10 +232,10 @@ public class EntityClaims {
                     }
 
                     try {
-                        if (claimsConfig.contains("entities." + key + ".permissions")) {
-                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".permissions")).getKeys(false)) {
+                        if (cfg.contains("entities." + key + ".permissions")) {
+                            for (String uuid : Objects.requireNonNull(cfg.getConfigurationSection("entities." + key + ".permissions")).getKeys(false)) {
                                 var perms = claim.getPerms(UUID.fromString(uuid));
-                                for (String def : Objects.requireNonNull(claimsConfig.getStringList("entities." + key + ".permissions." + uuid))) {
+                                for (String def : Objects.requireNonNull(cfg.getStringList("entities." + key + ".permissions." + uuid))) {
                                     switch(def) {
                                         case "INTERACT_ENTITY": {
                                             perms.bools.put(EntityPermission.INTERACT, OptBool.True);
@@ -249,10 +249,10 @@ public class EntityClaims {
                                 }
                             }
                              
-                        } else if (claimsConfig.contains("entities." + key + ".perms")) {
-                            for (String uuid : Objects.requireNonNull(claimsConfig.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
+                        } else if (cfg.contains("entities." + key + ".perms")) {
+                            for (String uuid : Objects.requireNonNull(cfg.getConfigurationSection("entities." + key + ".perms")).getKeys(false)) {
                                 var perms = claim.getPerms(UUID.fromString(uuid));
-                                switch (Objects.requireNonNull(claimsConfig.getString("entities." + key + ".perms." + uuid))) {
+                                switch (Objects.requireNonNull(cfg.getString("entities." + key + ".perms." + uuid))) {
                                     case "INTERACT":
                                         perms.bools.put(EntityPermission.INTERACT, OptBool.True);
                                         break;
@@ -273,18 +273,20 @@ public class EntityClaims {
                 }
             }
         }
+        cfg.set("entities", null);
+
     }
 
     public void load() {
         claims.clear();
         var cfg = Claims.get().claimsConfig;
         var primary = Bukkit.getWorlds().getFirst().getUID();
-        if (cfg.contains("entityv3." + primary)) {
-            for (var key : nonNull(cfg.getConfigurationSection("entityv3." + primary)).getKeys(false)) {
+        if (cfg.contains(primary + ".entityv3")) {
+            for (var key : nonNull(cfg.getConfigurationSection(primary + ".entityv3.")).getKeys(false)) {
                 try {
-                    var path = "entityv3." + primary + "." + key;
-                    var oUuid = UUID.fromString(key);
-                    var uuid = cfg.contains(path + ".owner") ? UUID.fromString(nonNull(cfg.getString(path + ".owner"))) : null;
+                    var path = primary + ".entityv3." + key;
+                    var uuid = UUID.fromString(key);
+                    var oUuid = cfg.contains(path + ".owner") ? UUID.fromString(nonNull(cfg.getString(path + ".owner"))) : null;
                     var id = cfg.getInt(path + ".id");
                     var claim = new EntityClaim(oUuid != null ? Bukkit.getOfflinePlayer(oUuid) : null, id, uuid);
                     claim.config.canAggro = cfg.getBoolean(path + ".config.aggro");
@@ -640,7 +642,7 @@ public class EntityClaims {
         }
 
         public Claims.ManagementType getManagementType(Player who) {
-            if (owner != null && who.getUniqueId() == owner.getUniqueId()) return Claims.ManagementType.Owner;
+            if (owner != null && who.getUniqueId().equals(owner.getUniqueId())) return Claims.ManagementType.Owner;
             if (who.hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
             return Claims.ManagementType.None;
         }

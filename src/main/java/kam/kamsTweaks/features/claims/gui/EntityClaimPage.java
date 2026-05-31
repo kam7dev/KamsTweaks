@@ -96,7 +96,7 @@ public class EntityClaimPage extends GuiLayer {
             dialog = Dialog.create(builder -> {
                 var claim = Claims.get().entityClaims.getClaim(target);
                 if (claim == null) return;
-                var base = DialogBase.builder(Component.text("Edit Claim: ").append(Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD), Component.text(" ("), Component.translatable(target.getType().translationKey()), Component.text(")")));
+                var base = DialogBase.builder(Component.text("Edit Claim: ").append(Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD)));
                 if (claim.owner == null || !claim.owner.getUniqueId().equals(who.getUniqueId())) {
                     base.body(List.of(DialogBody.plainMessage(
                             Component.text("Careful! This claim is owned by ").append(
@@ -168,9 +168,9 @@ public class EntityClaimPage extends GuiLayer {
                                 return;
                             } else if (mt == Claims.ManagementType.Op) {
                                 KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited settings for " + claim.getOwnerUsername() + "'s entity claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
-                                Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s entity claim.");
+                                Logger.warn("[Claim management] " + who.getName() + " just edited settings for " + claim.getOwnerUsername() + "'s entity claim.");
                             }
-                            claim.config.canAggro = Objects.requireNonNullElse(view.getBoolean("prio"), false);
+                            claim.config.canAggro = Objects.requireNonNullElse(view.getBoolean("aggro"), false);
                         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                 );
 
@@ -203,7 +203,7 @@ public class EntityClaimPage extends GuiLayer {
                 return;
             } else if (mt == Claims.ManagementType.Op) {
                 KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited permissions for " + claim.getOwnerUsername() + "'s entity claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
-                Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s entity claim.");
+                Logger.warn("[Claim management] " + who.getName() + " just edited permissions for " + claim.getOwnerUsername() + "'s entity claim.");
             }
             if (isAdvanced) {
                 for (var opt : EntityClaims.AdvancedEntityPermission.values()) {

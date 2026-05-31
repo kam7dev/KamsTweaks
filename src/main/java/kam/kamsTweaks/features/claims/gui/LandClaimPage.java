@@ -189,7 +189,7 @@ public class LandClaimPage extends GuiLayer {
                                 return;
                             } else if (mt == Claims.ManagementType.Op) {
                                 KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited settings for " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
-                                Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
+                                Logger.warn("[Claim management] " + who.getName() + " just edited settings for " + claim.getOwnerUsername() + "'s land claim.");
                             }
                             claim.config.priority = Objects.requireNonNullElse(view.getFloat("prio"), 0).intValue();
 
@@ -240,7 +240,7 @@ public class LandClaimPage extends GuiLayer {
                 return;
             } else if (mt == Claims.ManagementType.Op) {
                 KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited permissions for " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
-                Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
+                Logger.warn("[Claim management] " + who.getName() + " just edited permissions for " + claim.getOwnerUsername() + "'s land claim.");
             }
             if (isAdvanced) {
                 for (var opt : AdvancedLandPermission.values()) {

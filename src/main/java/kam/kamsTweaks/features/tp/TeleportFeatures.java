@@ -6,17 +6,16 @@ import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.Feature;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.claims.Claims;
+import kam.kamsTweaks.features.claims.EntityClaims;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Pose;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -27,6 +26,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.eclipse.sisu.Priority;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -103,7 +103,7 @@ public class TeleportFeatures extends Feature {
             Listener listener;
         };
         o.listener = new Listener() {
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
             void onAttack(EntityDamageByEntityEvent e) {
                 if (e.getDamager() == player) {
                     player.sendMessage(Component.text("Teleport immunity lost since you attacked someone/something.").color(NamedTextColor.YELLOW));
@@ -119,14 +119,13 @@ public class TeleportFeatures extends Feature {
         if (vehicle != null) {
             var passengers = vehicle.getPassengers();
             for (var passenger : passengers) {
-                // TODO
-//                if (Claims.get().entityClaims.containsKey(passenger.getUniqueId())) {
-//                    var claim = Claims.get().entityClaims.get(passenger.getUniqueId());
-//                    if (!claim.hasPermission(player, Claims.ClaimPermission.DAMAGE_ENTITY)) {
-//                        player.sendMessage(Component.text("Cancelled teleport because you don't have permission to ").append(Component.text("kill").color(NamedTextColor.AQUA).decorate(TextDecoration.UNDERLINED).clickEvent(ClickEvent.callback(audience -> audience.sendMessage(Component.text("It requires the damage permission because teleporting the mob would allow a method of killing a claimed entity.")))), Component.text(" an entity in this vehicle.")));
-//                        return;
-//                    }
-//                }
+                var claim = Claims.get().entityClaims.getClaim(passenger);
+                if (claim  != null) {
+                    if (!claim.hasPermission(player, EntityClaims.EntityPermission.DAMAGE)) {
+                        player.sendMessage(Component.text("Cancelled teleport because you don't have permission to ").append(Component.text("damage").color(NamedTextColor.AQUA).decorate(TextDecoration.UNDERLINED).clickEvent(ClickEvent.callback(audience -> audience.sendMessage(Component.text("It requires the damage permission because teleporting the mob would allow a method of killing a claimed entity.")))), Component.text(" an entity in this vehicle.")));
+                        return;
+                    }
+                }
             }
         }
         onCooldown.put(player, KamsTweaks.get().getConfig().getInt("teleportation.cooldown"));
@@ -206,6 +205,9 @@ public class TeleportFeatures extends Feature {
             @EventHandler
             public void onPlayerDamage(EntityDamageEvent event) {
                 if (event.getEntity().equals(player)) {
+                    if (player.isBlocking()) {
+                        if (!(event.getDamageSource().getCausingEntity() instanceof Player)) return;
+                    }
                     player.sendMessage(Component.text("Teleport cancelled because you took damage.").color(NamedTextColor.GOLD));
                     cancel();
                 }
@@ -290,11 +292,17 @@ public class TeleportFeatures extends Feature {
             @EventHandler
             public void onPlayerDamage(EntityDamageEvent event) {
                 if (event.getEntity().equals(player)) {
+                    if (player.isBlocking()) {
+                        if (!(event.getDamageSource().getCausingEntity() instanceof Player)) return;
+                    }
                     target.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
                             .append(player.displayName().color(NamedTextColor.RED))
                             .append(Component.text(" took damage.").color(NamedTextColor.GOLD)));
                     cancel();
                 } else if (event.getEntity().equals(target)) {
+                    if (target instanceof HumanEntity human && human.isBlocking()) {
+                        if (!(event.getDamageSource().getCausingEntity() instanceof Player)) return;
+                    }
                     player.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
                             .append(event.getEntity().name().color(NamedTextColor.RED))
                             .append(Component.text(" took damage.").color(NamedTextColor.GOLD)));

@@ -32,10 +32,8 @@ public class SilkSpawner extends Feature {
         new ConfigCommand.BoolConfig("silk-spawners.enabled", "silk-spawners.enabled", true, "kamstweaks.configure"));
   }
 
-  @EventHandler(priority = EventPriority.HIGH)
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   public void onBreak(BlockBreakEvent e) {
-    if (e.isCancelled())
-      return;
     if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))
       return;
     if (!e.getPlayer().hasPermission("kamstweaks.silkspawner"))
@@ -76,21 +74,5 @@ public class SilkSpawner extends Feature {
       spawner.setSpawnedType(type);
       spawner.update(true);
     }
-  }
-
-  @Override
-  public void shutdown() {
-  }
-
-  @Override
-  public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-  }
-
-  @Override
-  public void loadData() {
-  }
-
-  @Override
-  public void saveData() {
   }
 }

@@ -122,8 +122,21 @@ public class Claims extends Feature {
             return true;
         }
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            event.setCancelled(true);
             assert event.getClickedBlock() != null;
             landClaims.handleTool(plr, event.getClickedBlock().getLocation());
+            return true;
+        }
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            event.setCancelled(true);
+            assert event.getClickedBlock() != null;
+            var claim = landClaims.getClaim(event.getClickedBlock().getLocation());
+            if (claim == null) {
+                plr.sendMessage(Component.text("This land isn't claimed"));
+            } else {
+                plr.sendMessage(Component.text("This land is owned by ").append(claim.getOwnerName()));
+            }
+            return true;
         }
         if (event.getAction() == Action.RIGHT_CLICK_AIR) {
             new Homepage(plr).show();

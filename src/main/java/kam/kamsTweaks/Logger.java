@@ -61,7 +61,7 @@ public class Logger {
 
     public static void handleException(Exception e) {
         excs.add(e);
-        Logger.error(e + "\n" + e.fillInStackTrace());
+        Logger.error(e + "\nStack trace: \n" + e.fillInStackTrace());
     }
 
     public enum LogLevel {

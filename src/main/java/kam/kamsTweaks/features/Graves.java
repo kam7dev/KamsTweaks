@@ -186,6 +186,7 @@ public class Graves extends Feature {
     }
 
     public static Location checkLocation(Location loc) {
+        if (loc.getWorld() == null) return null;
         var wb = loc.getWorld().getWorldBorder();
         if (!wb.isInside(loc)) {
             loc.setX(Math.clamp(loc.getX(), wb.getCenter().getX() - wb.getSize() / 2, wb.getCenter().getX() + wb.getSize() / 2));
@@ -287,6 +288,7 @@ public class Graves extends Feature {
         Player player = event.getPlayer();
         if (player.getInventory().isEmpty() && player.getTotalExperience() == 0) return;
         var loc = checkLocation(player.getLocation());
+        if (loc == null) loc = player.getLocation();
         Grave grave = new Grave(player, loc);
         graves.put(grave.id, grave);
         event.getDrops().clear();
@@ -768,7 +770,7 @@ public class Graves extends Feature {
                     int xp = (int) config.get("graves." + key + ".xp", 0);
                     assert locationStr != null;
                     Location location = checkLocation(LocationUtils.deserializeLocation(locationStr));
-                    if (location.getWorld() == null) continue;
+                    if (location == null || location.getWorld() == null) continue;
                     Inventory inv = Inventories.loadInventory(Component.text("Grave"), GRAVE_SIZE, config, "graves." + key);
                     long timeLeft = config.getLong("graves." + key + ".timeleft", 1000 * 60 * 20);
                     Grave grave = new Grave(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), inv, location, xp, timeLeft);

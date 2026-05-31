@@ -1,10 +1,7 @@
 package kam.kamsTweaks.features;
 
-import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
 import org.bukkit.Bukkit;
-import org.jetbrains.annotations.NotNull;
 
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.KamsTweaks;
@@ -43,9 +40,8 @@ public class SeedDispenser extends Feature {
     }
 
     // compat with claims
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onDispense(BlockDispenseEvent e) {
-        if (e.isCancelled()) return;
         if (!KamsTweaks.get().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
         Block block = e.getBlock();
         if (block.getType() == Material.DISPENSER) {
@@ -99,26 +95,5 @@ public class SeedDispenser extends Feature {
                 }
             }
         }
-    }
-
-
-    @Override
-    public void shutdown() {
-
-    }
-
-    @Override
-    public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-
-    }
-
-    @Override
-    public void loadData() {
-
-    }
-
-    @Override
-    public void saveData() {
-
     }
 }
