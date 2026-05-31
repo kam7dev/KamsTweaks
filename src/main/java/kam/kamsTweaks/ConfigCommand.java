@@ -12,6 +12,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -168,9 +170,10 @@ public class ConfigCommand {
                             return Command.SINGLE_SUCCESS;
                         }).then(Commands.argument("id", IntegerArgumentType.integer(0, Logger.exceptions.size() - 1)).executes(ctx -> {
                             var e = Logger.exceptions.get(ctx.getArgument("id", Integer.class));
-                            var msg = e + "\n" + e.fillInStackTrace();
-                            Logger.error("Stack trace print requested by " + ctx.getSource().getSender().getName() + ": \n" + msg);
-                            ctx.getSource().getSender().sendMessage(msg);
+                            StringWriter sw = new StringWriter();
+                            e.printStackTrace(new PrintWriter(sw));
+                            Logger.error("Stack trace print requested by " + ctx.getSource().getSender().getName() + ":\n" + sw);
+                            ctx.getSource().getSender().sendMessage(sw.toString());
                             return Command.SINGLE_SUCCESS;
                         }).requires(source -> source.getSender().hasPermission("kamstweaks.logger")))
                         .then(Commands.literal("clear").executes(ctx -> {

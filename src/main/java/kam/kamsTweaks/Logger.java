@@ -1,5 +1,7 @@
 package kam.kamsTweaks;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,7 +63,9 @@ public class Logger {
 
     public static void handleException(Exception e) {
         exceptions.add(e);
-        Logger.error(e + "\nStack trace: \n" + e.fillInStackTrace());
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        Logger.error(sw.toString());
     }
 
     public enum LogLevel {
