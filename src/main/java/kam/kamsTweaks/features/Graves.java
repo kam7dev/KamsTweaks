@@ -134,7 +134,7 @@ public class Graves extends Feature {
                                 grave.hasMessagedExpire = false;
                                 ctx.getSource().getSender()
                                         .sendMessage(Component
-                                                .text("You have 10 minutes to recover your grave. You can recover a grave repeaatedly, but only 3 can be recovered at a time.")
+                                                .text("You have 10 minutes to recover your grave. You can recover a grave repeatedly, but only 3 can be recovered at a time.")
                                                 .color(NamedTextColor.AQUA));
                                 grave.createStand();
                                 return Command.SINGLE_SUCCESS;

@@ -17,7 +17,6 @@ import net.kyori.adventure.text.*;
 import net.kyori.adventure.text.event.*;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -43,23 +42,17 @@ public class LandClaimPage extends GuiLayer {
             }
 
             if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30) && !Claims.get().landClaims.currentlyClaiming.containsKey(who)) {
-                var createBtn = ActionButton.builder(Component.text("Create a Claim")).action(DialogAction.customClick((view, audience) -> {
-                    Claims.get().landClaims.startClaiming(who, true);
-                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var createBtn = ActionButton.builder(Component.text("Create a Claim")).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.startClaiming(who, true), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
                 btns.add(createBtn);
             }
 
             if (Claims.get().landClaims.currentlyClaiming.containsKey(who)) {
-                var createBtn = ActionButton.builder(Component.text("Cancel Claiming")).action(DialogAction.customClick((view, audience) -> {
-                    Claims.get().landClaims.stopClaiming(who);
-                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var createBtn = ActionButton.builder(Component.text("Cancel Claiming")).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.stopClaiming(who), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
                 btns.add(createBtn);
             }
 
             if (target != null && target.getManagementType(who) != Claims.ManagementType.None) {
-                var editBtn = ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> {
-                    new EditPage(who, target).show();
-                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var editBtn = ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> new EditPage(who, target).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
                 btns.add(editBtn);
             }
 
@@ -69,23 +62,19 @@ public class LandClaimPage extends GuiLayer {
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
             btns.add(viewBtn);
 
-            var listBtn = ActionButton.builder(Component.text("List Your Claims")).action(DialogAction.customClick((view, audience) -> {
-                Claims.get().landClaims.listClaims(who);
-            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            var listBtn = ActionButton.builder(Component.text("List Your Claims")).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.listClaims(who), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
             btns.add(listBtn);
 
-            var deleteBtn = ActionButton.builder(Component.text("Delete ALL of Your Claims")).action(DialogAction.customClick((view, audience) -> {
-                new FLAlertLayer(who, Component.text("Delete ALL of your land claims?"),
-                        Component.text("Are you sure you want to ALL of your land claims?").append(Component.text(" This is irreversible.", NamedTextColor.RED)),
-                        Component.text("Yes").color(NamedTextColor.GREEN), Component.text("No").color(NamedTextColor.RED), second -> {
-                    if (second) {
-                        show();
-                    } else {
-                        Claims.get().landClaims.claims.removeIf(claim -> claim.owner == who);
-                        who.sendMessage(Component.text("Deleted all of your claims successfully.").color(NamedTextColor.GREEN));
-                    }
-                }).show();
-            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            var deleteBtn = ActionButton.builder(Component.text("Delete ALL of Your Claims")).action(DialogAction.customClick((view, audience) -> new FLAlertLayer(who, Component.text("Delete ALL of your land claims?"),
+                    Component.text("Are you sure you want to ALL of your land claims?").append(Component.text(" This is irreversible.", NamedTextColor.RED)),
+                    Component.text("Yes").color(NamedTextColor.GREEN), Component.text("No").color(NamedTextColor.RED), second -> {
+                if (second) {
+                    show();
+                } else {
+                    Claims.get().landClaims.claims.removeIf(claim -> claim.owner == who);
+                    who.sendMessage(Component.text("Deleted all of your claims successfully.").color(NamedTextColor.GREEN));
+                }
+            }).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
             btns.add(deleteBtn);
 
             dia.type(DialogType.multiAction(btns, null, 1));
@@ -129,35 +118,23 @@ public class LandClaimPage extends GuiLayer {
                 }
                 var dia = builder.empty().base(base.build());
 
-                var defaultBtn = ActionButton.builder(Component.text("Default Player Permissions")).action(DialogAction.customClick((view, audience) -> {
-                    new PermissionPage(who, claim, PermMode.DEFAULT).show();
-                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var defaultBtn = ActionButton.builder(Component.text("Default Player Permissions")).action(DialogAction.customClick((view, audience) -> new PermissionPage(who, claim, PermMode.DEFAULT).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                var entityBtn = ActionButton.builder(Component.text("Default Entity Permissions")).action(DialogAction.customClick((view, audience) -> {
-                    new PermissionPage(who, claim, PermMode.ENTITY_DEFAULT).show();
-                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var entityBtn = ActionButton.builder(Component.text("Default Entity Permissions")).action(DialogAction.customClick((view, audience) -> new PermissionPage(who, claim, PermMode.ENTITY_DEFAULT).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                var permBtn = ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> {
-                    new UserListPage(who, Component.text("Edit Permissions: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)), plr -> {
-                        new PermissionPage(who, claim, plr).show();
-                    }).show();
-                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var permBtn = ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> new UserListPage(who, Component.text("Edit Permissions: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)), plr -> new PermissionPage(who, claim, plr).show()).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                var settingsBtn = ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> {
-                    new SettingsPage(who, claim).show();
-                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var settingsBtn = ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> new SettingsPage(who, claim).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                var deleteBtn = ActionButton.builder(Component.text("Delete")).action(DialogAction.customClick((view, audience) -> {
-                    new FLAlertLayer(who, Component.text("Delete claim?"),
-                            Component.text("Are you sure you want to delete this land claim?"),
-                            Component.text("Yes").color(NamedTextColor.GREEN), Component.text("No").color(NamedTextColor.RED), second -> {
-                        if (second) {
-                            show();
-                        } else {
-                            Claims.get().landClaims.deleteClaim(claim, who);
-                        }
-                    }).show();
-                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var deleteBtn = ActionButton.builder(Component.text("Delete")).action(DialogAction.customClick((view, audience) -> new FLAlertLayer(who, Component.text("Delete claim?"),
+                        Component.text("Are you sure you want to delete this land claim?"),
+                        Component.text("Yes").color(NamedTextColor.GREEN), Component.text("No").color(NamedTextColor.RED), second -> {
+                    if (second) {
+                        show();
+                    } else {
+                        Claims.get().landClaims.deleteClaim(claim, who);
+                    }
+                }).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
                 dia.type(DialogType.multiAction(List.of(defaultBtn, entityBtn, permBtn, settingsBtn, deleteBtn), null, 1));
             });
@@ -334,9 +311,7 @@ public class LandClaimPage extends GuiLayer {
                                 Component.text("Confirm", NamedTextColor.GREEN),
                                 Component.text("Click to confirm your changes."),
                                 100,
-                                DialogAction.customClick((view, audience) -> {
-                                    save(view);
-                                }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
+                                DialogAction.customClick((view, audience) -> save(view), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                         ),
                         ActionButton.create(
                                 Component.text("Discard", NamedTextColor.RED),

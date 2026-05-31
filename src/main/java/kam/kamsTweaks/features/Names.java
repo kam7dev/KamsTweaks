@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Names extends Feature {
     Map<UUID, Component> data = new HashMap<>();
-    public static final String INVIS_REGEX = "[\\u200B-\\u200F\\uFEFF\\u2060]";
+    public static final String INVISIBLE_REGEX = "[\\u200B-\\u200F\\uFEFF\\u2060]";
 
     public static Names instance;
 
@@ -58,7 +58,7 @@ public class Names extends Feature {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("nicknames.enabled", "nicknames.enabled", true, "kamstweaks.configure"));
     }
 
-    public static class Compat {
+    public static class Legacy {
         private static List<String> splitGraphemes(String input) {
             BreakIterator iter = BreakIterator.getCharacterInstance(Locale.ROOT);
             iter.setText(input);
@@ -128,7 +128,7 @@ public class Names extends Feature {
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
-                        String name = ctx.getArgument("name", String.class).replaceAll(INVIS_REGEX, "");
+                        String name = ctx.getArgument("name", String.class).replaceAll(INVISIBLE_REGEX, "");
                         Component comp = Component.text().append(mm.deserialize(name)).build().hoverEvent(HoverEvent.showText(Component.text(player.getName())));
                         var plain = pt.serialize(comp);
                         if (plain.length() > 30) {
@@ -249,7 +249,7 @@ public class Names extends Feature {
                             (nick.isBlank()) ? pName : nick,
                             colors
                     );
-                    data.put(owner, Component.text().append(Compat.renderName(info)).build().hoverEvent(HoverEvent.showText(Component.text(pName))));
+                    data.put(owner, Component.text().append(Legacy.renderName(info)).build().hoverEvent(HoverEvent.showText(Component.text(pName))));
                 } catch (Exception e) {
                     Logger.warn("Failed to load name for " + key + ". Exception printed below.");
                     Logger.handleException(e);

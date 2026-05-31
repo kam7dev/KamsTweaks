@@ -414,18 +414,15 @@ public class LandProtections implements Listener {
         } else {
             ItemFrame frame = (ItemFrame) entity;
             boolean spin = !frame.getItem().isEmpty();
+            LandClaim.MPRes res;
             if (spin) {
-                var res = claim.hasPermissions(player, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.ITEM_FRAME_ITEM_ROTATE);
-                if (!res.result()) {
-                    message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
-                    e.setCancelled(true);
-                }
+                res = claim.hasPermissions(player, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.ITEM_FRAME_ITEM_ROTATE);
             } else {
-                var res = claim.hasPermissions(player, LandPermission.BLOCK_PLACE, AdvancedLandPermission.ITEM_FRAME_ITEM_PLACE);
-                if (!res.result()) {
-                    message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
-                    e.setCancelled(true);
-                }
+                res = claim.hasPermissions(player, LandPermission.BLOCK_PLACE, AdvancedLandPermission.ITEM_FRAME_ITEM_PLACE);
+            }
+            if (!res.result()) {
+                message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                e.setCancelled(true);
             }
         }
     }

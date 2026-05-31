@@ -26,9 +26,6 @@ public class SlashHat extends Feature {
     }
 
     @Override
-    public void shutdown() {}
-
-    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("hat")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.hat"))
@@ -42,7 +39,7 @@ public class SlashHat extends Feature {
                     if (executor instanceof Player player) {
                         PlayerInventory inv = player.getInventory();
                         ItemStack hand = inv.getItemInMainHand();
-                        ItemManager.getType(hand); // update it if its a claim tool that has prot 5 lol
+                        ItemManager.getType(hand); // update it if it's a claim tool that has protection 5 lol
                         ItemStack helmet = inv.getHelmet();
                         // no cheat
                         if (helmet != null && helmet.containsEnchantment(Enchantment.BINDING_CURSE)) {
@@ -61,10 +58,4 @@ public class SlashHat extends Feature {
         commands.registrar().register(buildCommand);
 
     }
-
-    @Override
-    public void loadData() {}
-
-    @Override
-    public void saveData() {}
 }

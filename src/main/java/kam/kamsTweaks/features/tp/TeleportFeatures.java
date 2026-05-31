@@ -26,7 +26,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.eclipse.sisu.Priority;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;

@@ -20,17 +20,11 @@ public class Homepage extends GuiLayer {
             var base = DialogBase.builder(Component.text("Claims"));
             var dia = builder.empty().base(base.build());
 
-            var lcBtn = ActionButton.builder(Component.text("Land Claims")).action(DialogAction.customClick((view, audience) -> {
-                new LandClaimPage(who).show();
-            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            var lcBtn = ActionButton.builder(Component.text("Land Claims")).action(DialogAction.customClick((view, audience) -> new LandClaimPage(who).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-            var ecBtn = ActionButton.builder(Component.text("Entity Claims")).action(DialogAction.customClick((view, audience) -> {
-                new EntityClaimPage(who).show();
-            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            var ecBtn = ActionButton.builder(Component.text("Entity Claims")).action(DialogAction.customClick((view, audience) -> new EntityClaimPage(who).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-            var infoBtn = ActionButton.builder(Component.text("Claim Tool info")).action(DialogAction.customClick((view, audience) -> {
-                new InfoPage(who, this).show();
-            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            var infoBtn = ActionButton.builder(Component.text("Claim Tool info")).action(DialogAction.customClick((view, audience) -> new InfoPage(who, this).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
             dia.type(DialogType.multiAction(List.of(lcBtn, ecBtn, infoBtn), null, 1));
         });

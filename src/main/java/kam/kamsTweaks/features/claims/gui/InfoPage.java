@@ -30,9 +30,7 @@ public class InfoPage extends GuiLayer {
             var dia = builder.empty().base(base.build());
 
             // back button
-            dia.type(DialogType.notice(ActionButton.builder(Component.text("Close")).action(DialogAction.customClick((view, audience) -> {
-                next.show();
-            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build()));
+            dia.type(DialogType.notice(ActionButton.builder(Component.text("Close")).action(DialogAction.customClick((view, audience) -> next.show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build()));
         });
     }
 }

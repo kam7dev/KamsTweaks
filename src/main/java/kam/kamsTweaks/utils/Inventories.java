@@ -1,6 +1,5 @@
 package kam.kamsTweaks.utils;
 
-import kam.kamsTweaks.Logger;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;

@@ -1,10 +1,7 @@
 package kam.kamsTweaks.features;
 
-import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.Feature;
-import org.jetbrains.annotations.NotNull;
 import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

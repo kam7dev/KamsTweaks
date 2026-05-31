@@ -103,7 +103,7 @@ public class LandClaims implements Listener {
         }
     }
 
-    // i got tired of typing the long thing
+    // I got tired of typing the long thing
     public static <T> @NotNull T nonNull(@Nullable T t) {
         return Objects.requireNonNull(t);
     }
@@ -225,7 +225,7 @@ public class LandClaims implements Listener {
                             }
                         }
                     } catch (NullPointerException e) {
-                        Logger.excs.add(e);
+                        Logger.exceptions.add(e);
                         Logger.warn(e.getMessage());
                         claim.defaultPerms.bools = new HashMap<>();
                     }
@@ -261,12 +261,12 @@ public class LandClaims implements Listener {
                             }
                         }
                     } catch (Exception e) {
-                        Logger.excs.add(e);
+                        Logger.exceptions.add(e);
                         Logger.warn(e.getMessage());
                     }
                     claims.add(claim);
                 } catch (Exception e) {
-                    Logger.excs.add(e);
+                    Logger.exceptions.add(e);
                     Logger.warn(e.getMessage());
                 }
             }
@@ -990,14 +990,14 @@ public class LandClaims implements Listener {
                         }
                     }
                 } catch (Exception exception) {
-                    Logger.excs.add(exception);
+                    Logger.exceptions.add(exception);
                     Logger.error(exception.getMessage());
                 }
             }
         }.runTaskTimer(KamsTweaks.get(), 0L, 1L);
     }
 
-    public void listClaims(OfflinePlayer who, CommandSender reciever) {
+    public void listClaims(OfflinePlayer who, CommandSender receiver) {
         Component msg = Component.empty();
         int i = 0;
         for (LandClaim claim : claims) {
@@ -1014,7 +1014,7 @@ public class LandClaims implements Listener {
             }
         }
 
-        reciever.sendMessage(Component.text().append(who == reciever ? Component.text("You have ") : Names.instance.getRenderedName(who).append(Component.text(" has ")), Component.text(i).color(NamedTextColor.GOLD), Component.text(" land claims"), Component.text("."), msg));
+        receiver.sendMessage(Component.text().append(who == receiver ? Component.text("You have ") : Names.instance.getRenderedName(who).append(Component.text(" has ")), Component.text(i).color(NamedTextColor.GOLD), Component.text(" land claims"), Component.text("."), msg));
     }
 
     public void listClaims(Player who) {

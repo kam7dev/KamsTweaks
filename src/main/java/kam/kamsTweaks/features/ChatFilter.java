@@ -54,8 +54,7 @@ public class ChatFilter extends Feature {
         public void fetch() {
             if (!fetched) return;
             String str;
-            try {
-                HttpClient client = HttpClient.newHttpClient();
+            try (HttpClient client = HttpClient.newHttpClient()) {
                 HttpRequest request = HttpRequest.newBuilder().uri(URI.create(fetchUrl)).GET().build();
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 KamsTweaks.get().getDataConfig().set("filter-cache." + name, response.body());
@@ -173,7 +172,7 @@ public class ChatFilter extends Feature {
             try {
                 var channel = DiscordUtil.getTextChannelById("1487994679579508836");
                 if (channel != null) {
-                    channel.sendMessage("<@&1488275345252810882> " + message);
+                    var ignored = channel.sendMessage("<@&1488275345252810882> " + message);
                 }
             } catch (Exception e) {
                 Logger.error("Failed to send message to discord. Exception printed below.");

@@ -28,12 +28,8 @@ public class FLAlertLayer extends GuiLayer {
     }
     public FLAlertLayer(Player who, Component title, Component body, Component first, Component second, Consumer<Boolean> callback) {
         super(who);
-        var firstBtn = ActionButton.builder(first).action(DialogAction.customClick((view, audience) -> {
-            callback.accept(false);
-        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
-        var secondBtn = ActionButton.builder(second).action(DialogAction.customClick((view, audience) -> {
-            callback.accept(true);
-        }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+        var firstBtn = ActionButton.builder(first).action(DialogAction.customClick((view, audience) -> callback.accept(false), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+        var secondBtn = ActionButton.builder(second).action(DialogAction.customClick((view, audience) -> callback.accept(true), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
         init(title, body, firstBtn, secondBtn);
     }
 }

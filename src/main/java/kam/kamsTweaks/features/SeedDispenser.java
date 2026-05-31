@@ -39,7 +39,7 @@ public class SeedDispenser extends Feature {
         };
     }
 
-    // compat with claims
+    // compatibility with claims
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onDispense(BlockDispenseEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("seed-dispenser.enabled", true)) return;
@@ -72,8 +72,8 @@ public class SeedDispenser extends Feature {
                             return;
                         }
                     }
-                    // sometimes it just flat out doesnt work, so run it again next tick
-                    // no this does not repeat if it does run, because of the return in the statement
+                    // sometimes it just flat out doesn't work, so run it again next tick
+                    // no this does not repeat if it does run, because of the return in the statement above
                     Bukkit.getServer().getScheduler().runTask(KamsTweaks.get(), () -> {
                         ItemStack[] contents2 = container.getInventory().getContents();
                         for (int i = 0; i < contents2.length; i++) {

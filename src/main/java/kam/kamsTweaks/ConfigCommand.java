@@ -164,17 +164,17 @@ public class ConfigCommand {
                             return Command.SINGLE_SUCCESS;
                         }).requires(source -> source.getSender().hasPermission("kamstweaks.save")))
                         .then(Commands.literal("printException").requires(source -> source.getSender().hasPermission("kamstweaks.logger")).executes(ctx -> {
-                            ctx.getSource().getSender().sendMessage("There are " + Logger.excs.size() + " exceptions.");
+                            ctx.getSource().getSender().sendMessage("There are " + Logger.exceptions.size() + " exceptions.");
                             return Command.SINGLE_SUCCESS;
-                        }).then(Commands.argument("id", IntegerArgumentType.integer(0, Logger.excs.size() - 1)).executes(ctx -> {
-                            var e = Logger.excs.get(ctx.getArgument("id", Integer.class));
+                        }).then(Commands.argument("id", IntegerArgumentType.integer(0, Logger.exceptions.size() - 1)).executes(ctx -> {
+                            var e = Logger.exceptions.get(ctx.getArgument("id", Integer.class));
                             var msg = e + "\n" + e.fillInStackTrace();
                             Logger.error("Stack trace print requested by " + ctx.getSource().getSender().getName() + ": \n" + msg);
                             ctx.getSource().getSender().sendMessage(msg);
                             return Command.SINGLE_SUCCESS;
                         }).requires(source -> source.getSender().hasPermission("kamstweaks.logger")))
                         .then(Commands.literal("clear").executes(ctx -> {
-                            Logger.excs.clear();
+                            Logger.exceptions.clear();
                             ctx.getSource().getSender().sendMessage("Exceptions cleared.");
                             return Command.SINGLE_SUCCESS;
                         }).requires(source -> source.getSender().hasPermission("kamstweaks.logger"))))

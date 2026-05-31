@@ -18,16 +18,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class Spawn extends Feature {
     @Override
-    public void setup() {
-
-    }
-
-    @Override
-    public void shutdown() {
-
-    }
-
-    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> spawn = Commands.literal("spawn")
                 .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.spawn"))
@@ -63,15 +53,5 @@ public class Spawn extends Feature {
                     return Command.SINGLE_SUCCESS;
                 });
         commands.registrar().register(spawn.build());
-    }
-
-    @Override
-    public void loadData() {
-
-    }
-
-    @Override
-    public void saveData() {
-
     }
 }

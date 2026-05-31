@@ -226,7 +226,7 @@ public class EntityClaims {
                             }
                         }
                     } catch (NullPointerException e) {
-                        Logger.excs.add(e);
+                        Logger.exceptions.add(e);
                         Logger.warn(e.getMessage());
 
                     }
@@ -263,12 +263,12 @@ public class EntityClaims {
                             }
                         }
                     } catch (Exception e) {
-                        Logger.excs.add(e);
+                        Logger.exceptions.add(e);
                         Logger.warn(e.getMessage());
                     }
                     claims.put(UUID.fromString(key), claim);
                 } catch (Exception e) {
-                    Logger.excs.add(e);
+                    Logger.exceptions.add(e);
                     Logger.warn(e.getMessage());
                 }
             }
@@ -308,7 +308,7 @@ public class EntityClaims {
         loadLegacy();
     }
 
-    public void listClaims(Player who, CommandSender reciever) {
+    public void listClaims(Player who, CommandSender receiver) {
         var ref = new Object() {
             Component msg = Component.empty();
             int i = 0;
@@ -328,7 +328,7 @@ public class EntityClaims {
             }
         });
 
-        reciever.sendMessage(Component.text().append(who == reciever ? Component.text("You have ") : Names.instance.getRenderedName(who).append(Component.text(" has ")), Component.text(ref.i).color(NamedTextColor.GOLD), Component.text(" entity claims"), Component.text("."), ref.msg));
+        receiver.sendMessage(Component.text().append(who == receiver ? Component.text("You have ") : Names.instance.getRenderedName(who).append(Component.text(" has ")), Component.text(ref.i).color(NamedTextColor.GOLD), Component.text(" entity claims"), Component.text("."), ref.msg));
     }
 
     public void listClaims(Player who) {

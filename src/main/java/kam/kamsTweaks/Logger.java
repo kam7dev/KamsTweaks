@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Logger {
-    static boolean inited = false;
+    static boolean initialized = false;
 
     static LogLevel logLevel = LogLevel.WARN;
 
-    public static List<Exception> excs = new ArrayList<>();
+    public static List<Exception> exceptions = new ArrayList<>();
 
     public static void init() {
-        if (inited) return;
+        if (initialized) return;
         try {
             logLevel = LogLevel.valueOf(KamsTweaks.get().getConfig().getString("log-level", "warn").toUpperCase());
         } catch(Exception e) {
@@ -20,7 +20,7 @@ public class Logger {
         var cmd = new ConfigCommand.StringConfig("log-level", "log-level", "warn", new String[]{"debug", "info", "warn", "error"}, "kamstweaks.configure");
         cmd.callback = Logger::setLevel;
         ConfigCommand.addConfig(cmd);
-        inited = true;
+        initialized = true;
     }
 
     public static void debug(String message) {
@@ -60,7 +60,7 @@ public class Logger {
     }
 
     public static void handleException(Exception e) {
-        excs.add(e);
+        exceptions.add(e);
         Logger.error(e + "\nStack trace: \n" + e.fillInStackTrace());
     }
 
