@@ -98,6 +98,11 @@ public class Claims extends Feature {
         setupFile();
         landClaims.save();
         entityClaims.save();
+
+        // it wasnt removing these before
+        claimsConfig.set("claims", null);
+        claimsConfig.set("entities", null);
+
         try {
             claimsConfig.save(claimsFile);
         } catch (Exception e) {
