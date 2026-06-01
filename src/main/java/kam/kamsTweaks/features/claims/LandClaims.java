@@ -766,7 +766,7 @@ public class LandClaims implements Listener {
         }
 
         public Claims.ManagementType getManagementType(Player who) {
-            if (owner != null && who.getUniqueId() == owner.getUniqueId()) return Claims.ManagementType.Owner;
+            if (owner != null && who.getUniqueId().equals(owner.getUniqueId())) return Claims.ManagementType.Owner;
             if (who.hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
             return Claims.ManagementType.None;
         }
