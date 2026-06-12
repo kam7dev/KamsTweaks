@@ -54,6 +54,9 @@ graves:
 
 zombify:
   enabled: true
+
+stand-arms:
+  enabled: true
   
 filters:
   brainrot:

@@ -530,7 +530,8 @@ public class LandProtections implements Listener {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Entity entity = e.getEntity();
-        if (e.getDamageSource().getCausingEntity() instanceof Entity damager) {
+        Entity damager = e.getDamageSource().getCausingEntity();
+        if (damager != null) {
             var claim = Claims.get().entityClaims.getClaim(damager);
             if (claim != null && !claim.config.canAggro) {
                 e.setCancelled(true);
@@ -548,7 +549,7 @@ public class LandProtections implements Listener {
             origin = claims.getClaim(loc);
         }
         if (entity instanceof ItemFrame frame && !frame.getItem().isEmpty()) {
-            var res = claim.hasPermissions(entity, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE);
+            var res = claim.hasPermissions(damager, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE);
             if (!res.result()) {
                 if (origin == null || !origin.hasPermissions(entity, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE).result())  {
                     message(entity, Component.text("You don't have permission to " + res.message() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
@@ -556,7 +557,7 @@ public class LandProtections implements Listener {
                 }
             }
         } else {
-            if (!claim.hasPermission(entity, LandPermission.BLOCK_BREAK)) {
+            if (!claim.hasPermission(damager, LandPermission.BLOCK_BREAK)) {
                 if (origin == null || !origin.hasPermission(entity, LandPermission.BLOCK_BREAK)) {
                     message(entity, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
                     e.setCancelled(true);
