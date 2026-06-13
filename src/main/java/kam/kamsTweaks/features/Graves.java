@@ -282,8 +282,7 @@ public class Graves extends Feature {
         graves.put(grave.id, grave);
         event.getDrops().clear();
         event.setDroppedExp(0);
-        // TODO
-        player.sendMessage(Component.text("You have a new grave at ").append(Component.text(String.format("(%s, %s, %s)", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())).color(NamedTextColor.RED), Component.text(" in "), Component.text(loc.getWorld().getName()).color(NamedTextColor.RED), Component.text(".")).color(NamedTextColor.GOLD));
+        player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_NEW, Component.text(String.format("(%s, %s, %s)", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())).color(NamedTextColor.RED), Component.text(loc.getWorld().getName()).color(NamedTextColor.RED)).color(NamedTextColor.GOLD));
     }
 
     void tp() {
@@ -360,8 +359,7 @@ public class Graves extends Feature {
                 case null, default: break;
             }
         }
-        // TODO
-        if (plainSerializer.serialize(e.getView().title()).equals("Grave")) {
+        if (e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_TITLE)) || e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_BLOCK_TITLE))) {
             switch (e.getAction()) {
                 case PLACE_ALL:
                 case PLACE_ONE:
@@ -394,8 +392,7 @@ public class Graves extends Feature {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onDrag(InventoryDragEvent e) {
-        // TODO
-        if (plainSerializer.serialize(e.getView().title()).equals("Grave")) {
+	if (e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_TITLE)) || e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_BLOCK_TITLE))) {
             for (int rawSlot : e.getRawSlots()) {
                 if (rawSlot < e.getView().getTopInventory().getSize()) {
                     e.setCancelled(true);
@@ -436,7 +433,6 @@ public class Graves extends Feature {
             }
         });
         if (expired.get() > 0 || unexpired.get() > 0) {
-            // TODO
             var msg = Component.text("You have ");
             if (expired.get() > 0) {
                 msg = msg.append(Component.text(expired.get() + " expired grave(s)"));
@@ -447,6 +443,7 @@ public class Graves extends Feature {
             if (unexpired.get() > 0) {
                 msg = msg.append(Component.text(unexpired.get() + " active grave(s)"));
             }
+	    e.getPlayer().sendMessage(KTStrings.getFor(KTStrings.GRAVE_WELCOME, Component.text(unexpired.get()), Component.text(expired.get())).color(NamedTextColor.GOLD));
             e.getPlayer().sendMessage(msg.append(Component.text(".")).color(NamedTextColor.GOLD));
         }
     }
@@ -590,8 +587,7 @@ public class Graves extends Feature {
                     }
                     if (!hasMessagedExpire) {
                         player.playSound(player.getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, .6f, 1.0f);
-                        // TODO
-                        player.sendMessage(Component.text("Your grave (" + id + ") just expired.").color(NamedTextColor.RED));
+        		player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_EXPIRE_NOW, Component.text(id)).color(NamedTextColor.RED));
                         hasMessagedExpire = true;
                     }
 //                    if (recovery) {
@@ -600,20 +596,17 @@ public class Graves extends Feature {
                 } else {
                     if (this.msLeft <= 1000 * 60 * 5 && !hasMessaged5) {
                         hasMessaged5 = true;
-                        // TODO
-                        player.sendMessage(Component.text("Your grave expires in 5 minutes!").color(NamedTextColor.RED));
+                        player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_5_MINS, Component.text(id)).color(NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.0f);
                     }
                     if (this.msLeft <= 1000 * 60 && !hasMessaged1) {
                         hasMessaged1 = true;
-                        // TODO
-                        player.sendMessage(Component.text("Your grave expires in 1 minute!").color(NamedTextColor.RED));
+			player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_1_MIN, Component.text(id)).color(NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.2f);
                     }
                     if (this.msLeft <= 1000 * 30 && !hasMessagedHalf) {
                         hasMessagedHalf = true;
-                        // TODO
-                        player.sendMessage(Component.text("Your grave expires in 30 seconds!").color(NamedTextColor.RED));
+			player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_30_SEC, Component.text(id)).color(NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, .5f, .5f);
                     }
                 }
@@ -636,7 +629,7 @@ public class Graves extends Feature {
                 case STONECUTTER -> {return slot == 1;}
                 case WORKBENCH, CRAFTING -> {return slot == 0;}
             }
-            return false;
+	    return false;
         }
 
         private static boolean holdsItems(InventoryType type) {
@@ -650,8 +643,7 @@ public class Graves extends Feature {
             this.owner = owner;
             this.location = location;
             PlayerInventory inv = owner.getInventory();
-            // TODO
-            this.mainInv = Bukkit.createInventory(null, MAIN_SIZE, Component.text("Grave"));
+            this.mainInv = Bukkit.createInventory(null, MAIN_SIZE, KTStrings.getFor(KTStrings.GRAVE_TITLE));
             for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
                 if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
@@ -707,8 +699,7 @@ public class Graves extends Feature {
 
             Inventory topInv = owner.getOpenInventory().getTopInventory();
             if (!holdsItems(topInv.getType())) {
-                // TODO
-                this.stationInv = Bukkit.createInventory(null, STATION_SIZE, Component.text("Grave (Stations)"));
+                this.stationInv = Bukkit.createInventory(null, STATION_SIZE, KTStrings.getFor(KTStrings.GRAVE_BLOCK_TITLE));
                 for (int i = 0; i < topInv.getSize(); i++) {
                     if (i > STATION_SIZE) {
                         Logger.error("Attempted to put an item past max inventory space in an inventory! Type: " + topInv.getType());
@@ -744,8 +735,7 @@ public class Graves extends Feature {
                     var toStation = new ItemStack(Material.ARROW);
                     ItemMeta toMeta = toStation.getItemMeta();
                     if (toMeta != null) {
-                        // TODO
-                        toMeta.displayName(Component.translatable("kamstweaks.gui.graves_to_block", "To Block Inventory").decoration(TextDecoration.ITALIC, false));
+                        toMeta.displayName(KTStrings.getFor(KTStrings.GRAVE_TO_BLOCK).decoration(TextDecoration.ITALIC, false));
                         toMeta.getPersistentDataContainer().set(guiKey, PersistentDataType.STRING, "station");
                         toMeta.getPersistentDataContainer().set(graveKey, PersistentDataType.INTEGER, id);
                         toStation.setItemMeta(toMeta);
@@ -754,8 +744,7 @@ public class Graves extends Feature {
                     var fromStation = new ItemStack(Material.ARROW);
                     ItemMeta fromMeta = fromStation.getItemMeta();
                     if (fromMeta != null) {
-                        // TODO
-                        fromMeta.displayName(Component.translatable("kamstweaks.gui.graves_from_block", "To Main Inventory").decoration(TextDecoration.ITALIC, false));
+                        fromMeta.displayName(KTStrings.getFor(KTStrings.GRAVE_FROM_BLOCK).decoration(TextDecoration.ITALIC, false));
                         fromMeta.getPersistentDataContainer().set(guiKey, PersistentDataType.STRING, "main");
                         fromMeta.getPersistentDataContainer().set(graveKey, PersistentDataType.INTEGER, id);
                         fromStation.setItemMeta(fromMeta);
@@ -802,8 +791,7 @@ public class Graves extends Feature {
             stand.setInvisible(true);
             stand.setInvulnerable(true);
             stand.setArms(false);
-            // TODO
-            stand.customName(Component.text(owner.getName() == null ? "Unknown" : owner.getName()).color(NamedTextColor.GOLD).append(Component.text("'s Grave").color(NamedTextColor.WHITE)));
+            stand.customName(KTStrings.getFor(KTStrings.GRAVE_NAME, Component.text(owner.getName() == null ? "Unknown" : owner.getName()).color(NamedTextColor.GOLD)));
             stand.getPersistentDataContainer().set(graveKey, PersistentDataType.INTEGER, this.id);
         }
     }
@@ -841,9 +829,8 @@ public class Graves extends Feature {
                     assert locationStr != null;
                     Location location = checkLocation(LocationUtils.deserializeLocation(locationStr));
                     if (location == null || location.getWorld() == null) continue;
-                    // TODO
-                    Inventory mainInv = Inventories.loadInventory(Component.text("Grave"), MAIN_SIZE, config, "graves." + key);
-                    Inventory stationInv = Inventories.loadInventory(Component.text("Grave"), MAIN_SIZE, config, "graves." + key + ".station");
+                    Inventory mainInv = Inventories.loadInventory(KTStrings.getFor(KTStrings.GRAVE_TITLE), MAIN_SIZE, config, "graves." + key);
+                    Inventory stationInv = Inventories.loadInventory(KTStrings.getFor(KTStrings.GRAVE_BLOCK_TITLE), MAIN_SIZE, config, "graves." + key + ".station");
                     long timeLeft = config.getLong("graves." + key + ".timeleft", 1000 * 60 * 20);
                     Grave grave = new Grave(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), mainInv, stationInv, location, xp, timeLeft);
                     grave.hasMessaged5 = config.getBoolean("graves." + key + ".m5", false);

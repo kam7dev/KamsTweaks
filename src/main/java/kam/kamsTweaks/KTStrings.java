@@ -19,6 +19,17 @@ public enum KTStrings {
     GRAVE_RECOVERY,
     GRAVE_NO_ID,
     GRAVE_DELETED,
+    GRAVE_NEW,
+    GRAVE_TITLE,
+    GRAVE_BLOCK_TITLE,
+    GRAVE_NAME,
+    GRAVE_TO_BLOCK,
+    GRAVE_FROM_BLOCK,
+    GRAVE_5_MINS,
+    GRAVE_1_MIN,
+    GRAVE_30_SEC,
+    GRAVE_EXPIRE_NOW,
+    GRAVE_WELCOME,
 
     // Names
     NAMES,
@@ -69,7 +80,7 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.graves.time_left", "%s seconds left", args);
             }
             case GRAVE_COUNT -> {
-                return Component.translatable("kamstweaks.graves.count", "You have %s graves.", args);
+                return Component.translatable("kamstweaks.graves.count", "You have %s grave(s).", args);
             }
             case GRAVE_RECOVERY_MAX -> {
                 return Component.translatable("kamstweaks.graves.recovery_max", "You are already recovering %s graves.", args);
@@ -83,6 +94,42 @@ public enum KTStrings {
             case GRAVE_DELETED -> {
                 return Component.translatable("kamstweaks.graves.deleted", "Grave deleted successfully.");
             }
+	    case GRAVE_NEW -> {
+		return Component.translatable("kamstweaks.graves.new", "You have a new grave at %s in %s.", args);
+	    }
+	    case GRAVE_TITLE -> {
+		return Component.translatable("kamstweaks.graves.inv_title", "Grave", args);
+	    }
+	    case GRAVE_BLOCK_TITLE -> {
+		return Component.translatable("kamstweaks.graves.inv_title_block", "Grave (Stations)", args);
+	    }
+	    case GRAVE_NAME -> {
+		return Component.translatable("kamstweaks.graves.name", "%s's Grave", args);
+
+	    }
+   	    case GRAVE_TO_BLOCK -> {
+		return Component.translatable("kamstweaks.graves.to_block", "To Station Inventory", args);
+
+	    }
+	    case GRAVE_FROM_BLOCK -> {
+		return Component.translatable("kamstweaks.graves.from_block", "To Main Inventory", args);
+
+	    }
+	    case GRAVE_EXPIRE_NOW -> {
+		return Component.translatable("kamstweaks.graves.just_expired", "Your grave (%s) just expired.", args);
+	    }
+    	    case GRAVE_5_MINS -> {
+		return Component.translatable("kamstweaks.graves.5_mins", "Your grave (%s) expires in 5 minutes!", args);
+	    }
+    	    case GRAVE_1_MIN -> {
+		return Component.translatable("kamstweaks.graves.1_min", "Your grave (%s) expires in 1 minute!", args);
+	    }
+            case GRAVE_30_SEC -> {
+		return Component.translatable("kamstweaks.graves.30_sec", "Your grave (%s) expires in 30 seconds!", args);
+	    }
+	    case GRAVE_WELCOME -> {
+		return Component.translatable("kamstweaks.graves.welcome", "You have %s active grave(s) and %s expired grave(s).", args);
+	    }
 
             case NAMES -> {
                 return Component.translatable("kamstweaks.names", "Nicknames", args);
