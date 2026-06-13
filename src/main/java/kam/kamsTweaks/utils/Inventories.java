@@ -8,6 +8,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class Inventories {
     public static void saveInventory(Inventory inventory, FileConfiguration config, String key) {
+        if (inventory == null) return;
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack item = inventory.getItem(i);
             config.set(key + ".slot." + i, item);

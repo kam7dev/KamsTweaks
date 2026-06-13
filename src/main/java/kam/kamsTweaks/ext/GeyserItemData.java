@@ -44,6 +44,17 @@ public class GeyserItemData implements EventRegistrar {
                 .priority(1)
                 .build());
 
+        // Grave Head
+        event.register(Identifier.of("music_disc_pigstep"), CustomItemDefinition.builder(
+                        Identifier.of("kamstweaks:grave"), // Bedrock item identifier
+                        Identifier.of("minecraft:stone_brick_wall") // Java item model
+                )
+                .bedrockOptions(CustomItemBedrockOptions.builder().creativeCategory(CreativeCategory.EQUIPMENT).creativeGroup("kamstweaks"))
+                .component(JavaItemDataComponents.MAX_STACK_SIZE, 1)
+                .component(JavaItemDataComponents.EQUIPPABLE, JavaEquippable.builder().slot(JavaEquippable.EquipmentSlot.HEAD).build())
+                .priority(1)
+                .build());
+
         // Anvixo's Bits
         Logger.info("Setting up Anvixo's Bits items with Geyser");
         // 23 / Daisy Bell

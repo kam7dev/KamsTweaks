@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features;
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import kam.kamsTweaks.Feature;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -11,8 +12,10 @@ import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.Inventories;
 import kam.kamsTweaks.utils.LocationUtils;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
@@ -32,6 +35,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
@@ -43,7 +47,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Graves extends Feature {
-    public static int GRAVE_SIZE = 54;
+    public static final int MAIN_SIZE = 45;
+    public static final int STATION_SIZE = 36;
+    public static NamespacedKey guiKey = new NamespacedKey("kamstweaks", "gui");
+    public static NamespacedKey graveKey = new NamespacedKey("kamstweaks", "grave");
     public Map<Integer, Grave> graves = new HashMap<>();
     static int highest = 0;
 
@@ -163,7 +170,6 @@ public class Graves extends Feature {
                                 graves.remove(grave.id);
                                 ctx.getSource().getSender()
                                         .sendMessage(Component.text("Grave deleted successfully.").color(NamedTextColor.AQUA));
-                                grave.createStand();
                                 return Command.SINGLE_SUCCESS;
                             }
                             ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
@@ -344,6 +350,32 @@ public class Graves extends Feature {
     @EventHandler(priority = EventPriority.HIGH)
     public void onClick(InventoryClickEvent e) {
         var clickedInv = e.getClickedInventory();
+        var item = e.getCurrentItem();
+        if (item != null && !item.isEmpty() && item.getPersistentDataContainer().has(guiKey)) {
+            switch (item.getPersistentDataContainer().get(guiKey, PersistentDataType.STRING)) {
+                case "main": {
+                    var id = item.getPersistentDataContainer().get(graveKey, PersistentDataType.INTEGER);
+                    e.getWhoClicked().closeInventory();
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> {
+                        var grave = graves.get(id);
+                        if (grave == null) return;
+                        e.getWhoClicked().openInventory(grave.getMainInv());
+                    }, 0);
+                    break;
+                }
+                case "station": {
+                    var id = item.getPersistentDataContainer().get(graveKey, PersistentDataType.INTEGER);
+                    e.getWhoClicked().closeInventory();
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> {
+                        var grave = graves.get(id);
+                        if (grave == null || grave.getStationInv() == null) return;
+                        e.getWhoClicked().openInventory(grave.getStationInv());
+                    }, 0);
+                    break;
+                }
+                case null, default: break;
+            }
+        }
         if (plainSerializer.serialize(e.getView().title()).equals("Grave")) {
             switch (e.getAction()) {
                 case PLACE_ALL:
@@ -436,8 +468,19 @@ public class Graves extends Feature {
     public void onCloseInv(InventoryCloseEvent e) {
         AtomicInteger rem = new AtomicInteger(-1);
         graves.forEach((id, grave) -> {
-            if (e.getInventory().equals(grave.getInventory())) {
-                if (grave.getInventory().isEmpty()) {
+            if (e.getInventory().equals(grave.getMainInv())) {
+                var st = grave.getStationInv();
+                if (st != null) {
+                    var i = 0;
+                    for (var stack : st.getContents()) {
+                        if (stack != null && !stack.isEmpty()) i++;
+                    }
+                    if (i == 1) {
+                        grave.stationInv = null;
+                        grave.mainInv.setItem(MAIN_SIZE - 1, ItemStack.empty());
+                    }
+                }
+                if (grave.getMainInv().isEmpty()) {
                     if (grave.stand != null) grave.stand.remove();
                     rem.set(id);
                     KamsTweaks.get().save();
@@ -451,18 +494,17 @@ public class Graves extends Feature {
         Entity entity = e.getRightClicked();
         Player player = e.getPlayer();
         if (entity instanceof ArmorStand stand) {
-            NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
-            if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
+            if (!stand.getPersistentDataContainer().has(graveKey, PersistentDataType.INTEGER)) return;
             e.setCancelled(true);
             if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
                 return;
             @SuppressWarnings("DataFlowIssue")
-            int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
+            int id = stand.getPersistentDataContainer().get(graveKey, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
                 PlayerInventory inv = player.getInventory();
-                Inventory inventory = grave.getInventory();
+                Inventory inventory = grave.getMainInv();
                 for (int i = 0; i < 36; i++) {
                     if (inv.getItem(i) != null && !Objects.requireNonNull(inv.getItem(i)).isEmpty()) continue;
                     ItemStack item = inventory.getItem(i);
@@ -471,19 +513,19 @@ public class Graves extends Feature {
                         inventory.setItem(i, null);
                     }
                 }
-                if (inv.getHelmet() == null || Objects.requireNonNull(inv.getHelmet()).isEmpty()) {
+                if (inv.getHelmet().isEmpty()) {
                     inv.setHelmet(inventory.getItem(36));
                     inventory.setItem(36, null);
                 }
-                if (inv.getChestplate() == null || Objects.requireNonNull(inv.getChestplate()).isEmpty()) {
+                if (inv.getChestplate().isEmpty()) {
                     inv.setChestplate(inventory.getItem(37));
                     inventory.setItem(37, null);
                 }
-                if (inv.getLeggings() == null || Objects.requireNonNull(inv.getLeggings()).isEmpty()) {
+                if (inv.getLeggings().isEmpty()) {
                     inv.setLeggings(inventory.getItem(38));
                     inventory.setItem(38, null);
                 }
-                if (inv.getBoots() == null || Objects.requireNonNull(inv.getBoots()).isEmpty()) {
+                if (inv.getBoots().isEmpty()) {
                     inv.setBoots(inventory.getItem(39));
                     inventory.setItem(39, null);
                 }
@@ -512,17 +554,16 @@ public class Graves extends Feature {
         }
         if (entity instanceof ArmorStand stand) {
             Player player = e.getPlayer();
-            NamespacedKey key = new NamespacedKey("kamstweaks", "grave");
-            if (!stand.getPersistentDataContainer().has(key, PersistentDataType.INTEGER)) return;
+            if (!stand.getPersistentDataContainer().has(graveKey, PersistentDataType.INTEGER)) return;
             e.setCancelled(true);
             if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
                 return;
             @SuppressWarnings("DataFlowIssue")
-            int id = stand.getPersistentDataContainer().get(key, PersistentDataType.INTEGER);
+            int id = stand.getPersistentDataContainer().get(graveKey, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
             var grave = graves.get(id);
             if (grave.getOwner().getUniqueId().equals(player.getUniqueId())) {
-                player.openInventory(grave.getInventory());
+                player.openInventory(grave.getMainInv());
                 if (grave.experience != 0) {
                     changePlayerExp(player, grave.experience);
                     grave.experience = 0;
@@ -538,7 +579,8 @@ public class Graves extends Feature {
 
     public static class Grave {
         OfflinePlayer owner;
-        Inventory inventory;
+        Inventory mainInv;
+        Inventory stationInv;
         Location location;
         ArmorStand stand;
         int experience;
@@ -587,9 +629,10 @@ public class Graves extends Feature {
             }
         }
 
-        public Grave(OfflinePlayer owner, Inventory inventory, Location location, int experience, long msLeft) {
+        public Grave(OfflinePlayer owner, Inventory inventoryA, Inventory inventoryB, Location location, int experience, long msLeft) {
             this.owner = owner;
-            this.inventory = inventory;
+            this.mainInv = inventoryA;
+            this.stationInv = inventoryB;
             this.location = location;
             this.experience = experience;
             this.msLeft = msLeft;
@@ -616,39 +659,39 @@ public class Graves extends Feature {
             this.owner = owner;
             this.location = location;
             PlayerInventory inv = owner.getInventory();
-            this.inventory = Bukkit.createInventory(null, GRAVE_SIZE, Component.text("Grave"));
+            this.mainInv = Bukkit.createInventory(null, MAIN_SIZE, Component.text("Grave"));
             for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
                 if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
-                    inventory.setItem(i, item);
+                    mainInv.setItem(i, item);
                     inv.setItem(i, null);
                 }
             }
             {
                 var item = inv.getHelmet();
-                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
-                    inventory.setItem(36, item);
+                if (!item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    mainInv.setItem(36, item);
                     inv.setHelmet(null);
                 }
             }
             {
                 var item = inv.getChestplate();
-                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
-                    inventory.setItem(37, item);
+                if (!item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    mainInv.setItem(37, item);
                     inv.setChestplate(null);
                 }
             }
             {
                 var item = inv.getLeggings();
-                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
-                    inventory.setItem(38, item);
+                if (item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    mainInv.setItem(38, item);
                     inv.setLeggings(null);
                 }
             }
             {
                 var item = inv.getBoots();
-                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
-                    inventory.setItem(39, item);
+                if (!item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                    mainInv.setItem(39, item);
                     inv.setBoots(null);
                 }
             }
@@ -656,22 +699,25 @@ public class Graves extends Feature {
             {
                 var item = inv.getItemInOffHand();
                 if (!item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
-                    inventory.setItem(40, item);
+                    mainInv.setItem(40, item);
                     inv.setItemInOffHand(null);
                 }
             }
             {
                 var item = owner.getItemOnCursor();
                 if (!item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
-                    inventory.setItem(41, item);
+                    mainInv.setItem(41, item);
                     owner.setItemOnCursor(null);
                 }
             }
+            this.id = highest;
+            highest++;
 
             Inventory topInv = owner.getOpenInventory().getTopInventory();
             if (!holdsItems(topInv.getType())) {
+                this.stationInv = Bukkit.createInventory(null, STATION_SIZE, Component.text("Grave (Stations)"));
                 for (int i = 0; i < topInv.getSize(); i++) {
-                    if (45 + i > 53) {
+                    if (i > STATION_SIZE) {
                         Logger.error("Attempted to put an item past max inventory space in an inventory! Type: " + topInv.getType());
                         Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
                         if (dsPlugin != null && dsPlugin.isEnabled()) {
@@ -695,15 +741,35 @@ public class Graves extends Feature {
                     }
                     ItemStack item = topInv.getItem(i);
                     if (item != null && !slotIsOutput(topInv.getType(), i)) {
-                        inventory.setItem(45+i, item);
+                        stationInv.setItem(i, item);
                         topInv.setItem(i, null);
                     }
+                }
+                if (stationInv.isEmpty()) {
+                    stationInv = null;
+                } else {
+                    var toStation = new ItemStack(Material.ARROW);
+                    ItemMeta toMeta = toStation.getItemMeta();
+                    if (toMeta != null) {
+                        toMeta.displayName(Component.translatable("kamstweaks.gui.graves_to_block", "To Block Inventory").decoration(TextDecoration.ITALIC, false));
+                        toMeta.getPersistentDataContainer().set(guiKey, PersistentDataType.STRING, "station");
+                        toMeta.getPersistentDataContainer().set(graveKey, PersistentDataType.INTEGER, id);
+                        toStation.setItemMeta(toMeta);
+                    }
+                    mainInv.setItem(MAIN_SIZE - 1, toStation);
+                    var fromStation = new ItemStack(Material.ARROW);
+                    ItemMeta fromMeta = fromStation.getItemMeta();
+                    if (fromMeta != null) {
+                        fromMeta.displayName(Component.translatable("kamstweaks.gui.graves_from_block", "To Main Inventory").decoration(TextDecoration.ITALIC, false));
+                        fromMeta.getPersistentDataContainer().set(guiKey, PersistentDataType.STRING, "main");
+                        fromMeta.getPersistentDataContainer().set(graveKey, PersistentDataType.INTEGER, id);
+                        fromStation.setItemMeta(fromMeta);
+                    }
+                    stationInv.setItem(STATION_SIZE - 1, fromStation);
                 }
             }
 
             this.experience = getPlayerExp(owner);
-            this.id = highest;
-            highest++;
             if (owner.isOnline()) {
                 if (msLeft > 0) {
                     createStand();
@@ -715,8 +781,12 @@ public class Graves extends Feature {
             return owner;
         }
 
-        public Inventory getInventory() {
-            return inventory;
+        public Inventory getMainInv() {
+            return mainInv;
+        }
+
+        public Inventory getStationInv() {
+            return stationInv;
         }
 
         public Location getLocation() {
@@ -726,16 +796,19 @@ public class Graves extends Feature {
         public void createStand() {
             stand = location.getWorld().spawn(location.clone().addRotation(90, 0).subtract(0, 1.4375, 0), ArmorStand.class);
             stand.setGravity(false);
-            stand.setItem(EquipmentSlot.HEAD, new ItemStack(Material.STONE_BRICK_WALL));
+            var stack = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
+            //noinspection UnstableApiUsage
+            stack.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "stone_brick_wall"));
+            stand.setItem(EquipmentSlot.HEAD, stack);
             stand.setCustomNameVisible(true);
             stand.setBasePlate(false);
-            stand.setRemoveWhenFarAway(false);
             stand.setPersistent(false);
             stand.setRemoveWhenFarAway(true);
             stand.setInvisible(true);
             stand.setInvulnerable(true);
+            stand.setArms(false);
             stand.customName(Component.text(owner.getName() == null ? "Unknown" : owner.getName()).color(NamedTextColor.GOLD).append(Component.text("'s Grave").color(NamedTextColor.WHITE)));
-            stand.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "grave"), PersistentDataType.INTEGER, this.id);
+            stand.getPersistentDataContainer().set(graveKey, PersistentDataType.INTEGER, this.id);
         }
     }
 
@@ -744,7 +817,8 @@ public class Graves extends Feature {
         FileConfiguration config = KamsTweaks.get().getDataConfig();
         config.set("graves", null);
         graves.forEach((id, grave) -> {
-            Inventories.saveInventory(grave.getInventory(), config, "graves." + id);
+            Inventories.saveInventory(grave.getMainInv(), config, "graves." + id);
+            Inventories.saveInventory(grave.getStationInv(), config, "graves." + id + ".station");
             config.set("graves." + id + ".location", LocationUtils.serializeLocation(grave.location));
             config.set("graves." + id + ".owner", grave.owner.getUniqueId().toString());
             config.set("graves." + id + ".xp", grave.experience);
@@ -771,15 +845,16 @@ public class Graves extends Feature {
                     assert locationStr != null;
                     Location location = checkLocation(LocationUtils.deserializeLocation(locationStr));
                     if (location == null || location.getWorld() == null) continue;
-                    Inventory inv = Inventories.loadInventory(Component.text("Grave"), GRAVE_SIZE, config, "graves." + key);
+                    Inventory mainInv = Inventories.loadInventory(Component.text("Grave"), MAIN_SIZE, config, "graves." + key);
+                    Inventory stationInv = Inventories.loadInventory(Component.text("Grave"), MAIN_SIZE, config, "graves." + key + ".station");
                     long timeLeft = config.getLong("graves." + key + ".timeleft", 1000 * 60 * 20);
-                    Grave grave = new Grave(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), inv, location, xp, timeLeft);
+                    Grave grave = new Grave(owner == null ? null : Bukkit.getServer().getOfflinePlayer(owner), mainInv, stationInv, location, xp, timeLeft);
                     grave.hasMessaged5 = config.getBoolean("graves." + key + ".m5", false);
                     grave.hasMessaged1 = config.getBoolean("graves." + key + ".m1", false);
                     grave.hasMessagedHalf = config.getBoolean("graves." + key + ".m30", false);
                     grave.hasMessagedExpire = config.getBoolean("graves." + key + ".me", false);
                     int id = Integer.parseInt(key);
-                    if (highest < id) highest = id;
+                    if (highest < id) highest = id + 1;
                     grave.id = id;
                     graves.put(id, grave);
                     if (grave.owner.isOnline()) {
