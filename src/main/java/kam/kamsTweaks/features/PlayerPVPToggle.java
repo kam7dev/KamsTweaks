@@ -3,10 +3,7 @@ package kam.kamsTweaks.features;
 import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
-import kam.kamsTweaks.ConfigCommand;
-import kam.kamsTweaks.Feature;
-import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -33,28 +30,54 @@ public class PlayerPVPToggle extends Feature {
         commands.registrar().register(Commands.literal("pvp")
                 .then(Commands.literal("on")
                         .executes(ctx -> {
+                            if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true)) {
+                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/pvp")));
+                                return Command.SINGLE_SUCCESS;
+                            }
                             Entity exec = ctx.getSource().getExecutor();
                             if (exec instanceof Player p) {
                                 UUID playerUUID = p.getUniqueId();
                                 pvp.put(playerUUID, true);
-                                p.sendMessage(Component.text("PVP is now").color(NamedTextColor.GOLD)
-                                        .append(Component.text("enabled").color(NamedTextColor.RED))
-                                        .append(Component.text(".").color(NamedTextColor.GOLD)));
+                                p.sendMessage(KTStrings.getFor(KTStrings.PVP_ENABLE).color(NamedTextColor.GREEN));
+                                return Command.SINGLE_SUCCESS;
                             }
+                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
                             return Command.SINGLE_SUCCESS;
                         }))
                 .then(Commands.literal("off")
                         .executes(ctx -> {
+                            if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true)) {
+                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/pvp")));
+                                return Command.SINGLE_SUCCESS;
+                            }
                             Entity exec = ctx.getSource().getExecutor();
                             if (exec instanceof Player p) {
                                 UUID playerUUID = p.getUniqueId();
                                 pvp.put(playerUUID, false);
-                                p.sendMessage(Component.text("PVP is now").color(NamedTextColor.GOLD)
-                                        .append(Component.text("disabled").color(NamedTextColor.RED))
-                                        .append(Component.text(".").color(NamedTextColor.GOLD)));
+                                p.sendMessage(KTStrings.getFor(KTStrings.PVP_DISABLE).color(NamedTextColor.RED));
+                                return Command.SINGLE_SUCCESS;
                             }
+                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
                             return Command.SINGLE_SUCCESS;
-                        })).build());
+                        }))
+                .executes(ctx -> {
+                    if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true)) {
+                        ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/pvp")));
+                        return Command.SINGLE_SUCCESS;
+                    }
+                    Entity exec = ctx.getSource().getExecutor();
+                    if (exec instanceof Player p) {
+                        UUID playerUUID = p.getUniqueId();
+                        if (pvp.getOrDefault(playerUUID, true)) {
+                            p.sendMessage(KTStrings.getFor(KTStrings.PVP_STATUS_ENABLED).color(NamedTextColor.GOLD));
+                        } else {
+                            p.sendMessage(KTStrings.getFor(KTStrings.PVP_STATUS_DISABLED).color(NamedTextColor.GOLD));
+                        }
+                        return Command.SINGLE_SUCCESS;
+                    }
+                    ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
+                    return Command.SINGLE_SUCCESS;
+                }).build());
     }
 
     @Override
@@ -83,13 +106,15 @@ public class PlayerPVPToggle extends Feature {
 
     @EventHandler
     public void onAttack(EntityDamageByEntityEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true))
+            return;
         if (e.getEntity() instanceof Player target && e.getDamageSource().getCausingEntity() instanceof Player causer) {
             if (!pvp.getOrDefault(target.getUniqueId(), true)) {
                 e.setCancelled(true);
-                causer.sendMessage(Component.text("This player has PVP disabled.").color(NamedTextColor.RED));
+                causer.sendMessage(KTStrings.getFor(KTStrings.PVP_TARGET_DISABLED).color(NamedTextColor.RED));
             } else if (!pvp.getOrDefault(causer.getUniqueId(), true)) {
                 e.setCancelled(true);
-                causer.sendMessage(Component.text("You have PVP disabled.").color(NamedTextColor.RED));
+                causer.sendMessage(KTStrings.getFor(KTStrings.PVP_YOU_DISABLED).color(NamedTextColor.RED));
             }
         }
     }

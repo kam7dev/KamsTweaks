@@ -2,14 +2,11 @@ package kam.kamsTweaks.features;
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import io.papermc.paper.datacomponent.DataComponentTypes;
-import kam.kamsTweaks.Feature;
+import kam.kamsTweaks.*;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
-import kam.kamsTweaks.ConfigCommand;
-import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.Inventories;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.key.Key;
@@ -45,10 +42,12 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Graves extends Feature {
     public static final int MAIN_SIZE = 45;
     public static final int STATION_SIZE = 36;
+    public static final int RECOVERY_MAX = 3;
     public static NamespacedKey guiKey = new NamespacedKey("kamstweaks", "gui");
     public static NamespacedKey graveKey = new NamespacedKey("kamstweaks", "grave");
     public Map<Integer, Grave> graves = new HashMap<>();
@@ -76,31 +75,22 @@ public class Graves extends Feature {
                 .then(Commands.literal("list").executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (ctx.getSource().getExecutor() instanceof Player player) {
-                        StringBuilder claimsMsg = new StringBuilder();
+                        AtomicReference<Component> claimsMsg = new AtomicReference<>(Component.empty());
                         AtomicInteger i = new AtomicInteger();
                         graves.forEach((id, grave) -> {
                             if (grave.owner.getUniqueId().equals(player.getUniqueId())) {
                                 i.getAndIncrement();
-                                claimsMsg
-                                        .append("\nGrave ").append(id).append(": ")
-                                        .append(grave.location.getBlockX())
-                                        .append(", ")
-                                        .append(grave.location.getBlockY())
-                                        .append(", ")
-                                        .append(grave.location.getBlockZ())
-                                        .append(" in ")
-                                        .append(grave.location.getWorld().getName());
-                                if (grave.msLeft < 0) {
-                                    claimsMsg.append(" (expired)");
-                                } else {
-                                    claimsMsg.append(" (").append((int) grave.msLeft / 1000).append(" seconds left)");
-                                }
+                                claimsMsg.set(claimsMsg.get().appendNewline().append(KTStrings.getFor(KTStrings.GRAVE_INFO,
+                                        Component.text(id).color(NamedTextColor.GOLD),
+                                        Component.text(grave.location.getBlockX() + ", " + grave.location.getBlockY() + ",  " + grave.location.getBlockZ()).color(NamedTextColor.GREEN),
+                                        Component.text(grave.location.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE),
+                                        grave.msLeft < 0 ? KTStrings.getFor(KTStrings.GRAVE_EXPIRED).color(NamedTextColor.RED) : KTStrings.getFor(KTStrings.GRAVE_TIME_LEFT, Component.text((int) grave.msLeft / 1000)).color(NamedTextColor.YELLOW))
+                                ));
                             }
                         });
-                        claimsMsg.insert(0, "You have " + i + " graves.");
-                        player.sendMessage(claimsMsg.toString());
+                        player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_COUNT, Component.text(i.get())).append(claimsMsg.get()));
                     } else {
-                        sender.sendMessage("Only players can run this.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
                     }
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("recover")
@@ -122,11 +112,8 @@ public class Graves extends Feature {
                                     recovCount.getAndAdd(1);
                                 }
                             });
-                            if (recovCount.get() >= 3) {
-                                ctx.getSource().getSender()
-                                        .sendMessage(Component
-                                                .text("You are already recovering 3 graves.")
-                                                .color(NamedTextColor.RED));
+                            if (recovCount.get() >= RECOVERY_MAX) {
+                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_RECOVERY_MAX, Component.text(RECOVERY_MAX)).color(NamedTextColor.RED));
                                 return Command.SINGLE_SUCCESS;
                             }
                             int id = ctx.getArgument("id", Integer.class);
@@ -139,14 +126,11 @@ public class Graves extends Feature {
                                 grave.hasMessaged1 = false;
                                 grave.hasMessagedHalf = false;
                                 grave.hasMessagedExpire = false;
-                                ctx.getSource().getSender()
-                                        .sendMessage(Component
-                                                .text("You have 10 minutes to recover your grave. You can recover a grave repeatedly, but only 3 can be recovered at a time.")
-                                                .color(NamedTextColor.AQUA));
+                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_RECOVERY, Component.text(RECOVERY_MAX)).color(NamedTextColor.AQUA));
                                 grave.createStand();
                                 return Command.SINGLE_SUCCESS;
                             }
-                            ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
+                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_NO_ID, Component.text(id)).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         })))
                 .then(Commands.literal("delete")
@@ -168,11 +152,10 @@ public class Graves extends Feature {
                                 if (grave.stand != null)
                                     grave.stand.remove();
                                 graves.remove(grave.id);
-                                ctx.getSource().getSender()
-                                        .sendMessage(Component.text("Grave deleted successfully.").color(NamedTextColor.AQUA));
+                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_DELETED).color(NamedTextColor.RED));
                                 return Command.SINGLE_SUCCESS;
                             }
-                            ctx.getSource().getSender().sendMessage(Component.text("You don't have a grave with that ID."));
+                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_NO_ID, Component.text(id)).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         })))
                 .build());
@@ -299,6 +282,7 @@ public class Graves extends Feature {
         graves.put(grave.id, grave);
         event.getDrops().clear();
         event.setDroppedExp(0);
+        // TODO
         player.sendMessage(Component.text("You have a new grave at ").append(Component.text(String.format("(%s, %s, %s)", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())).color(NamedTextColor.RED), Component.text(" in "), Component.text(loc.getWorld().getName()).color(NamedTextColor.RED), Component.text(".")).color(NamedTextColor.GOLD));
     }
 
@@ -376,6 +360,7 @@ public class Graves extends Feature {
                 case null, default: break;
             }
         }
+        // TODO
         if (plainSerializer.serialize(e.getView().title()).equals("Grave")) {
             switch (e.getAction()) {
                 case PLACE_ALL:
@@ -409,6 +394,7 @@ public class Graves extends Feature {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onDrag(InventoryDragEvent e) {
+        // TODO
         if (plainSerializer.serialize(e.getView().title()).equals("Grave")) {
             for (int rawSlot : e.getRawSlots()) {
                 if (rawSlot < e.getView().getTopInventory().getSize()) {
@@ -450,6 +436,7 @@ public class Graves extends Feature {
             }
         });
         if (expired.get() > 0 || unexpired.get() > 0) {
+            // TODO
             var msg = Component.text("You have ");
             if (expired.get() > 0) {
                 msg = msg.append(Component.text(expired.get() + " expired grave(s)"));
@@ -603,6 +590,7 @@ public class Graves extends Feature {
                     }
                     if (!hasMessagedExpire) {
                         player.playSound(player.getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, .6f, 1.0f);
+                        // TODO
                         player.sendMessage(Component.text("Your grave (" + id + ") just expired.").color(NamedTextColor.RED));
                         hasMessagedExpire = true;
                     }
@@ -612,16 +600,19 @@ public class Graves extends Feature {
                 } else {
                     if (this.msLeft <= 1000 * 60 * 5 && !hasMessaged5) {
                         hasMessaged5 = true;
+                        // TODO
                         player.sendMessage(Component.text("Your grave expires in 5 minutes!").color(NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.0f);
                     }
                     if (this.msLeft <= 1000 * 60 && !hasMessaged1) {
                         hasMessaged1 = true;
+                        // TODO
                         player.sendMessage(Component.text("Your grave expires in 1 minute!").color(NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.2f);
                     }
                     if (this.msLeft <= 1000 * 30 && !hasMessagedHalf) {
                         hasMessagedHalf = true;
+                        // TODO
                         player.sendMessage(Component.text("Your grave expires in 30 seconds!").color(NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, .5f, .5f);
                     }
@@ -659,6 +650,7 @@ public class Graves extends Feature {
             this.owner = owner;
             this.location = location;
             PlayerInventory inv = owner.getInventory();
+            // TODO
             this.mainInv = Bukkit.createInventory(null, MAIN_SIZE, Component.text("Grave"));
             for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
@@ -715,6 +707,7 @@ public class Graves extends Feature {
 
             Inventory topInv = owner.getOpenInventory().getTopInventory();
             if (!holdsItems(topInv.getType())) {
+                // TODO
                 this.stationInv = Bukkit.createInventory(null, STATION_SIZE, Component.text("Grave (Stations)"));
                 for (int i = 0; i < topInv.getSize(); i++) {
                     if (i > STATION_SIZE) {
@@ -751,6 +744,7 @@ public class Graves extends Feature {
                     var toStation = new ItemStack(Material.ARROW);
                     ItemMeta toMeta = toStation.getItemMeta();
                     if (toMeta != null) {
+                        // TODO
                         toMeta.displayName(Component.translatable("kamstweaks.gui.graves_to_block", "To Block Inventory").decoration(TextDecoration.ITALIC, false));
                         toMeta.getPersistentDataContainer().set(guiKey, PersistentDataType.STRING, "station");
                         toMeta.getPersistentDataContainer().set(graveKey, PersistentDataType.INTEGER, id);
@@ -760,6 +754,7 @@ public class Graves extends Feature {
                     var fromStation = new ItemStack(Material.ARROW);
                     ItemMeta fromMeta = fromStation.getItemMeta();
                     if (fromMeta != null) {
+                        // TODO
                         fromMeta.displayName(Component.translatable("kamstweaks.gui.graves_from_block", "To Main Inventory").decoration(TextDecoration.ITALIC, false));
                         fromMeta.getPersistentDataContainer().set(guiKey, PersistentDataType.STRING, "main");
                         fromMeta.getPersistentDataContainer().set(graveKey, PersistentDataType.INTEGER, id);
@@ -807,6 +802,7 @@ public class Graves extends Feature {
             stand.setInvisible(true);
             stand.setInvulnerable(true);
             stand.setArms(false);
+            // TODO
             stand.customName(Component.text(owner.getName() == null ? "Unknown" : owner.getName()).color(NamedTextColor.GOLD).append(Component.text("'s Grave").color(NamedTextColor.WHITE)));
             stand.getPersistentDataContainer().set(graveKey, PersistentDataType.INTEGER, this.id);
         }
@@ -845,6 +841,7 @@ public class Graves extends Feature {
                     assert locationStr != null;
                     Location location = checkLocation(LocationUtils.deserializeLocation(locationStr));
                     if (location == null || location.getWorld() == null) continue;
+                    // TODO
                     Inventory mainInv = Inventories.loadInventory(Component.text("Grave"), MAIN_SIZE, config, "graves." + key);
                     Inventory stationInv = Inventories.loadInventory(Component.text("Grave"), MAIN_SIZE, config, "graves." + key + ".station");
                     long timeLeft = config.getLong("graves." + key + ".timeleft", 1000 * 60 * 20);

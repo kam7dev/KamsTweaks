@@ -2,13 +2,14 @@ package kam.kamsTweaks.features;
 
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.Feature;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.CreatureSpawner;
@@ -17,59 +18,54 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.Collections;
-
 public class SilkSpawner extends Feature {
-  @Override
-  public void setup() {
-    ConfigCommand.addConfig(
-        new ConfigCommand.BoolConfig("silk-spawners.enabled", "silk-spawners.enabled", true, "kamstweaks.configure"));
-  }
+    @Override
+    public void setup() {
+        ConfigCommand.addConfig(
+                new ConfigCommand.BoolConfig("silk-spawners.enabled", "silk-spawners.enabled", true, "kamstweaks.configure"));
+    }
 
-  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-  public void onBreak(BlockBreakEvent e) {
-    if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))
-      return;
-    if (!e.getPlayer().hasPermission("kamstweaks.silkspawner"))
-      return;
-    if (e.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 0) {
-      if (e.getBlock().getType() == Material.SPAWNER && e.isDropItems()) {
-        e.setDropItems(false);
-        e.setExpToDrop(0);
-        ItemStack spawner = new ItemStack(Material.SPAWNER, 1);
-        EntityType spawns = ((CreatureSpawner) e.getBlock().getState()).getSpawnedType();
-        if (spawns != null) {
-          ItemMeta meta = spawner.getItemMeta();
-          meta.displayName(Component.translatable(spawns.translationKey()).color(NamedTextColor.GOLD)
-              .decoration(TextDecoration.ITALIC, false)
-              .append(Component.text(" Spawner").decoration(TextDecoration.ITALIC, false).color(NamedTextColor.WHITE)));
-          meta.lore(Collections.singletonList(Component.text("Spawns ").decoration(TextDecoration.ITALIC, false)
-              .color(NamedTextColor.WHITE).append(Component.translatable(spawns.translationKey())
-                  .color(NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false))));
-          meta.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "spawner-mob"),
-              PersistentDataType.STRING, spawns.toString());
-          spawner.setItemMeta(meta);
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBreak(BlockBreakEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))
+            return;
+        if (!e.getPlayer().hasPermission("kamstweaks.silkspawner"))
+            return;
+        if (e.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 0) {
+            if (e.getBlock().getType() == Material.SPAWNER && e.isDropItems()) {
+                e.setDropItems(false);
+                e.setExpToDrop(0);
+                ItemStack spawner = new ItemStack(Material.SPAWNER, 1);
+                var spawns = ((CreatureSpawner) e.getBlock().getState()).getSpawnedType();
+                if (spawns != null) {
+                    BlockStateMeta meta = (BlockStateMeta) spawner.getItemMeta();
+                    meta.displayName(KTStrings.getFor(KTStrings.SPAWNER, Component.translatable(spawns.translationKey()).color(NamedTextColor.GOLD)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.WHITE));
+                    var state = meta.getBlockState();
+                    ((CreatureSpawner) state).setSpawnedType(spawns);
+                    meta.setBlockState(state);
+                    spawner.setItemMeta(meta);
+                }
+                e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), spawner);
+            }
         }
-        e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), spawner);
-      }
     }
-  }
 
-  @EventHandler
-  public void onPlace(BlockPlaceEvent e) {
-    if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))
-      return;
-    if (e.getBlock().getState() instanceof CreatureSpawner spawner) {
-      var name = e.getItemInHand().getItemMeta().getPersistentDataContainer()
-          .get(new NamespacedKey("kamstweaks", "spawner-mob"), PersistentDataType.STRING);
-      if (name == null)
-        return;
-      EntityType type = EntityType.valueOf(name);
-      spawner.setSpawnedType(type);
-      spawner.update(true);
+    // For older spawners to still work
+    @EventHandler
+    public void onPlace(BlockPlaceEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))
+            return;
+        if (e.getBlock().getState() instanceof CreatureSpawner spawner) {
+            var name = e.getItemInHand().getItemMeta().getPersistentDataContainer()
+                    .get(new NamespacedKey("kamstweaks", "spawner-mob"), PersistentDataType.STRING);
+            if (name == null)
+                return;
+            EntityType type = EntityType.valueOf(name);
+            spawner.setSpawnedType(type);
+            spawner.update(true);
+        }
     }
-  }
 }

@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Names extends Feature {
     Map<UUID, Component> data = new HashMap<>();
     public static final String INVISIBLE_REGEX = "[\\u200B-\\u200F\\uFEFF\\u2060]";
+    public static final int CHAR_LIMIT = 30;
 
     public static Names instance;
 
@@ -123,7 +124,7 @@ public class Names extends Feature {
                 .then(Commands.argument("name", StringArgumentType.greedyString()).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("nicknames.enabled", true)) {
-                        sender.sendPlainMessage("Nicknames are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.NAMES)));
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
@@ -131,24 +132,24 @@ public class Names extends Feature {
                         String name = ctx.getArgument("name", String.class).replaceAll(INVISIBLE_REGEX, "");
                         Component comp = Component.text().append(mm.deserialize(name)).build().hoverEvent(HoverEvent.showText(Component.text(player.getName())));
                         var plain = pt.serialize(comp);
-                        if (plain.length() > 30) {
-                            sender.sendPlainMessage("Nicknames cannot be longer than 30 characters.");
+                        if (plain.length() > CHAR_LIMIT) {
+                            sender.sendMessage(KTStrings.getFor(KTStrings.NAME_LENGTH, Component.text(CHAR_LIMIT)));
                             return Command.SINGLE_SUCCESS;
                         }
                         if (plain.isBlank()) {
-                            sender.sendPlainMessage("Nicknames cannot be empty.");
+                            sender.sendMessage(KTStrings.getFor(KTStrings.NAME_EMPTY));
                             return Command.SINGLE_SUCCESS;
                         }
                         var res = ChatFilter.instance.isFiltered(plain);
                         if (res.first) {
-                            ChatFilter.warnStaff("Nickname by " + sender.getName() + " was caught by the " + res.second.name + " automod: " + plain);
+                            ChatFilter.warnStaff(KTStrings.getFor(KTStrings.NAME_AUTOMOD, Component.text(sender.getName()), Component.text(res.second.name), Component.text(plain)));
                             sender.sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         AtomicBoolean ret = new AtomicBoolean(false);
                         data.forEach((uuid, other) -> {
                             if (!uuid.equals(player.getUniqueId()) && Objects.equals(plain, pt.serialize(other))) {
-                                sender.sendPlainMessage("Someone already has that nickname.");
+                                sender.sendMessage(KTStrings.getFor(KTStrings.NAME_IN_USE));
                                 ret.set(true);
                             }
                         });
@@ -156,10 +157,10 @@ public class Names extends Feature {
                         data.put(player.getUniqueId(), comp);
                         player.displayName(comp);
                         player.playerListName(comp);
-                        sender.sendMessage(Component.text("Your nickname is now ").append(comp).append(Component.text(".")));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.NAME_SET, comp));
                         return Command.SINGLE_SUCCESS;
                     }
-                    sender.sendMessage("Only players can use /nick.");
+                    sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/nick")));
                     return Command.SINGLE_SUCCESS;
                 }));
         commands.registrar().register(nickCmd.build());
@@ -176,7 +177,7 @@ public class Names extends Feature {
                 }).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("nicknames.enabled", true)) {
-                        sender.sendPlainMessage("Nicknames are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.NAMES)));
                         return Command.SINGLE_SUCCESS;
                     }
                     String name = ctx.getArgument("who", String.class);
@@ -187,9 +188,9 @@ public class Names extends Feature {
                         }
                     });
                     if (who.get() == null) {
-                        sender.sendMessage("No one is using the nickname " + name + ".");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.NAME_WHOIS_NONE, Component.text(name)));
                     } else {
-                        sender.sendMessage(getRenderedName(who.get()) + " is " + who.get().getName() + ".");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.NAME_WHOIS, getRenderedName(who.get()), Component.text(Objects.requireNonNullElse(who.get().getName(), "Unknown"))));
                     }
                     return Command.SINGLE_SUCCESS;
                 }));

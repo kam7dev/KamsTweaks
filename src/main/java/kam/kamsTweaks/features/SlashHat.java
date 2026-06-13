@@ -6,10 +6,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
-import kam.kamsTweaks.ConfigCommand;
-import kam.kamsTweaks.Feature;
-import kam.kamsTweaks.ItemManager;
-import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -32,26 +29,25 @@ public class SlashHat extends Feature {
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("slash-hat", true)) {
-                        sender.sendPlainMessage("/hat is disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/hat")));
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
                         PlayerInventory inv = player.getInventory();
                         ItemStack hand = inv.getItemInMainHand();
-                        ItemManager.getType(hand); // update it if it's a claim tool that has protection 5 lol
                         ItemStack helmet = inv.getHelmet();
                         // no cheat
-                        if (helmet != null && helmet.containsEnchantment(Enchantment.BINDING_CURSE)) {
-                            sender.sendMessage("You can't take this item off.");
+                        if (helmet.containsEnchantment(Enchantment.BINDING_CURSE)) {
+                            sender.sendMessage(KTStrings.getFor(KTStrings.SLASHHAT_BINDING, helmet.displayName()));
                             return Command.SINGLE_SUCCESS;
                         }
                         inv.setItemInMainHand(helmet);
                         inv.setHelmet(hand);
-                        sender.sendMessage(Component.text((executor == sender ? "You're" : player.displayName() + " is") + " now wearing ").append(hand.displayName()).append(Component.text(".")));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.SLASHHAT_EQUIP, hand.displayName()));
                         return Command.SINGLE_SUCCESS;
                     }
-                    sender.sendMessage("Only players can use /hat.");
+                    sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
                     return Command.SINGLE_SUCCESS;
                 });
         LiteralCommandNode<CommandSourceStack> buildCommand = command.build();

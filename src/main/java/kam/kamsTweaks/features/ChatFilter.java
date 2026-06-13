@@ -164,9 +164,27 @@ public class ChatFilter extends Feature {
         }
     }
 
+    // TODO: remove this one
     public static void warnStaff(String message) {
         Logger.warn(message);
         KamsTweaks.get().sendToOps(Component.text(message).color(NamedTextColor.RED));
+        Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
+        if (dsPlugin != null && dsPlugin.isEnabled()) {
+            try {
+                var channel = DiscordUtil.getTextChannelById("1487994679579508836");
+                if (channel != null) {
+                    var ignored = channel.sendMessage("<@&1488275345252810882> " + message);
+                }
+            } catch (Exception e) {
+                Logger.error("Failed to send message to discord. Exception printed below.");
+                Logger.handleException(e);
+            }
+        }
+    }
+
+    public static void warnStaff(Component message) {
+        Logger.warn(Names.instance.pt.serialize(message));
+        KamsTweaks.get().sendToOps(message.color(NamedTextColor.RED));
         Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
         if (dsPlugin != null && dsPlugin.isEnabled()) {
             try {
