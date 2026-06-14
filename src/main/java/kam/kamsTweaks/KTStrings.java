@@ -41,6 +41,7 @@ public enum KTStrings {
     // Claims
     CLAIMS,
     CLAIM_TOOL_INFO,
+    CLAIM_TOOL_HINT,
     CLAIM_DESC,
     CLAIM_CREATE,
     CLAIM_CANCEL,
@@ -66,6 +67,7 @@ public enum KTStrings {
     CLAIM_ADVANCED_DESC,
     CLAIM_HIGHLIGHTED_FOR,
     CLAIMS_SHOWED_GUI_TO,
+    CLAIMS_GAVE_TOOL_TO,
     CLAIMS_NONEXISTENT,
     CLAIM_OP_DELETE,
     CLAIM_DELETED,
@@ -118,6 +120,8 @@ public enum KTStrings {
     LC_SLOTS,
     LC_INFO,
     LC_NO_PERM,
+    LC_UNCLAIMED,
+    LC_OWNED_BY,
 
     EC,
     ENTITY,
@@ -334,6 +338,9 @@ public enum KTStrings {
             case CLAIM_TOOL_INFO -> {
                 return Component.translatable("kamstweaks.claims.tool_info", "Claim Tool Info", args);
             }
+	    case CLAIM_TOOL_HINT -> {
+		return Component.translatable("kamstweaks.claims.tool_hint", "Right click to use the claim tool.", args);
+	    }
             case CLAIM_DESC -> {
                 return Component.translatable("kamstweaks.claims.description", """
                         Welcome to the Claim Tool! This explanation will guide you through its usage.
@@ -420,6 +427,9 @@ public enum KTStrings {
             case CLAIMS_SHOWED_GUI_TO -> {
                 return Component.translatable("kamstweaks.claims.showed_gui_to", "Showed claims gui to %s.", args);
             }
+	    case CLAIMS_GAVE_TOOL_TO -> {
+		return Component.translatable("kamstweaks.claims.gave_tool_to", "Gave claim tool to %s.", args);
+	    }
             case CLAIMS_NONEXISTENT -> {
                 return Component.translatable("kamstweaks.claims.not_exist", "This claim does not exist.", args);
             }
@@ -571,6 +581,12 @@ public enum KTStrings {
             case LC_NO_PERM -> {
                 return Component.translatable("kamstweaks.claims.land.no_perms", "You don't have permission to %s here! (Claim owned by %s)", args);
             }
+	    case LC_UNCLAIMED -> {
+		return Component.translatable("kamstweaks.claims.land.unclaimed", "This land isn't claimed.", args);
+	    }
+	    case LC_OWNED_BY -> {
+		return Component.translatable("kamstweaks.claims.land.owned_by", "This land is owned by %s.", args);
+	    }
 
             case EC -> {
                 return Component.translatable("kamstweaks.claims.entity", "Entity Claims", args);

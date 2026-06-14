@@ -69,7 +69,7 @@ public class Claims extends Feature {
             if (executor instanceof Player player) {
                 player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIM_TOOL));
                 if (player == sender) {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_TOOL_HINT).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_TOOL_HINT).color(NamedTextColor.GOLD));
                 } else {
                     sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_GAVE_TOOL_TO, Names.instance.getRenderedName(player)).color(NamedTextColor.GOLD));
                 }
