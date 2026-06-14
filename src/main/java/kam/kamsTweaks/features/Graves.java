@@ -82,7 +82,7 @@ public class Graves extends Feature {
                                 i.getAndIncrement();
                                 claimsMsg.set(claimsMsg.get().appendNewline().append(KTStrings.getFor(KTStrings.GRAVE_INFO,
                                         Component.text(id).color(NamedTextColor.GOLD),
-                                        Component.text(grave.location.getBlockX() + ", " + grave.location.getBlockY() + ",  " + grave.location.getBlockZ()).color(NamedTextColor.GREEN),
+                                        Component.text(grave.location.getBlockX() + ", " + grave.location.getBlockY() + ", " + grave.location.getBlockZ()).color(NamedTextColor.GREEN),
                                         Component.text(grave.location.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE),
                                         grave.msLeft < 0 ? KTStrings.getFor(KTStrings.GRAVE_EXPIRED).color(NamedTextColor.RED) : KTStrings.getFor(KTStrings.GRAVE_TIME_LEFT, Component.text((int) grave.msLeft / 1000)).color(NamedTextColor.YELLOW))
                                 ));
@@ -356,7 +356,8 @@ public class Graves extends Feature {
                     }, 0);
                     break;
                 }
-                case null, default: break;
+                case null, default:
+                    break;
             }
         }
         if (e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_TITLE)) || e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_BLOCK_TITLE))) {
@@ -392,7 +393,7 @@ public class Graves extends Feature {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onDrag(InventoryDragEvent e) {
-	if (e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_TITLE)) || e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_BLOCK_TITLE))) {
+        if (e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_TITLE)) || e.getView().title().equals(KTStrings.getFor(KTStrings.GRAVE_BLOCK_TITLE))) {
             for (int rawSlot : e.getRawSlots()) {
                 if (rawSlot < e.getView().getTopInventory().getSize()) {
                     e.setCancelled(true);
@@ -433,18 +434,7 @@ public class Graves extends Feature {
             }
         });
         if (expired.get() > 0 || unexpired.get() > 0) {
-            var msg = Component.text("You have ");
-            if (expired.get() > 0) {
-                msg = msg.append(Component.text(expired.get() + " expired grave(s)"));
-                if (unexpired.get() > 0) {
-                    msg = msg.append(Component.text(" and "));
-                }
-            }
-            if (unexpired.get() > 0) {
-                msg = msg.append(Component.text(unexpired.get() + " active grave(s)"));
-            }
-	    e.getPlayer().sendMessage(KTStrings.getFor(KTStrings.GRAVE_WELCOME, Component.text(unexpired.get()), Component.text(expired.get())).color(NamedTextColor.GOLD));
-            e.getPlayer().sendMessage(msg.append(Component.text(".")).color(NamedTextColor.GOLD));
+            e.getPlayer().sendMessage(KTStrings.getFor(KTStrings.GRAVE_WELCOME, Component.text(unexpired.get()), Component.text(expired.get())).color(NamedTextColor.GOLD));
         }
     }
 
@@ -587,7 +577,7 @@ public class Graves extends Feature {
                     }
                     if (!hasMessagedExpire) {
                         player.playSound(player.getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, .6f, 1.0f);
-        		player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_EXPIRE_NOW, Component.text(id)).color(NamedTextColor.RED));
+                        player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_EXPIRE_NOW, Component.text(id)).color(NamedTextColor.RED));
                         hasMessagedExpire = true;
                     }
 //                    if (recovery) {
@@ -601,12 +591,12 @@ public class Graves extends Feature {
                     }
                     if (this.msLeft <= 1000 * 60 && !hasMessaged1) {
                         hasMessaged1 = true;
-			player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_1_MIN, Component.text(id)).color(NamedTextColor.RED));
+                        player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_1_MIN, Component.text(id)).color(NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.2f);
                     }
                     if (this.msLeft <= 1000 * 30 && !hasMessagedHalf) {
                         hasMessagedHalf = true;
-			player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_30_SEC, Component.text(id)).color(NamedTextColor.RED));
+                        player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_30_SEC, Component.text(id)).color(NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, .5f, .5f);
                     }
                 }
@@ -624,17 +614,26 @@ public class Graves extends Feature {
 
         private static boolean slotIsOutput(InventoryType type, int slot) {
             switch (type) {
-                case LOOM, SMITHING -> {return slot == 3;}
-                case CARTOGRAPHY, GRINDSTONE, ANVIL, MERCHANT -> {return slot == 2;}
-                case STONECUTTER -> {return slot == 1;}
-                case WORKBENCH, CRAFTING -> {return slot == 0;}
+                case LOOM, SMITHING -> {
+                    return slot == 3;
+                }
+                case CARTOGRAPHY, GRINDSTONE, ANVIL, MERCHANT -> {
+                    return slot == 2;
+                }
+                case STONECUTTER -> {
+                    return slot == 1;
+                }
+                case WORKBENCH, CRAFTING -> {
+                    return slot == 0;
+                }
             }
-	    return false;
+            return false;
         }
 
         private static boolean holdsItems(InventoryType type) {
             return switch (type) {
-                case CHEST, DISPENSER, DROPPER, FURNACE, BREWING, ENDER_CHEST, BEACON, HOPPER, SHULKER_BOX, BARREL, BLAST_FURNACE, SMOKER, CRAFTER -> true;
+                case CHEST, DISPENSER, DROPPER, FURNACE, BREWING, ENDER_CHEST, BEACON, HOPPER, SHULKER_BOX, BARREL,
+                     BLAST_FURNACE, SMOKER, CRAFTER -> true;
                 default -> false;
             };
         }

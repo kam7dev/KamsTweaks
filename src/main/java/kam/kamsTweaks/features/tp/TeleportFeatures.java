@@ -4,10 +4,10 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.ConfigCommand;
 import kam.kamsTweaks.Feature;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.claims.EntityClaims;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -41,7 +41,6 @@ public class TeleportFeatures extends Feature {
 
     public TeleportFeatures() {
         instance = this;
-        // rtp is being removed due to its mass lag causing
         features.add(new Spawn());
         features.add(new Back());
         features.add(new Home());
@@ -64,7 +63,6 @@ public class TeleportFeatures extends Feature {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.tpa.enabled", "teleportation.tpa.enabled", true, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.warp.enabled", "teleportation.warp.enabled", true, "kamstweaks.configure"));
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.back.enabled", "teleportation.back.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.rtp.enabled", "teleportation.rtp.enabled", true, "kamstweaks.configure"));
     }
 
     @Override
@@ -105,7 +103,7 @@ public class TeleportFeatures extends Feature {
             @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
             void onAttack(EntityDamageByEntityEvent e) {
                 if (e.getDamager() == player) {
-                    player.sendMessage(Component.text("Teleport immunity lost since you attacked someone/something.").color(NamedTextColor.YELLOW));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_IMMUNITY_LOST).color(NamedTextColor.YELLOW));
                     player.removePotionEffect(PotionEffectType.RESISTANCE);
                     HandlerList.unregisterAll(o.listener);
                 }
@@ -119,9 +117,9 @@ public class TeleportFeatures extends Feature {
             var passengers = vehicle.getPassengers();
             for (var passenger : passengers) {
                 var claim = Claims.get().entityClaims.getClaim(passenger);
-                if (claim  != null) {
+                if (claim != null) {
                     if (!claim.hasPermission(player, EntityClaims.EntityPermission.DAMAGE)) {
-                        player.sendMessage(Component.text("Cancelled teleport because you don't have permission to ").append(Component.text("damage").color(NamedTextColor.AQUA).decorate(TextDecoration.UNDERLINED).clickEvent(ClickEvent.callback(audience -> audience.sendMessage(Component.text("It requires the damage permission because teleporting the mob would allow a method of killing a claimed entity.")))), Component.text(" an entity in this vehicle.")));
+                        player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_PASSENGER)).color(NamedTextColor.GOLD).decorate(TextDecoration.UNDERLINED).clickEvent(ClickEvent.callback(audience -> audience.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL_PASSENGER_INFO)))));
                         return;
                     }
                 }
@@ -131,6 +129,7 @@ public class TeleportFeatures extends Feature {
         locations.put(player.getUniqueId(), player.getLocation());
         var r = new Runnable() {
             int id = 0;
+
             @Override
             public void run() {
                 int val = onCooldown.get(player) - 1;
@@ -160,7 +159,8 @@ public class TeleportFeatures extends Feature {
             for (var passenger : passengers) {
                 passenger.teleport(location);
                 vehicle.addPassenger(passenger);
-                if (passenger instanceof LivingEntity le) le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
+                if (passenger instanceof LivingEntity le)
+                    le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
             }
             Bukkit.getScheduler().runTaskLater(KamsTweaks.get(), () -> vehicle.addPassenger(player), 1L);
         } else {
@@ -188,40 +188,45 @@ public class TeleportFeatures extends Feature {
                 HandlerList.unregisterAll(ref.listener);
                 Bukkit.getScheduler().cancelTask(task);
             }
+
             @EventHandler
             public void onPlayerLeave(PlayerQuitEvent event) {
                 if (event.getPlayer().equals(player)) {
                     cancel();
                 }
             }
+
             @EventHandler
             public void onPlayerDeath(PlayerDeathEvent event) {
                 if (event.getPlayer().equals(player)) {
-                    player.sendMessage(Component.text("Teleport cancelled because you died.").color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_DEATH)).color(NamedTextColor.GOLD));
                     cancel();
                 }
             }
+
             @EventHandler
             public void onPlayerDamage(EntityDamageEvent event) {
                 if (event.getEntity().equals(player)) {
                     if (player.isBlocking()) {
                         if (!(event.getDamageSource().getCausingEntity() instanceof Player)) return;
                     }
-                    player.sendMessage(Component.text("Teleport cancelled because you took damage.").color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_DAMAGE)).color(NamedTextColor.GOLD));
                     cancel();
                 }
             }
+
             @EventHandler
             public void onTeleport(PlayerTeleportEvent event) {
                 if (event.getPlayer().equals(player)) {
-                    player.sendMessage(Component.text("Teleport cancelled because you teleported.").color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_TP)).color(NamedTextColor.GOLD));
                     cancel();
                 }
             }
+
             @EventHandler
             public void onPlayerMove(PlayerMoveEvent event) {
                 if (event.getPlayer().equals(player) && event.hasChangedBlock()) {
-                    player.sendMessage(Component.text("Teleport cancelled because you moved.").color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_MOVE)).color(NamedTextColor.GOLD));
                     cancel();
                 }
             }
@@ -246,75 +251,68 @@ public class TeleportFeatures extends Feature {
                 HandlerList.unregisterAll(ref.listener);
                 Bukkit.getScheduler().cancelTask(task);
             }
+
             @EventHandler
             public void onPlayerLeave(PlayerQuitEvent event) {
                 if (event.getPlayer().equals(player)) {
-                    target.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
-                            .append(player.displayName().color(NamedTextColor.RED))
-                            .append(Component.text(" left.").color(NamedTextColor.GOLD)));
+                    target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_LEFT, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
                     cancel();
                 } else if (event.getPlayer().equals(target)) {
-                    player.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
-                            .append(event.getPlayer().displayName().color(NamedTextColor.RED))
-                            .append(Component.text(" left.").color(NamedTextColor.GOLD)));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_LEFT, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
                     cancel();
                 }
             }
+
             @EventHandler
             public void onPlayerDie(PlayerDeathEvent event) {
                 if (event.getPlayer().equals(player)) {
-                    target.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
-                            .append(player.displayName().color(NamedTextColor.RED))
-                            .append(Component.text(" died.").color(NamedTextColor.GOLD)));
+                    target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_DEATH, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_DEATH)).color(NamedTextColor.GOLD));
                     cancel();
                 } else if (event.getPlayer().equals(target)) {
-                    player.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
-                            .append(event.getPlayer().displayName().color(NamedTextColor.RED))
-                            .append(Component.text(" died.").color(NamedTextColor.GOLD)));
+                    target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_DEATH)).color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_DEATH, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
                     cancel();
                 }
             }
+
             @EventHandler
             public void onPlayerTeleport(PlayerTeleportEvent event) {
                 if (event.getPlayer().equals(player)) {
-                    target.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
-                            .append(player.displayName().color(NamedTextColor.RED))
-                            .append(Component.text(" teleported.").color(NamedTextColor.GOLD)));
+                    target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_TP, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_TP)).color(NamedTextColor.GOLD));
                     cancel();
                 } else if (event.getPlayer().equals(target)) {
-                    player.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
-                            .append(event.getPlayer().displayName().color(NamedTextColor.RED))
-                            .append(Component.text(" teleported.").color(NamedTextColor.GOLD)));
+                    target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_TP)).color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_TP, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
                     cancel();
                 }
             }
+
             @EventHandler
             public void onPlayerDamage(EntityDamageEvent event) {
                 if (event.getEntity().equals(player)) {
                     if (player.isBlocking()) {
                         if (!(event.getDamageSource().getCausingEntity() instanceof Player)) return;
                     }
-                    target.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
-                            .append(player.displayName().color(NamedTextColor.RED))
-                            .append(Component.text(" took damage.").color(NamedTextColor.GOLD)));
+                    target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_DAMAGE, ((Player) event.getEntity()).displayName())).color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_DAMAGE)).color(NamedTextColor.GOLD));
                     cancel();
                 } else if (event.getEntity().equals(target)) {
                     if (target instanceof HumanEntity human && human.isBlocking()) {
                         if (!(event.getDamageSource().getCausingEntity() instanceof Player)) return;
                     }
-                    player.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
-                            .append(event.getEntity().name().color(NamedTextColor.RED))
-                            .append(Component.text(" took damage.").color(NamedTextColor.GOLD)));
+                    target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_DAMAGE)).color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_DAMAGE, ((Player) event.getEntity()).displayName())).color(NamedTextColor.GOLD));
                     cancel();
                 }
             }
+
             @EventHandler
             public void onPlayerMove(PlayerMoveEvent event) {
                 if (event.getPlayer().equals(player) && event.hasChangedBlock()) {
-                    target.sendMessage(Component.text("Teleport cancelled because ").color(NamedTextColor.GOLD)
-                            .append(player.displayName().color(NamedTextColor.RED))
-                            .append(Component.text(" moved.").color(NamedTextColor.GOLD)));
-                    player.sendMessage(Component.text("Teleport cancelled because you moved.").color(NamedTextColor.GOLD));
+                    target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_MOVE, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
+                    player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_MOVE)).color(NamedTextColor.GOLD));
                     cancel();
                 }
             }

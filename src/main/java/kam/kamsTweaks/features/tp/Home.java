@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.LocationUtils;
@@ -63,36 +64,31 @@ public class Home extends Feature {
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.homes.enabled", true)) {
-                        sender.sendPlainMessage("Homes are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.HOMES)));
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     var handler = TeleportFeatures.get();
                     if (executor instanceof Player player) {
                         if (handler.teleportations.containsKey(player)) {
-                            sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_ALREADY_TELEPORTING).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         if (handler.onCooldown.containsKey(player)) {
-                            sender.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(player) + " seconds.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_COOLDOWN, Component.text(handler.onCooldown.get(player))).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         if (!homes.containsKey(player.getUniqueId())) {
-                            sender.sendMessage(Component.text("You do not have a home.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.HOMES_NONE).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         int time = KamsTweaks.get().getConfig().getInt("teleportation.timer");
-                        sender.sendMessage(
-                                Component.text("Teleporting to your home")
-                                        .color(NamedTextColor.GOLD)
-                                        .append(Component.text(time > 0 ? " in " : ".").color(NamedTextColor.GOLD))
-                                        .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
-                                        .append(Component.text(time > 0 ? ", please do not move." : "").color(NamedTextColor.GOLD)));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.TP_TO_HOME, Component.text(time).color(NamedTextColor.RED)).color(NamedTextColor.GOLD));
                         Location loc = homes.get(player.getUniqueId());
                         handler.scheduleTeleport(player, loc, time);
                         return Command.SINGLE_SUCCESS;
                     }
-                    sender.sendMessage("Only players can use /home.");
+                    sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, KTStrings.getFor(KTStrings.HOMES)));
                     return Command.SINGLE_SUCCESS;
                 });
         commands.registrar().register(home.build());
@@ -102,16 +98,16 @@ public class Home extends Feature {
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.homes.enabled", true)) {
-                        sender.sendPlainMessage("Homes are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.HOMES)));
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
                         homes.put(player.getUniqueId(), player.getLocation());
-                        sender.sendMessage(Component.text("Your home has been set.").color(NamedTextColor.GOLD));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.HOMES_SET).color(NamedTextColor.GOLD));
                         return Command.SINGLE_SUCCESS;
                     }
-                    sender.sendMessage("Only players can use /sethome.");
+                    sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, KTStrings.getFor(KTStrings.HOMES)));
                     return Command.SINGLE_SUCCESS;
                 });
         commands.registrar().register(sethome.build());

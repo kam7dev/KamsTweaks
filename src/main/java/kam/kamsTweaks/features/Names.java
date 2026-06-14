@@ -142,7 +142,7 @@ public class Names extends Feature {
                         }
                         var res = ChatFilter.instance.isFiltered(plain);
                         if (res.first) {
-                            ChatFilter.warnStaff(KTStrings.getFor(KTStrings.NAME_AUTOMOD, Component.text(sender.getName()), Component.text(res.second.name), Component.text(plain)));
+                            ChatFilter.warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_NAME, Component.text(sender.getName()), Component.text(res.second.name), Component.text(plain)));
                             sender.sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }

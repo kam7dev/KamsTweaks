@@ -7,6 +7,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.Graves;
@@ -34,34 +35,30 @@ public class Back extends Feature {
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.back.enabled", true)) {
-                        sender.sendPlainMessage("/back is disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/back")));
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
                         var handler = TeleportFeatures.get();
                         if (handler.teleportations.containsKey(player)) {
-                            sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_ALREADY_TELEPORTING).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         if (handler.onCooldown.containsKey(player)) {
-                            sender.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(player) + " seconds.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_COOLDOWN, Component.text(handler.onCooldown.get(player))).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         if (!handler.locations.containsKey(player.getUniqueId())) {
-                            sender.sendMessage(Component.text("You have not teleported anywhere recently.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.BACK_NO_RECENT).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         int time = KamsTweaks.get().getConfig().getInt("teleportation.timer");
-                        sender.sendMessage(
-                                Component.text("Returning to previous location").color(NamedTextColor.GOLD)
-                                        .append(Component.text(time > 0 ? " in " : ".").color(NamedTextColor.GOLD))
-                                        .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
-                                        .append(Component.text(time > 0 ? ", please do not move." : "").color(NamedTextColor.GOLD)));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.TP_TO_BACK, Component.text(time).color(NamedTextColor.RED)).color(NamedTextColor.GOLD));
                         handler.scheduleTeleport(player, handler.locations.get(player.getUniqueId()), time);
                         return Command.SINGLE_SUCCESS;
                     }
-                    sender.sendMessage("Only players can use /back.");
+                    sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/back")).color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;
                 });
         LiteralCommandNode<CommandSourceStack> buildCommand = command.build();
@@ -103,6 +100,6 @@ public class Back extends Feature {
     public void onDeath(PlayerDeathEvent e) {
         Player player = e.getPlayer();
         TeleportFeatures.get().locations.put(player.getUniqueId(), Graves.checkLocation(player.getLocation()));
-        player.sendMessage(Component.text("Return to your death location with ").append(Component.text("/back").color(NamedTextColor.RED).clickEvent(ClickEvent.runCommand("/back")), Component.text(".")).color(NamedTextColor.GOLD));
+        player.sendMessage(KTStrings.getFor(KTStrings.BACK_INFO, Component.text("/back").color(NamedTextColor.RED).clickEvent(ClickEvent.runCommand("/back"))).color(NamedTextColor.GOLD));
     }
 }

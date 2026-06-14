@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.Names;
@@ -32,6 +33,7 @@ public class TPA extends Feature {
         boolean here;
         Listener listener;
         int taskId;
+
         public TPARequest(Player target, boolean here, Listener listener, int taskId) {
             this.target = target;
             this.here = here;
@@ -46,74 +48,76 @@ public class TPA extends Feature {
 
     private void sendRequest(Player sender, Player target, boolean here) {
         if (tpas.containsKey(sender)) {
-            sender.sendMessage(Component.text("You already have an outgoing TPA request.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.TPA_ALREADY_OUTGOING).color(NamedTextColor.RED));
             return;
         }
         var handler = TeleportFeatures.get();
         if (handler.teleportations.containsKey(sender)) {
-            sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.TP_ALREADY_TELEPORTING).color(NamedTextColor.RED));
             return;
         }
         if (handler.onCooldown.containsKey(sender)) {
-            sender.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(sender) + " seconds.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.TP_COOLDOWN, Component.text(handler.onCooldown.get(sender))).color(NamedTextColor.RED));
             return;
         }
         if (target.equals(sender)) {
-            sender.sendMessage(Component.text("You can't teleport to yourself, silly!").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.TPA_SELF).color(NamedTextColor.RED));
             return;
         }
         if (target.isDead()) {
-            sender.sendMessage(Component.text("This person is currently dead.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.TPA_OTHER_DEAD).color(NamedTextColor.RED));
             return;
         }
         if (sender.isDead()) {
-            sender.sendMessage(Component.text("You can't teleport to while dead.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.TPA_DEAD).color(NamedTextColor.RED));
             return;
         }
 
         if (tpBlock.containsKey(target.getUniqueId()) && tpBlock.get(target.getUniqueId()).contains(sender.getUniqueId())) {
-            sender.sendMessage(Component.text("The player you want to teleport to has you blocked").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.TPA_BLOCKED, target.displayName()).color(NamedTextColor.RED));
             return;
         }
 
-        String type = here ? "TPAHere" : "TPA";
-        sender.sendMessage(
-                Component.text(type + " request sent to ").color(NamedTextColor.GOLD)
-                        .append(target.displayName().color(NamedTextColor.RED))
-                        .append(Component.text(". They have 60 seconds to accept it. You can cancel this by running ").color(NamedTextColor.GOLD))
-                        .append(Component.text("/tpcancel").clickEvent(ClickEvent.runCommand("tpcancel")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED))
-                        .append(Component.text(".").color(NamedTextColor.GOLD)));
-        target.sendMessage(sender.displayName().color(NamedTextColor.RED)
-                .append(Component.text(here ? " requested you teleport to them. Run " : " requested to teleport to you. Run ").color(NamedTextColor.GOLD))
-                .append(Component.text("/tpaccept").clickEvent(ClickEvent.runCommand("tpaccept")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED))
-                .append(Component.text(" to accept it, or ").color(NamedTextColor.GOLD))
-                .append(Component.text("/tpdecline").clickEvent(ClickEvent.runCommand("tpdecline")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED))
-                .append(Component.text(" to decline. This request expires in 60 seconds.").color(NamedTextColor.GOLD)));
+        sender.sendMessage(KTStrings.getFor(KTStrings.TPA_SENT,
+                KTStrings.getFor(here ? KTStrings.TPA_HERE : KTStrings.TPA),
+                target.displayName(),
+                Component.text("/tpcancel").clickEvent(ClickEvent.runCommand("tpcancel")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED)).color(NamedTextColor.GOLD));
+        target.sendMessage(KTStrings.getFor(KTStrings.TPA_RECIEVED,
+                target.displayName(),
+                KTStrings.getFor(here ? KTStrings.TPA_HERE : KTStrings.TPA),
+                Component.text("/tpaccept").clickEvent(ClickEvent.runCommand("tpaccept")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED),
+                Component.text("/tpdecline").clickEvent(ClickEvent.runCommand("tpdecline")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED)).color(NamedTextColor.GOLD));
 
         Listener listener = new Listener() {
             @EventHandler
             public void onPlayerLeave(PlayerQuitEvent event) {
                 var left = event.getPlayer().equals(sender) ? sender : event.getPlayer().equals(target) ? target : null;
-                if (left != null) {
-                    cancel(sender, target, left.displayName().color(NamedTextColor.RED).append(Component.text(" left").color(NamedTextColor.GOLD)));
-                }
+                if (left == target) {
+                    sender.sendMessage(KTStrings.getFor(KTStrings.TPA_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_LEFT, left.displayName())).color(NamedTextColor.GOLD));
+                } else if (left == sender) {
+                    target.sendMessage(KTStrings.getFor(KTStrings.TPA_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_LEFT, left.displayName())).color(NamedTextColor.GOLD));
+                } else return;
+                cancel(sender, target);
             }
+
             @EventHandler
             public void onPlayerDie(PlayerDeathEvent event) {
                 var died = event.getPlayer().equals(sender) ? sender : event.getPlayer().equals(target) ? target : null;
-                if (died != null) {
-                    cancel(sender, target, died.displayName().color(NamedTextColor.RED).append(Component.text(" died").color(NamedTextColor.GOLD)));
-                }
+                if (died == target) {
+                    sender.sendMessage(KTStrings.getFor(KTStrings.TPA_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_DEATH, died.displayName())).color(NamedTextColor.GOLD));
+                    target.sendMessage(KTStrings.getFor(KTStrings.TPA_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_DEATH)).color(NamedTextColor.GOLD));
+                } else if (died == sender) {
+                    target.sendMessage(KTStrings.getFor(KTStrings.TPA_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_DEATH, died.displayName())).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.TPA_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_DEATH)).color(NamedTextColor.GOLD));
+                } else return;
+                cancel(sender, target);
             }
         };
         Bukkit.getPluginManager().registerEvents(listener, KamsTweaks.get());
 
         int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> {
-            sender.sendMessage(Component.text("Your request to ").color(NamedTextColor.GOLD)
-                    .append(target.displayName().color(NamedTextColor.RED))
-                    .append(Component.text(" has expired.").color(NamedTextColor.GOLD)));
-            target.sendMessage(sender.displayName().color(NamedTextColor.RED)
-                    .append(Component.text("'s request has expired.").color(NamedTextColor.GOLD)));
+            sender.sendMessage(KTStrings.getFor(KTStrings.TPA_TO_EXPIRED, target.displayName()).color(NamedTextColor.GOLD));
+            target.sendMessage(KTStrings.getFor(KTStrings.TPA_FROM_EXPIRED, sender.displayName()).color(NamedTextColor.GOLD));
             tpas.remove(sender);
             handler.teleportations.remove(sender);
             HandlerList.unregisterAll(listener);
@@ -122,8 +126,8 @@ public class TPA extends Feature {
         tpas.put(sender, new TPARequest(target, here, listener, taskId));
 
         if (!here && tpAuto.containsKey(target.getUniqueId()) && tpAuto.get(target.getUniqueId())) {
-            target.sendMessage(Component.text("Accepted Automatically.").color(NamedTextColor.GOLD));
-            accept(target,sender);
+            target.sendMessage(KTStrings.getFor(KTStrings.TPA_AUTOACCEPTED).color(NamedTextColor.GOLD));
+            accept(target, sender);
         }
     }
 
@@ -133,12 +137,12 @@ public class TPA extends Feature {
         if (req == null) return;
         if (req.here) {
             if (handler.onCooldown.containsKey(acceptor)) {
-                acceptor.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(acceptor) + " seconds.").color(NamedTextColor.RED));
+                acceptor.sendMessage(KTStrings.getFor(KTStrings.TP_COOLDOWN, Component.text(handler.onCooldown.get(acceptor))).color(NamedTextColor.RED));
                 return;
             }
         } else {
             if (handler.onCooldown.containsKey(requester)) {
-                acceptor.sendMessage(requester.displayName().append(Component.text(" is currently on teleportation cooldown.").color(NamedTextColor.RED)));
+                acceptor.sendMessage(KTStrings.getFor(KTStrings.TP_OTHER_COOLDOWN, requester.displayName(), Component.text(handler.onCooldown.get(requester))).color(NamedTextColor.RED));
                 return;
             }
         }
@@ -155,23 +159,8 @@ public class TPA extends Feature {
             handler.scheduleTeleport(requester, acceptor, time);
         }
 
-        acceptor.sendMessage(Component.text("You accepted the request from ").color(NamedTextColor.GOLD)
-                .append(requester.displayName().color(NamedTextColor.RED))
-                .append(Component.text(". " + (
-                        req.here ? (time > 0 ? "You will be teleported to them in " : "You have been teleported to them")
-                                : (time > 0 ? "They will be teleported to you in " : "They have been teleported to you")
-                )).color(NamedTextColor.GOLD))
-                .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
-                .append(Component.text(".").color(NamedTextColor.GOLD)));
-        requester.sendMessage(Component.text("Your request to ").color(NamedTextColor.GOLD)
-                .append(acceptor.displayName().color(NamedTextColor.RED))
-                .append(Component.text(" was accepted").color(NamedTextColor.GOLD))
-                .append(Component.text(". " + (
-                        req.here ? (time > 0 ? "They will be teleported to you in " : "They have been teleported to you")
-                                : (time > 0 ? "You will be teleported to them in " : "You have been teleported to them")
-                )).color(NamedTextColor.GOLD))
-                .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
-                .append(Component.text(".").color(NamedTextColor.GOLD)));
+        acceptor.sendMessage(KTStrings.getFor(KTStrings.TPA_ACCEPTED, requester.displayName(), KTStrings.getFor(req.here ? KTStrings.TPA_WILL : KTStrings.TPA_OTHER_WILL, Component.text(time))).color(NamedTextColor.GOLD));
+        requester.sendMessage(KTStrings.getFor(KTStrings.TPA_OTHER_ACCEPTED, acceptor.displayName(), KTStrings.getFor(req.here ? KTStrings.TPA_OTHER_WILL : KTStrings.TPA_WILL, Component.text(time))).color(NamedTextColor.GOLD));
     }
 
     private void decline(Player decliner, Player requester) {
@@ -182,22 +171,17 @@ public class TPA extends Feature {
         HandlerList.unregisterAll(req.listener);
         tpas.remove(requester);
 
-        decliner.sendMessage(Component.text("You declined the request from ").color(NamedTextColor.GOLD)
-                .append(requester.displayName().color(NamedTextColor.RED))
-                .append(Component.text(".").color(NamedTextColor.GOLD)));
-        requester.sendMessage(Component.text("Your request to ").color(NamedTextColor.GOLD)
-                .append(decliner.displayName().color(NamedTextColor.RED))
-                .append(Component.text(" was declined.").color(NamedTextColor.GOLD)));
+        decliner.sendMessage(KTStrings.getFor(KTStrings.TPA_DECLINED, requester.displayName()).color(NamedTextColor.GOLD));
+        requester.sendMessage(KTStrings.getFor(KTStrings.TPA_OTHER_DECLINED, decliner.displayName()).color(NamedTextColor.GOLD));
+
         TeleportFeatures.get().teleportations.remove(requester);
     }
 
-    private void cancel(Player sender, Player target, Component reason) {
+    private void cancel(Player sender, Player target) {
         TPARequest req = tpas.remove(sender);
         if (req == null) return;
         Bukkit.getScheduler().cancelTask(req.taskId);
         HandlerList.unregisterAll(req.listener);
-        target.sendMessage(Component.text("Teleport request cancelled because ").color(NamedTextColor.GOLD)
-                .append(reason));
         TeleportFeatures.get().teleportations.remove(sender);
     }
 
@@ -232,7 +216,7 @@ public class TPA extends Feature {
                                 .filter(e -> e.getValue().target.equals(p))
                                 .map(Map.Entry::getKey).findFirst().orElse(null);
                         if (requester != null) accept(p, requester);
-                        else p.sendMessage(Component.text("No pending requests.").color(NamedTextColor.RED));
+                        else p.sendMessage(KTStrings.getFor(KTStrings.TPA_NO_PENDING).color(NamedTextColor.RED));
                     }
                     return Command.SINGLE_SUCCESS;
                 }).build());
@@ -245,7 +229,7 @@ public class TPA extends Feature {
                                 .filter(e -> e.getValue().target.equals(p))
                                 .map(Map.Entry::getKey).findFirst().orElse(null);
                         if (requester != null) decline(p, requester);
-                        else p.sendMessage(Component.text("No pending requests.").color(NamedTextColor.RED));
+                        else p.sendMessage(KTStrings.getFor(KTStrings.TPA_NO_PENDING).color(NamedTextColor.RED));
                     }
                     return Command.SINGLE_SUCCESS;
                 }).build());
@@ -255,11 +239,12 @@ public class TPA extends Feature {
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
                         TPARequest req = tpas.get(p);
-                        if (req != null)  {
-                            cancel(p, req.target, p.displayName().color(NamedTextColor.RED).append(Component.text(" cancelled it").color(NamedTextColor.GOLD)));
-                            p.sendMessage(Component.text("Teleport request cancelled.").color(NamedTextColor.GOLD));
+                        if (req != null) {
+                            cancel(p, req.target);
+                            req.target.sendMessage(KTStrings.getFor(KTStrings.TPA_OTHER_CANCELLED, p.displayName()).color(NamedTextColor.GOLD));
+                            p.sendMessage(KTStrings.getFor(KTStrings.TPA_CANCELLED, p.displayName()).color(NamedTextColor.GOLD));
                         } else {
-                            p.sendMessage(Component.text("No outgoing requests.").color(NamedTextColor.RED));
+                            p.sendMessage(KTStrings.getFor(KTStrings.TPA_NO_PENDING, p.displayName()).color(NamedTextColor.GOLD));
                         }
                     }
                     return Command.SINGLE_SUCCESS;
@@ -274,42 +259,40 @@ public class TPA extends Feature {
                         if (tpAuto.containsKey(playerUUID)) newValue = !tpAuto.get(playerUUID);
 
                         tpAuto.put(p.getUniqueId(), newValue);
-                        p.sendMessage(Component.text("TPAuto is now ").color(NamedTextColor.GOLD)
-                                .append(Component.text(newValue ? "ON" : "OFF").color(NamedTextColor.RED))
-                                .append(Component.text(". When you receive a TPA request " + (newValue ? "it will automatically be accepted." : "you will have to accept it manually.")).color(NamedTextColor.GOLD)));
+                        if (newValue) {
+                            p.sendMessage(KTStrings.getFor(KTStrings.TPA_AUTO_ENABLED).color(NamedTextColor.GOLD));
+                        } else {
+                            p.sendMessage(KTStrings.getFor(KTStrings.TPA_AUTO_DISABLED).color(NamedTextColor.GOLD));
+                        }
                     }
                     return Command.SINGLE_SUCCESS;
                 }).build());
         commands.registrar().register(Commands.literal("tpblock")
                 .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
-                        .then(Commands.argument("player", ArgumentTypes.player())
-                .executes(ctx -> {
-                    Entity exec = ctx.getSource().getExecutor();
-                    if (exec instanceof Player p) {
-                        UUID playerUUID = p.getUniqueId();
-                        List<UUID> list;
-                        if (!tpBlock.containsKey(playerUUID)) {
-                            list = new ArrayList<>();
-                            tpBlock.put(playerUUID, list);
-                        } else {
-                            list = tpBlock.get(playerUUID);
-                        }
+                .then(Commands.argument("player", ArgumentTypes.player())
+                        .executes(ctx -> {
+                            Entity exec = ctx.getSource().getExecutor();
+                            if (exec instanceof Player p) {
+                                UUID playerUUID = p.getUniqueId();
+                                List<UUID> list;
+                                if (!tpBlock.containsKey(playerUUID)) {
+                                    list = new ArrayList<>();
+                                    tpBlock.put(playerUUID, list);
+                                } else {
+                                    list = tpBlock.get(playerUUID);
+                                }
 
-                        Player target = ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst();
-                        if (list.contains(target.getUniqueId())) {
-                            list.remove(target.getUniqueId());
-                            p.sendMessage(Component.text("Unblocked ").color(NamedTextColor.GOLD)
-                                    .append(Names.instance.getRenderedName(target).color(NamedTextColor.RED))
-                                    .append(Component.text(". They can now send TPA requests to you.")));
-                        } else {
-                            list.add(target.getUniqueId());
-                            p.sendMessage(Component.text("Blocked ").color(NamedTextColor.GOLD)
-                                    .append(Names.instance.getRenderedName(target).color(NamedTextColor.RED))
-                                    .append(Component.text(". They can no longer send TPA requests to you.")));
-                        }
-                    }
-                    return Command.SINGLE_SUCCESS;
-                })).build());
+                                Player target = ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst();
+                                if (list.contains(target.getUniqueId())) {
+                                    list.remove(target.getUniqueId());
+                                    p.sendMessage(KTStrings.getFor(KTStrings.TPA_REMOVE_BLOCK, Names.instance.getRenderedName(target).color(NamedTextColor.RED)));
+                                } else {
+                                    list.add(target.getUniqueId());
+                                    p.sendMessage(KTStrings.getFor(KTStrings.TPA_ADD_BLOCK, Names.instance.getRenderedName(target).color(NamedTextColor.RED)));
+                                }
+                            }
+                            return Command.SINGLE_SUCCESS;
+                        })).build());
     }
 
     @Override

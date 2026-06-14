@@ -10,6 +10,7 @@ import io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolv
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.utils.LocationUtils;
@@ -75,38 +76,35 @@ public class Warp extends Feature {
                 }).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
-                        sender.sendPlainMessage("Warps are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.WARPS)));
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     var handler = TeleportFeatures.get();
                     if (executor instanceof Player player) {
                         if (handler.teleportations.containsKey(player)) {
-                            sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_ALREADY_TELEPORTING).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         if (handler.onCooldown.containsKey(player)) {
-                            sender.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(player) + " seconds.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_COOLDOWN, Component.text(handler.onCooldown.get(player))).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         String warp = ctx.getArgument("name", String.class);
                         if (!warps.containsKey(warp)) {
-                            sender.sendMessage(Component.text("Warp \"" + warp + "\" does not exist.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.WARP_NOT_EXIST, Component.text(warp)).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         double time = KamsTweaks.get().getConfig().getDouble("teleportation.timer");
-                        sender.sendMessage(
-                                Component.text("Teleporting to the ").color(NamedTextColor.GOLD)
-                                        .append(Component.text(warp).color(NamedTextColor.RED))
-                                        .append(Component.text(" warp").color(NamedTextColor.GOLD))
-                                        .append(Component.text(time > 0 ? " in " : ".").color(NamedTextColor.GOLD))
-                                        .append(Component.text(time > 0 ? (time + "") : "").color(NamedTextColor.RED))
-                                        .append(Component.text(time > 0 ? " seconds, please do not move." : "").color(NamedTextColor.GOLD)));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.TP_TO_WARP,
+                                Component.text(warp).color(NamedTextColor.RED),
+                                Component.text((int) time).color(NamedTextColor.RED)
+                        ).color(NamedTextColor.GOLD));
                         Location loc = warps.get(warp);
                         handler.scheduleTeleport(player, loc, time);
                         return Command.SINGLE_SUCCESS;
                     }
-                    sender.sendMessage("Only players can use warps.");
+                    sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, KTStrings.getFor(KTStrings.WARPS)));
                     return Command.SINGLE_SUCCESS;
                 }));
         commands.registrar().register(warpCmd.build());
@@ -121,16 +119,16 @@ public class Warp extends Feature {
                 }).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
-                        sender.sendPlainMessage("Warps are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.WARPS)));
                         return Command.SINGLE_SUCCESS;
                     }
                     String warp = ctx.getArgument("name", String.class);
                     if (!warps.containsKey(warp)) {
-                        sender.sendMessage(Component.text("Warp \"" + warp + "\" does not exist.").color(NamedTextColor.RED));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.WARP_NOT_EXIST, Component.text(warp)).color(NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
                     warps.remove(warp);
-                    sender.sendMessage("Deleted warp " + warp + ".");
+                    sender.sendMessage(KTStrings.getFor(KTStrings.WARP_DELETED, Component.text(warp)).color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;
                 }));
         commands.registrar().register(delWarpCmd.build());
@@ -139,12 +137,16 @@ public class Warp extends Feature {
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
-                        sender.sendPlainMessage("Warps are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.WARPS)));
                         return Command.SINGLE_SUCCESS;
                     }
-                    Component c = Component.text("The server has the following warps:").color(NamedTextColor.GOLD);
+                    Component c = KTStrings.getFor(KTStrings.WARP_COUNT, Component.text(warps.size())).color(NamedTextColor.GOLD);
                     for (var warp : warps.keySet()) {
-                        c = c.appendNewline().append(Component.text(warp).color(NamedTextColor.WHITE));
+                        var loc = warps.get(warp);
+                        c = c.appendNewline().append(KTStrings.getFor(KTStrings.WARP_INFO,
+                                Component.text(warp).color(NamedTextColor.GOLD),
+                                Component.text(loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ()).color(NamedTextColor.GREEN),
+                                Component.text(loc.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE)).color(NamedTextColor.WHITE));
                     }
                     sender.sendMessage(c);
                     return Command.SINGLE_SUCCESS;
@@ -156,48 +158,42 @@ public class Warp extends Feature {
                 .then(Commands.argument("name", StringArgumentType.word()).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
-                        sender.sendPlainMessage("Warps are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.WARPS)));
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
                         String warp = ctx.getArgument("name", String.class);
                         warps.put(warp, player.getLocation());
-                        sender.sendMessage(Component.text("Successfully created the warp ").color(NamedTextColor.GOLD)
-                                .append(Component.text(warp).color(NamedTextColor.RED))
-                                .append(Component.text(".").color(NamedTextColor.GOLD)));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.WARP_CREATED, Component.text(warp).color(NamedTextColor.RED)).color(NamedTextColor.GOLD));
                         return Command.SINGLE_SUCCESS;
                     }
-                    sender.sendMessage("Only players can use warps.");
+                    sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, KTStrings.getFor(KTStrings.WARPS)));
                     return Command.SINGLE_SUCCESS;
                 }).then(Commands.argument("location", ArgumentTypes.blockPosition()).executes(ctx -> {
-		 CommandSender sender = ctx.getSource().getSender();
+                    CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
-                        sender.sendPlainMessage("Warps are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.WARPS)));
                         return Command.SINGLE_SUCCESS;
                     }
-                        String warp = ctx.getArgument("name", String.class);
-			BlockPosition pos = ctx.getArgument("location", BlockPositionResolver.class).resolve(ctx.getSource()); 
-                        warps.put(warp, pos.toLocation(Bukkit.getWorlds().getFirst()));
-                        sender.sendMessage(Component.text("Successfully created the warp ").color(NamedTextColor.GOLD)
-                                .append(Component.text(warp).color(NamedTextColor.RED))
-                                .append(Component.text(".").color(NamedTextColor.GOLD)));
+                    String warp = ctx.getArgument("name", String.class);
+                    BlockPosition pos = ctx.getArgument("location", BlockPositionResolver.class).resolve(ctx.getSource());
+                    warps.put(warp, pos.toLocation(Bukkit.getWorlds().getFirst()));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.WARP_CREATED, Component.text(warp).color(NamedTextColor.RED)).color(NamedTextColor.GOLD));
                     return Command.SINGLE_SUCCESS;
-	}).then(Commands.argument("world", ArgumentTypes.world()).executes(ctx -> {
-		 CommandSender sender = ctx.getSource().getSender();
+                }).then(Commands.argument("world", ArgumentTypes.world()).executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
-                        sender.sendPlainMessage("Warps are disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.WARPS)));
                         return Command.SINGLE_SUCCESS;
                     }
-                        String warp = ctx.getArgument("name", String.class);
-			BlockPosition pos = ctx.getArgument("location", BlockPositionResolver.class).resolve(ctx.getSource());
-			World world = ctx.getArgument("world", World.class);
-                        warps.put(warp, pos.toLocation(world));
-                        sender.sendMessage(Component.text("Successfully created the warp ").color(NamedTextColor.GOLD)
-                                .append(Component.text(warp).color(NamedTextColor.RED))
-                                .append(Component.text(".").color(NamedTextColor.GOLD)));
+                    String warp = ctx.getArgument("name", String.class);
+                    BlockPosition pos = ctx.getArgument("location", BlockPositionResolver.class).resolve(ctx.getSource());
+                    World world = ctx.getArgument("world", World.class);
+                    warps.put(warp, pos.toLocation(world));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.WARP_CREATED, Component.text(warp).color(NamedTextColor.RED)).color(NamedTextColor.GOLD));
                     return Command.SINGLE_SUCCESS;
-	}))));
+                }))));
         commands.registrar().register(addwarp.build());
     }
 }

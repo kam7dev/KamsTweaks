@@ -7,6 +7,7 @@ import io.papermc.paper.registry.data.dialog.body.*;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.*;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.ChatFilter;
@@ -173,7 +174,7 @@ public class LandClaimPage extends GuiLayer {
                             var name = Objects.requireNonNullElse(view.getText("name"), "Unnamed Claim");
                             var res = ChatFilter.instance.isFiltered(name);
                             if (res.first) {
-                                ChatFilter.warnStaff("Claim rename by " + who.getName() + " was caught by the " + res.second.name + " automod: " + name);
+                                ChatFilter.warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_NAME, Component.text(who.getName()), Component.text(res.second.name), Component.text(name)));
                                 show();
                                 who.sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                                 return;

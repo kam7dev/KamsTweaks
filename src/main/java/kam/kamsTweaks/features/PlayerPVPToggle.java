@@ -20,6 +20,7 @@ import java.util.UUID;
 
 public class PlayerPVPToggle extends Feature {
     private final Map<UUID, Boolean> pvp = new HashMap<>();
+
     @Override
     public void setup() {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("player-pvp-toggle.enabled", "player-pvp-toggle.enabled", false, "kamstweaks.configure"));

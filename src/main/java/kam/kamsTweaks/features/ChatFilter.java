@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import github.scarsz.discordsrv.util.DiscordUtil;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.utils.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -26,7 +27,6 @@ import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class ChatFilter extends Feature {
 
@@ -39,11 +39,13 @@ public class ChatFilter extends Feature {
         public String message;
         public boolean fetched = false;
         public String fetchUrl = "";
+
         public Filter(String name, String message, Pattern regex) {
             this.name = name;
             this.message = message;
             this.pattern = regex;
         }
+
         public Filter(String name, String message, String fetchUrl) {
             this.name = name;
             this.message = message;
@@ -93,8 +95,6 @@ public class ChatFilter extends Feature {
         }
     }
 
-    PlainTextComponentSerializer ser = PlainTextComponentSerializer.plainText();
-
     public Pair<Boolean, Filter> isFiltered(String str) {
         for (var filter : filters) {
             if (!filter.enabled) continue;
@@ -118,10 +118,10 @@ public class ChatFilter extends Feature {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onChat(AsyncChatEvent e) {
-        var str = ser.serialize(e.message());
+        var str = Names.instance.pt.serialize(e.message());
         var res = isFiltered(str);
         if (res.first) {
-            warnStaff("Message by " + e.getPlayer().getName() + " was caught by the " + res.second.name + " automod: " + str);
+            warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_CHAT, Component.text(e.getPlayer().getName()), Component.text(res.second.name), Component.text(str)));
             e.setCancelled(true);
             e.getPlayer().sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
         }
@@ -132,16 +132,16 @@ public class ChatFilter extends Feature {
         var comps = Component.text("");
         var f = true;
         for (var line : e.lines()) {
-            var s = ser.serialize(line);
+            var s = Names.instance.pt.serialize(line);
             if (s.isBlank()) continue;
             if (!f) comps = comps.appendNewline();
             comps = comps.append(line);
             f = false;
         }
-        var str = ser.serialize(comps);
+        var str = Names.instance.pt.serialize(comps);
         var res = isFiltered(str);
         if (res.first) {
-            warnStaff("Sign by " + e.getPlayer().getName() + " was caught by the " + res.second.name + " automod: " + str);
+            warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_SIGN, Component.text(e.getPlayer().getName()), Component.text(res.second.name), Component.text(str)));
             e.setCancelled(true);
             e.getPlayer().sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
         }
@@ -153,10 +153,10 @@ public class ChatFilter extends Feature {
             if (e.getSlot() == 2) {
                 var item = inv.getResult();
                 if (item == null) return;
-                var str = ser.serialize(item.displayName());
+                var str = Names.instance.pt.serialize(item.displayName());
                 var res = isFiltered(str);
                 if (res.first) {
-                    warnStaff("Anvil rename by " + e.getWhoClicked().getName() + " was caught by the " + res.second.name + " automod: " + str);
+                    warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_NAME, Component.text(e.getWhoClicked().getName()), Component.text(res.second.name), Component.text(str)));
                     e.setCancelled(true);
                     e.getWhoClicked().sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                 }
@@ -164,23 +164,6 @@ public class ChatFilter extends Feature {
         }
     }
 
-    // TODO: remove this one
-    public static void warnStaff(String message) {
-        Logger.warn(message);
-        KamsTweaks.get().sendToOps(Component.text(message).color(NamedTextColor.RED));
-        Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
-        if (dsPlugin != null && dsPlugin.isEnabled()) {
-            try {
-                var channel = DiscordUtil.getTextChannelById("1487994679579508836");
-                if (channel != null) {
-                    var ignored = channel.sendMessage("<@&1488275345252810882> " + message);
-                }
-            } catch (Exception e) {
-                Logger.error("Failed to send message to discord. Exception printed below.");
-                Logger.handleException(e);
-            }
-        }
-    }
 
     public static void warnStaff(Component message) {
         Logger.warn(Names.instance.pt.serialize(message));

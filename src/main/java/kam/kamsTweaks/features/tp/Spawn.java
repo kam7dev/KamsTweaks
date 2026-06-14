@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.Feature;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -24,32 +25,27 @@ public class Spawn extends Feature {
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.spawn.enabled", true)) {
-                        sender.sendPlainMessage("/spawn is disabled.");
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/spawn")));
                         return Command.SINGLE_SUCCESS;
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
                         var handler = TeleportFeatures.get();
                         if (handler.teleportations.containsKey(player)) {
-                            sender.sendMessage(Component.text("You are already teleporting somewhere.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_ALREADY_TELEPORTING).color(NamedTextColor.GOLD));
                             return Command.SINGLE_SUCCESS;
                         }
                         if (handler.onCooldown.containsKey(player)) {
-                            sender.sendMessage(Component.text("You're currently on teleportation cooldown for " + handler.onCooldown.get(player) + " seconds.").color(NamedTextColor.RED));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_COOLDOWN, Component.text(handler.onCooldown.get(player)).color(NamedTextColor.RED)).color(NamedTextColor.GOLD));
                             return Command.SINGLE_SUCCESS;
                         }
                         int time = KamsTweaks.get().getConfig().getInt("teleportation.timer");
-                        sender.sendMessage(
-                                Component.text("Teleporting to spawn")
-                                        .color(NamedTextColor.GOLD)
-                                        .append(Component.text(time > 0 ? " in " : ".").color(NamedTextColor.GOLD))
-                                        .append(Component.text(time > 0 ? (time + " seconds") : "").color(NamedTextColor.RED))
-                                        .append(Component.text(time > 0 ? ", please do not move." : "").color(NamedTextColor.GOLD)));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.TP_TO_SPAWN, Component.text(time).color(NamedTextColor.RED)).color(NamedTextColor.GOLD));
                         Location loc = Bukkit.getWorlds().getFirst().getSpawnLocation().toHighestLocation().add(.5, 1, .5);
                         handler.scheduleTeleport(player, loc, time);
                         return Command.SINGLE_SUCCESS;
                     }
-                    sender.sendMessage("Only players can use /spawn.");
+                    sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/spawn")));
                     return Command.SINGLE_SUCCESS;
                 });
         commands.registrar().register(spawn.build());
