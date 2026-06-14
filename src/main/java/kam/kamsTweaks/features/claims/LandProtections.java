@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features.claims;
 
 import kam.kamsTweaks.ItemManager;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.SeedDispenser;
@@ -76,7 +77,7 @@ public class LandProtections implements Listener {
         if (claim == null) return;
         var res = claim.hasPermissions(player, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.LECTERN_TAKE);
         if (!res.result()) {
-            message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
+            message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
             e.setCancelled(true);
         }
     }
@@ -90,7 +91,7 @@ public class LandProtections implements Listener {
         if (claim == null) return;
         var res = claim.hasPermissions(player, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.LECTERN_INSERT);
         if (!res.result()) {
-            message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
+            message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
             e.setCancelled(true);
         }
     }
@@ -103,7 +104,7 @@ public class LandProtections implements Listener {
         if (claim == null) return;
         var res = claim.hasPermissions(who, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.DRAIN_CAULDRON);
         if (!res.result()) {
-            if (who != null) message(who, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
+            if (who != null) message(who, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
             e.setCancelled(true);
         }
     }
@@ -120,7 +121,7 @@ public class LandProtections implements Listener {
                     if (claim == null) return;
                     var res = claim.hasPermissions(player, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.DAMAGE_ANVIL);
                     if (!res.result()) {
-                        message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
+                        message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
                         e.setCancelled(true);
                     }
                 });
@@ -137,7 +138,7 @@ public class LandProtections implements Listener {
         var res = claim.hasPermissions(player, LandPermission.BLOCK_PLACE, AdvancedLandPermission.EMPTY_BUCKETS);
         if (!res.result()) {
             e.setCancelled(true);
-            message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
+            message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
             applyCooldowns(player);
         }
     }
@@ -152,7 +153,7 @@ public class LandProtections implements Listener {
         var res = claim.hasPermissions(player, LandPermission.BLOCK_BREAK, AdvancedLandPermission.FILL_BUCKETS);
         if (!res.result()) {
             e.setCancelled(true);
-            message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
+            message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
         }
     }
 
@@ -187,18 +188,21 @@ public class LandProtections implements Listener {
                 LandClaim claim = claims.getClaim(e.getClickedBlock().getLocation());
                 if (claim == null) return;
                 if (e.getClickedBlock().getType().toString().contains("DOOR")) {
-                    if (!claim.hasPermission(player, LandPermission.DOOR_INTERACT) && !claim.hasPermission(player, LandPermission.BLOCK_INTERACT)) {
-                        message(player, Component.text("You don't have permission to interact with doors here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                    var res = claim.hasPermissions(player, LandPermission.DOOR_INTERACT, LandPermission.BLOCK_INTERACT);
+                    if (!res.result()) {
+                        message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
                         e.setCancelled(true);
                     }
                 } else if ((e.getClickedBlock().getType().equals(Material.RESPAWN_ANCHOR) && !e.getClickedBlock().getWorld().isRespawnAnchorWorks()) || (e.getClickedBlock().getType().name().contains("BED") && !e.getClickedBlock().getWorld().isBedWorks())){
-                    if (!claim.hasPermission(player, LandPermission.BLOCK_BREAK)) {
-                        message(player, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                    var perm = LandPermission.BLOCK_BREAK;
+                    if (!claim.hasPermission(player, perm)) {
+                        message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                         e.setCancelled(true);
                     }
                 } else {
+                    var perm = LandPermission.BLOCK_INTERACT;
                     if (!claim.hasPermission(player, LandPermission.BLOCK_INTERACT)) {
-                        message(player, Component.text("You don't have permission to interact with blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                        message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                         e.setCancelled(true);
                     }
                 }
@@ -213,8 +217,9 @@ public class LandProtections implements Listener {
         Player player = e.getPlayer();
         LandClaim claim = claims.getClaim(e.getBlock().getLocation());
         if (claim == null) return;
-        if (!claim.hasPermission(player, LandPermission.BLOCK_BREAK)) {
-            message(player, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+        var perm = LandPermission.BLOCK_BREAK;
+        if (!claim.hasPermission(player, perm)) {
+            message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
             e.setCancelled(true);
         }
     }
@@ -232,7 +237,8 @@ public class LandProtections implements Listener {
         Player player = e.getPlayer();
         LandClaim claim = claims.getClaim(e.getBlock().getLocation());
         if (claim == null) return;
-        if (!claim.hasPermission(player, LandPermission.BLOCK_PLACE)) {
+        var perm = LandPermission.BLOCK_PLACE;
+        if (!claim.hasPermission(player, perm)) {
             e.setCancelled(true);
             applyCooldowns(player);
             ItemStack item = e.getItemInHand();
@@ -248,7 +254,7 @@ public class LandProtections implements Listener {
             } else if (item.getType() == Material.ENDER_CHEST) {
                 e.getPlayer().openInventory(e.getPlayer().getEnderChest());
             } else {
-                message(player, Component.text("You don't have permission to place blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
             }
         }
     }
@@ -348,7 +354,8 @@ public class LandProtections implements Listener {
         Player player = e.getPlayer();
         LandClaim in = claims.getClaim(e.getBlock().getLocation());
         List<Component> who = new ArrayList<>();
-        if (in != null && !in.hasPermission(player, LandPermission.BLOCK_PLACE)) {
+        var perm = LandPermission.BLOCK_PLACE;
+        if (in != null && !in.hasPermission(player, perm)) {
             who.add(in.getOwnerName());
             e.setCancelled(true);
             e.getBlock().getState().update(true, false);
@@ -361,7 +368,7 @@ public class LandProtections implements Listener {
             LandClaim to = claims.getClaim(block.getLocation());
             if (to == null)
                 continue;
-            if (!to.hasPermission(player, LandPermission.BLOCK_PLACE)) {
+            if (!to.hasPermission(player, perm)) {
                 Component name = to.getOwnerName();
                 if (!who.contains(name))
                     who.add(name);
@@ -376,7 +383,7 @@ public class LandProtections implements Listener {
             plrs = plrs.append(plr);
         }
         if (player != null && !plrs.children().isEmpty())
-            message(player, Component.text("You don't have permission to place blocks here! (Claim(s) owned by ").append(plrs, Component.text(")")));
+            message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, plrs));
         e.getBlocks().removeAll(toProtect);
     }
 
@@ -390,8 +397,9 @@ public class LandProtections implements Listener {
             Player player = (Player) e.getPlayer();
             LandClaim claim = claims.getClaim(((Entity) entity).getLocation());
             if (claim == null) return;
-            if (!claim.hasPermission(player, LandPermission.BLOCK_INTERACT)) {
-                message(player, Component.text("You don't have permission to interact with blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            var perm = LandPermission.BLOCK_INTERACT;
+            if (!claim.hasPermission(player, perm)) {
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                 e.setCancelled(true);
             }
         }
@@ -407,8 +415,9 @@ public class LandProtections implements Listener {
         LandClaim claim = claims.getClaim(entity.getLocation());
         if (claim == null) return;
         if (entity instanceof LeashHitch) {
-            if (!claim.hasPermission(player, LandPermission.BLOCK_INTERACT)) {
-                message(player, Component.text("You don't have permission to interact with blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            var perm = LandPermission.BLOCK_INTERACT;
+            if (!claim.hasPermission(player, perm)) {
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                 e.setCancelled(true);
             }
         } else {
@@ -421,7 +430,7 @@ public class LandProtections implements Listener {
                 res = claim.hasPermissions(player, LandPermission.BLOCK_PLACE, AdvancedLandPermission.ITEM_FRAME_ITEM_PLACE);
             }
             if (!res.result()) {
-                message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
                 e.setCancelled(true);
             }
         }
@@ -458,7 +467,7 @@ public class LandProtections implements Listener {
             if (!res.result()) {
                 // Shouldn't need to keep message for the origin one.
                 if (origin == null || !origin.hasPermissions(player, LandPermission.BLOCK_INTERACT, actions.toArray(new AdvancedLandPermission[0])).result()) {
-                    message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
+                    message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
                     e.setCancelled(true);
                 }
             }
@@ -472,8 +481,9 @@ public class LandProtections implements Listener {
         if (e.getPlayer() instanceof Player player) {
             LandClaim claim = claims.getClaim(e.getEntity().getLocation());
             if (claim == null) return;
-            if (!claim.hasPermission(player, LandPermission.BLOCK_PLACE)) {
-                message(player, Component.text("You don't have permission to place blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            var perm = LandPermission.BLOCK_PLACE;
+            if (!claim.hasPermission(player, perm)) {
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                 e.setCancelled(true);
             }
         }
@@ -486,8 +496,9 @@ public class LandProtections implements Listener {
         LandClaim claim = claims.getClaim(e.getEntity().getLocation());
         var remover = e.getRemover();
         if (claim == null) return;
-        if (!claim.hasPermission(remover, LandPermission.BLOCK_BREAK)) {
-            message(remover, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+        var perm = LandPermission.BLOCK_BREAK;
+        if (!claim.hasPermission(remover, perm)) {
+            message(remover, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
             e.setCancelled(true);
         }
     }
@@ -499,8 +510,9 @@ public class LandProtections implements Listener {
         if (e.getPlayer() instanceof Player player) {
         LandClaim claim = claims.getClaim(e.getEntity().getLocation());
             if (claim == null) return;
-            if (!claim.hasPermission(player, LandPermission.BLOCK_PLACE)) {
-                message(player, Component.text("You don't have permission to place blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            var perm = LandPermission.BLOCK_PLACE;
+            if (!claim.hasPermission(player, perm)) {
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                 e.setCancelled(true);
             } else {
                 e.getEntity().getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING, LocationUtils.serializeBlockPos(e.getEntity().getLocation()));
@@ -518,8 +530,9 @@ public class LandProtections implements Listener {
         var attacker = e.getAttacker();
         LandClaim claim = claims.getClaim(e.getVehicle().getLocation());
         if (claim == null) return;
-        if (!claim.hasPermission(attacker, LandPermission.BLOCK_BREAK)) {
-            message(attacker, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+        var perm = LandPermission.BLOCK_BREAK;
+        if (!claim.hasPermission(attacker, perm)) {
+            message(attacker, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
             e.setCancelled(true);
         }
 
@@ -552,14 +565,15 @@ public class LandProtections implements Listener {
             var res = claim.hasPermissions(damager, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE);
             if (!res.result()) {
                 if (origin == null || !origin.hasPermissions(entity, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE).result())  {
-                    message(entity, Component.text("You don't have permission to " + res.message() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                    message(entity, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
                     e.setCancelled(true);
                 }
             }
         } else {
-            if (!claim.hasPermission(damager, LandPermission.BLOCK_BREAK)) {
-                if (origin == null || !origin.hasPermission(entity, LandPermission.BLOCK_BREAK)) {
-                    message(entity, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            var perm = LandPermission.BLOCK_BREAK;
+            if (!claim.hasPermission(damager, perm)) {
+                if (origin == null || !origin.hasPermission(entity, perm)) {
+                    message(entity, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                     e.setCancelled(true);
                 }
             }
@@ -577,11 +591,12 @@ public class LandProtections implements Listener {
 
             List<Component> who = new ArrayList<>();
             List<Block> toProtect = new ArrayList<>();
+            var perm = LandPermission.BLOCK_BREAK;
             for (Block block : e.blockList()) {
                 LandClaim to = claims.getClaim(block.getLocation());
                 if (to == null)
                     continue;
-                if (!to.hasPermission(source, LandPermission.BLOCK_BREAK)) {
+                if (!to.hasPermission(source, perm)) {
                     Component name = to.getOwnerName();
                     if (!who.contains(name))
                         who.add(name);
@@ -595,7 +610,7 @@ public class LandProtections implements Listener {
                 plrs = plrs.append(plr);
             }
             if (!plrs.children().isEmpty())
-                message(source, Component.text("You don't have permission to break blocks here! (Claim(s) owned by ").append(plrs, Component.text(")")));
+                message(source, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, plrs));
             e.blockList().removeAll(toProtect);
             for (Block block : toProtect) {
                 block.getState().update(true, false);
@@ -607,11 +622,12 @@ public class LandProtections implements Listener {
 
             List<Component> who = new ArrayList<>();
             List<Block> toProtect = new ArrayList<>();
+            var perm = LandPermission.BLOCK_INTERACT;
             for (Block block : e.blockList()) {
                 LandClaim to = claims.getClaim(block.getLocation());
                 if (to == null)
                     continue;
-                if (!to.hasPermission(source, LandPermission.BLOCK_INTERACT) && (block.getType().toString().contains("DOOR") && !to.hasPermission(source, LandPermission.DOOR_INTERACT))) {
+                if (!to.hasPermission(source, perm) && (block.getType().toString().contains("DOOR") && !to.hasPermission(source, LandPermission.DOOR_INTERACT))) {
                     Component name = to.getOwnerName();
                     if (!who.contains(name))
                         who.add(name);
@@ -625,7 +641,7 @@ public class LandProtections implements Listener {
                 plrs = plrs.append(plr);
             }
             if (!plrs.children().isEmpty())
-                message(source, Component.text("You don't have permission to interact with blocks here! (Claim(s) owned by ").append(plrs, Component.text(")")));
+                message(source, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, plrs));
             e.blockList().removeAll(toProtect);
             for (Block block : toProtect) {
                 block.getState().update(true, false);
@@ -705,26 +721,28 @@ public class LandProtections implements Listener {
             case FIREBALL, ARROW -> {
                 if (event.getIgnitingEntity() instanceof Projectile projectile) {
                     var shooter = projectile.getShooter();
+                    var perm = LandPermission.BLOCK_PLACE;
                     if (shooter instanceof Entity entity) {
-                        if (to != null && !to.hasPermission(entity, LandPermission.BLOCK_PLACE)) {
-                            message(entity, Component.text("You don't have permission to place blocks here! (Claim owned by ").append(to.getOwnerName(), Component.text(")")));
+                        if (to != null && !to.hasPermission(entity, perm)) {
+                            message(entity, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, to.getOwnerName()));
                             event.setCancelled(true);
                         }
                     } else if (shooter instanceof BlockProjectileSource block) {
                         var in = claims.getClaim(block.getBlock().getLocation());
-                        if (to != null && !to.hasPermission(in == null ? null : in.owner, LandPermission.BLOCK_PLACE)) {
+                        if (to != null && !to.hasPermission(in == null ? null : in.owner, perm)) {
                             event.setCancelled(true);
                         }
                     } else {
-                        if (to != null && !to.hasPermission(null, LandPermission.BLOCK_PLACE)) {
+                        if (to != null && !to.hasPermission(null, perm)) {
                             event.setCancelled(true);
                         }
                     }
                 } else {
                     LandClaim claim = claims.getClaim(event.getBlock().getLocation());
                     if (event.getIgnitingEntity() instanceof Entity entity) {
-                        if (claim != null && !claim.hasPermission(entity, LandPermission.BLOCK_PLACE)) {
-                            message(entity, Component.text("You don't have permission to place blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                        var perm = LandPermission.BLOCK_PLACE;
+                        if (claim != null && !claim.hasPermission(entity, perm)) {
+                            message(entity, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                             event.setCancelled(true);
                         }
                     } else {
@@ -736,8 +754,9 @@ public class LandProtections implements Listener {
             }
             case FLINT_AND_STEEL -> {
                 if (event.getIgnitingEntity() instanceof Entity entity) {
-                    if (to != null && !to.hasPermission(entity, LandPermission.BLOCK_PLACE)) {
-                        message(entity, Component.text("You don't have permission to place blocks here! (Claim owned by ").append(to.getOwnerName(), Component.text(")")));
+                    var perm = LandPermission.BLOCK_PLACE;
+                    if (to != null && !to.hasPermission(entity, perm)) {
+                        message(entity, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, to.getOwnerName()));
                         event.setCancelled(true);
                     }
                 } else {
@@ -1035,13 +1054,15 @@ public class LandProtections implements Listener {
         Player player = event.getPlayer();
         LandClaim claim = claims.getClaim(event.getClickedBlock().getLocation());
         if (event.getClickedBlock().getType() == Material.FARMLAND || event.getClickedBlock().getType() == Material.TURTLE_EGG) {
-            if (claim != null && !claim.hasPermission(player, LandPermission.BLOCK_BREAK)) {
-                message(player, Component.text("You don't have permission to break blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            var perm = LandPermission.BLOCK_BREAK;
+            if (claim != null && !claim.hasPermission(player, perm)) {
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                 event.setCancelled(true);
             }
         } else {
-            if (claim != null && !claim.hasPermission(player, LandPermission.BLOCK_INTERACT)) {
-                message(player, Component.text("You don't have permission to interact with blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            var perm = LandPermission.BLOCK_INTERACT;
+            if (claim != null && !claim.hasPermission(player, perm)) {
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                 event.setCancelled(true);
             }
         }
@@ -1054,13 +1075,14 @@ public class LandProtections implements Listener {
         if (event.getEntityType() == EntityType.SHEEP || event.getEntityType() == EntityType.BEE)
             return;
         LandClaim claim = claims.getClaim(event.getBlock().getLocation());
+        var perm = LandPermission.BLOCK_BREAK;
         if (event.getEntity() instanceof Player player) {
-            if (claim != null && !claim.hasPermission(player, LandPermission.BLOCK_BREAK)) {
-                message(player, Component.text("You don't have block break permissions here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            if (claim != null && !claim.hasPermission(player, perm)) {
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                 event.setCancelled(true);
             }
         } else if (event.getEntityType() == EntityType.ENDERMAN) {
-            if (claim != null && !claim.hasPermission(null, LandPermission.BLOCK_BREAK)) {
+            if (claim != null && !claim.hasPermission(null, perm)) {
                 event.setCancelled(true);
             }
         } else if (event.getEntity() instanceof ArmorStand stand && stand.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "grave"))) {
@@ -1069,12 +1091,12 @@ public class LandProtections implements Listener {
             if (event.getTo() == org.bukkit.Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
                 var newClaim = claims.getClaim(event.getBlock().getRelative(BlockFace.DOWN).getLocation());
 
-                if (claim != null && !claim.hasPermission(newClaim != null ? newClaim.owner : null, LandPermission.BLOCK_BREAK)) {
+                if (claim != null && !claim.hasPermission(newClaim != null ? newClaim.owner : null, perm)) {
                     event.setCancelled(true);
                     fb.remove();
                 }
 
-                if (newClaim != null && !newClaim.hasPermission(claim != null ? claim.owner : null, LandPermission.BLOCK_BREAK)) {
+                if (newClaim != null && !newClaim.hasPermission(claim != null ? claim.owner : null, perm)) {
                     event.setCancelled(true);
                     org.bukkit.inventory.ItemStack drop = new org.bukkit.inventory.ItemStack(event.getBlockData().getMaterial());
                     org.bukkit.inventory.meta.ItemMeta meta = drop.getItemMeta();
@@ -1092,7 +1114,7 @@ public class LandProtections implements Listener {
                     Location origin = LocationUtils.deserializeBlockPos(Objects.requireNonNull(fb.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)));
                     orig = claims.getClaim(origin);
                 }
-                if (claim != null && !claim.hasPermission(orig != null ? orig.owner : null, LandPermission.BLOCK_BREAK)) {
+                if (claim != null && !claim.hasPermission(orig != null ? orig.owner : null, perm)) {
                     event.setCancelled(true);
                     org.bukkit.inventory.ItemStack drop = new org.bukkit.inventory.ItemStack(event.getBlockData().getMaterial());
                     org.bukkit.inventory.meta.ItemMeta meta = drop.getItemMeta();
@@ -1105,7 +1127,7 @@ public class LandProtections implements Listener {
                 }
             }
         } else {
-            if (claim != null && !claim.hasPermission(null, LandPermission.BLOCK_INTERACT)) {
+            if (claim != null && !claim.hasPermission(null, perm)) {
                 event.setCancelled(true);
             }
         }
@@ -1116,8 +1138,9 @@ public class LandProtections implements Listener {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
             return;
         LandClaim claim = claims.getClaim(event.getBlock().getLocation());
-        if (claim != null && !claim.hasPermission(event.getEntity(), LandPermission.BLOCK_PLACE)) {
-            message(event.getEntity(), Component.text("You don't have permission to place blocks here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+        var perm = LandPermission.BLOCK_PLACE;
+        if (claim != null && !claim.hasPermission(event.getEntity(), perm)) {
+            message(event.getEntity(), KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
             event.setCancelled(true);
         }
     }

@@ -299,7 +299,7 @@ public class LandClaims implements Listener {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
-                sender.sendMessage(KTStrings.getFor(KTStrings.LC_CANT_FOR_OTHERS).color(NamedTextColor.RED));
+                sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_CANT_FOR_OTHERS).color(NamedTextColor.RED));
                 return Command.SINGLE_SUCCESS;
             }
             if (executor instanceof Player player) {
@@ -342,7 +342,7 @@ public class LandClaims implements Listener {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
-                sender.sendMessage(KTStrings.getFor(KTStrings.LC_CANT_FOR_OTHERS).color(NamedTextColor.RED));
+                sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_CANT_FOR_OTHERS).color(NamedTextColor.RED));
                 return Command.SINGLE_SUCCESS;
             }
             if (executor instanceof Player player) {
@@ -364,7 +364,7 @@ public class LandClaims implements Listener {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
-                sender.sendMessage(KTStrings.getFor(KTStrings.LC_CANT_FOR_OTHERS).color(NamedTextColor.RED));
+                sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_CANT_FOR_OTHERS).color(NamedTextColor.RED));
                 return Command.SINGLE_SUCCESS;
             }
             if (executor instanceof Player player) {
@@ -838,6 +838,14 @@ public class LandClaims implements Listener {
             return new MPRes(hasPermission(who, gen), gen.label);
         }
 
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted") // what is it talking about
+        public MPRes hasPermissions(Object who, LandPermission gen, LandPermission... perms) {
+            for (var perm : perms) {
+                if (hasPermission(who, perm)) return new MPRes(true, perm.label);
+            }
+            return new MPRes(hasPermission(who, gen), gen.label);
+        }
+
         boolean intersects(LandClaim other) {
             if (start.getWorld() != other.start.getWorld()) return false;
 
@@ -990,7 +998,7 @@ public class LandClaims implements Listener {
         for (LandClaim claim : claims) {
             if (claim.owner != null && who.getUniqueId().equals(claim.owner.getUniqueId())) {
                 i++;
-                msg = msg.appendNewline().append(KTStrings.getFor(KTStrings.CLAIM_INFO,
+                msg = msg.appendNewline().append(KTStrings.getFor(KTStrings.LC_INFO,
                         Component.text(claim.id).color(NamedTextColor.GOLD),
                         Component.text(claim.config.name).color(NamedTextColor.AQUA),
                         Component.text(claim.config.priority).color(NamedTextColor.YELLOW),

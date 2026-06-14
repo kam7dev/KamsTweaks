@@ -157,12 +157,12 @@ public class ConfigCommand {
         commands.registrar().register(
                 Commands.literal("kamstweaks").then(command)
                         .then(Commands.literal("version").executes(ctx -> {
-                            ctx.getSource().getSender().sendMessage("KamsTweaks is on version " + KamsTweaks.get().getPluginMeta().getVersion());
+                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.VERSION, Component.text(KamsTweaks.get().getPluginMeta().getVersion())));
                             return Command.SINGLE_SUCCESS;
                         }))
                         .then(Commands.literal("save").executes(ctx -> {
                             KamsTweaks.get().save();
-                            ctx.getSource().getSender().sendMessage(Component.text("Saved KamsTweaks.").color(NamedTextColor.GREEN));
+                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.SAVED).color(NamedTextColor.GREEN));
                             return Command.SINGLE_SUCCESS;
                         }).requires(source -> source.getSender().hasPermission("kamstweaks.save")))
                         .then(Commands.literal("printException").requires(source -> source.getSender().hasPermission("kamstweaks.logger")).executes(ctx -> {

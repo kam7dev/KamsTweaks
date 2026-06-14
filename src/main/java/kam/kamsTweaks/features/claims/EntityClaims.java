@@ -50,11 +50,11 @@ public class EntityClaims {
             if (executor instanceof Player player) {
                 new EntityClaimPage(player).show();
                 if (player != sender) {
-                    sender.sendMessage(Component.text("Showed entity claims gui to ").append(Names.instance.getRenderedName(player), Component.text(".")).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getRenderedName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims entity")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         };
 
@@ -68,14 +68,14 @@ public class EntityClaims {
             var executor = ctx.getSource().getExecutor();
             var target = ctx.getArgument("entity", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst();
             if (executor != sender) {
-                sender.sendMessage(Component.text("You can't create claims for someone else.").color(NamedTextColor.RED));
+                sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_CANT_FOR_OTHERS).color(NamedTextColor.RED));
                 return Command.SINGLE_SUCCESS;
             }
             if (executor instanceof Player player) {
                 createClaim(player, target);
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims entity create")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }));
         cmdList.add(create);
@@ -96,13 +96,13 @@ public class EntityClaims {
             if (executor instanceof Player player) {
                 var claim = getClaim(id);
                 if (claim == null) {
-                    sender.sendMessage(Component.text("This claim doesn't exist.").color(NamedTextColor.RED));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_NONEXISTENT).color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;
                 }
                 deleteClaim(claim, player);
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims entity delete")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         })).then(Commands.argument("uuid", ArgumentTypes.entity()).executes(ctx -> {
             var sender = ctx.getSource().getSender();
@@ -111,13 +111,13 @@ public class EntityClaims {
             if (executor instanceof Player player) {
                 var claim = getClaim(id);
                 if (claim == null) {
-                    sender.sendMessage(Component.text("This claim doesn't exist.").color(NamedTextColor.RED));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_NONEXISTENT).color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;
                 }
                 deleteClaim(claim, player);
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims entity delete")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }));
         cmdList.add(delete);
@@ -129,7 +129,7 @@ public class EntityClaims {
                 listClaims(player, sender);
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims entity list")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }));
 
@@ -319,17 +319,19 @@ public class EntityClaims {
                 var entity = Bukkit.getEntity(uuid);
                 if (entity != null) {
                     ref.i++;
-                    ref.msg = ref.msg.append(Component.newline(),
-                            Component.text("("), Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(") "),
-                            entity.name().color(NamedTextColor.AQUA),
-                            Component.text(" ("), Component.translatable(entity.getType().translationKey()), Component.text("): "),
+                    ref.msg = ref.msg.appendNewline().append(KTStrings.getFor(KTStrings.LC_INFO,
+                            Component.text(claim.id).color(NamedTextColor.GOLD),
+                        Names.instance.getEntityRenderedName(entity).color(NamedTextColor.AQUA),
                             Component.text(entity.getLocation().getBlockX() + ", " + entity.getLocation().getBlockY() + ", " + entity.getLocation().getBlockZ()).color(NamedTextColor.GREEN),
-                            Component.text(" in "), Component.text(entity.getLocation().getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE));
+                            Component.text(entity.getLocation().getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE)));
                 }
             }
         });
-
-        receiver.sendMessage(Component.text().append(who == receiver ? Component.text("You have ") : Names.instance.getRenderedName(who).append(Component.text(" has ")), Component.text(ref.i).color(NamedTextColor.GOLD), Component.text(" entity claims"), Component.text("."), ref.msg));
+        if (receiver == who) {
+            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_YOU_HAVE, Component.text(ref.i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.EC)).append(ref.msg));
+        } else {
+            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.instance.getRenderedName(who), Component.text(ref.i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.EC)).append(ref.msg));
+        }
     }
 
     public void listClaims(Player who) {
@@ -345,15 +347,15 @@ public class EntityClaims {
             }
         }
         if (count >= max) {
-            who.sendMessage(Component.text("You already have the max number of claims! (" + count + "/" + max + ")").color(NamedTextColor.RED));
+            who.sendMessage(KTStrings.getFor(KTStrings.EC_MAX, Component.text(count), Component.text(max)).color(NamedTextColor.RED));
             return;
         }
         if (!isClaimable(entity)) {
-            who.sendMessage(Component.text("This entity is not claimable!").color(NamedTextColor.RED));
+            who.sendMessage(KTStrings.getFor(KTStrings.EC_UNCLAIMABLE).color(NamedTextColor.RED));
             return;
         }
         if (claims.containsKey(entity.getUniqueId())) {
-            who.sendMessage(Component.text("Sorry! This entity is already claimed!").color(NamedTextColor.RED));
+            who.sendMessage(KTStrings.getFor(KTStrings.EC_ALREADY_CLAIMED, claims.get(entity.getUniqueId()).getOwnerName()).color(NamedTextColor.RED));
         } else {
             var claim = new EntityClaim(who, entity.getUniqueId());
             claims.put(entity.getUniqueId(), claim);
@@ -363,21 +365,21 @@ public class EntityClaims {
                 mob.setRemoveWhenFarAway(false);
             }
             entity.setPersistent(true);
-            who.sendMessage(Component.text("Claimed ").append(Names.instance.getEntityRenderedName(entity), Component.text(" successfully ("), Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(")")));
+            who.sendMessage(KTStrings.getFor(KTStrings.EC_CLAIMED, Names.instance.getEntityRenderedName(entity), Component.text(claim.id).color(NamedTextColor.GOLD)));
         }
     }
 
     public void deleteClaim(EntityClaim claim, Player who) {
         var mt = claim.getManagementType(who);
         if (mt == Claims.ManagementType.None) {
-            who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
+            who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_CANT_MANAGE).color(NamedTextColor.RED));
             return;
         } else if (mt == Claims.ManagementType.Op) {
-            KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Deleted " + claim.getOwnerUsername() + "'s entity claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+            KamsTweaks.get().sendToOps(KTStrings.getFor(KTStrings.CLAIM_OP_DELETE, Component.text(who.getName()), Component.text(claim.getOwnerUsername()), KTStrings.getFor(KTStrings.ENTITY)).decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
             Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s entity claim.");
         }
         claims.remove(claim.entity);
-        who.sendMessage(Component.text("Deleted claim successfully.").color(NamedTextColor.GREEN));
+        who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_DELETED).color(NamedTextColor.GREEN));
     }
 
     public @Nullable EntityClaim getClaim(Entity entity) {
@@ -659,7 +661,7 @@ public class EntityClaims {
         }
 
         public Component getOwnerName() {
-            if (owner == null) return Component.text("the server").color(NamedTextColor.GOLD);
+            if (owner == null) return KTStrings.getFor(KTStrings.THE_SERVER).color(NamedTextColor.GOLD);
             return Names.instance.getRenderedName(owner);
         }
 

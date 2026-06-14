@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features.claims;
 
 import kam.kamsTweaks.ItemManager;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.Names;
 import kam.kamsTweaks.features.claims.gui.EntityClaimPage;
@@ -47,7 +48,7 @@ public class EntityProtections implements Listener {
                 e.setCancelled(true);
                 if (entity instanceof Tameable tameable && tameable.getOwnerUniqueId() != null) {
                     if (tameable.getOwnerUniqueId() != who.getUniqueId()) {
-                        message(who, Component.text("This entity is tamed and cannot be claimed."));
+                        message(who, KTStrings.getFor(KTStrings.EC_TAMED));
                         return;
                     }
                 }
@@ -56,11 +57,10 @@ public class EntityProtections implements Listener {
                         new EntityClaimPage(who, entity).show();
                         return;
                     }
-                    message(who, Component.text("This entity is already claimed by ").append(claim.getOwnerName(), Component.text(".")));
+                    message(who, KTStrings.getFor(KTStrings.EC_ALREADY_CLAIMED, claim.getOwnerName()));
                     return;
                 }
                 if (!who.hasPermission("kamstweaks.claims.claim")) {
-                    who.sendMessage(Component.text("You do not have permission to claim entities.").color(NamedTextColor.RED));
                     return;
                 }
                 int count = 0;
@@ -69,14 +69,14 @@ public class EntityProtections implements Listener {
                 }
                 var max = KamsTweaks.get().getConfig().getInt("entity-claims.max-claims", 1000);
                 if (count >= max) {
-                    who.sendMessage(Component.text("You already have the max number of claims! (" + count + "/" + max + ")").color(NamedTextColor.RED));
+                    who.sendMessage(KTStrings.getFor(KTStrings.EC_MAX, Component.text(count), Component.text(max)).color(NamedTextColor.RED));
                     return;
                 }
                 new FLAlertLayer(who,
-                        Component.text("Claim ").append(Names.instance.getEntityRenderedName(entity), Component.text("?")),
+                        KTStrings.getFor(KTStrings.EC_CONFIRM, Names.instance.getEntityRenderedName(entity)),
                         Component.empty(),
-                        Component.text("Yes"),
-                        Component.text("No"),
+                        KTStrings.getFor(KTStrings.YES),
+                        KTStrings.getFor(KTStrings.NO),
                         second -> {
                             if (!second) {
                                 Claims.get().entityClaims.createClaim(who, entity);
@@ -85,8 +85,9 @@ public class EntityProtections implements Listener {
                 return;
             }
             if (claim == null) return;
-            if (!claim.hasPermission(who, EntityPermission.INTERACT)) {
-                message(who, Component.text("You don't have permission to interact with this entity! (Entity claimed by ").append(claim.getOwnerName(), Component.text(")")));
+            var perm = EntityPermission.INTERACT;
+            if (!claim.hasPermission(who, perm)) {
+                message(who, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
                 e.setCancelled(true);
             }
         }
@@ -99,13 +100,14 @@ public class EntityProtections implements Listener {
         Entity entity = e.getVehicle();
         EntityClaim claim = claims.getClaim(entity);
         if (claim == null) return;
+        var perm = EntityPermission.DAMAGE;
         if (e.getAttacker() instanceof Player player) {
-            if (!claim.hasPermission(player, EntityPermission.DAMAGE)) {
-                message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(claim.getOwnerName(), Component.text(")")));
+            if (!claim.hasPermission(player, perm)) {
+                message(player, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
                 e.setCancelled(true);
             }
         } else {
-            if (!claim.hasPermission(null, EntityPermission.DAMAGE)) {
+            if (!claim.hasPermission(null, perm)) {
                 e.setCancelled(true);
             }
         }
@@ -118,13 +120,14 @@ public class EntityProtections implements Listener {
         Entity entity = e.getVehicle();
         EntityClaim claim = claims.getClaim(entity);
         if (claim == null) return;
+        var perm = EntityPermission.DAMAGE;
         if (e.getAttacker() instanceof Player player) {
-            if (!claim.hasPermission(player, EntityPermission.DAMAGE)) {
-                message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(claim.getOwnerName(), Component.text(")")));
+            if (!claim.hasPermission(player, perm)) {
+                message(player, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
                 e.setCancelled(true);
             }
         } else {
-            if (!claim.hasPermission(null, EntityPermission.DAMAGE)) {
+            if (!claim.hasPermission(null, perm)) {
                 e.setCancelled(true);
             }
         }
@@ -134,6 +137,7 @@ public class EntityProtections implements Listener {
     public void onDamage(EntityDamageEvent event) {
         if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         EntityClaim claim = claims.getClaim(event.getEntity());
+        var perm = EntityPermission.DAMAGE;
         switch (event.getCause()) {
             case VOID, KILL -> {}
             case ENTITY_ATTACK, ENTITY_EXPLOSION, ENTITY_SWEEP_ATTACK -> {
@@ -155,11 +159,11 @@ public class EntityProtections implements Listener {
                         return;
                     }
                     if (claim == null) return;
-                    if (claim.hasPermission(player, EntityPermission.DAMAGE)) return;
-                    message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(claim.getOwnerName(), Component.text(")")));
+                    if (claim.hasPermission(player, perm)) return;
+                    message(player, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
                     event.setCancelled(true);
                 } else if (claim != null) {
-                    if (claim.hasPermission(null, EntityPermission.DAMAGE)) return;
+                    if (claim.hasPermission(null, perm)) return;
                     event.setCancelled(true);
                 }
             }
@@ -175,8 +179,8 @@ public class EntityProtections implements Listener {
                         return;
                     }
                     if (claim == null) return;
-                    if (claim.hasPermission(player, EntityPermission.DAMAGE)) return;
-                    message(player, Component.text("You don't have permission to damage this entity! (Entity claimed by ").append(claim.getOwnerName(), Component.text(")")));
+                    if (claim.hasPermission(player, perm)) return;
+                    message(player, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
                     event.setCancelled(true);
                 }
             }

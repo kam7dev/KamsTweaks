@@ -28,6 +28,8 @@ public enum KTStrings {
     NAME,
     PRIORITY,
     THE_SERVER,
+    SAVED,
+    VERSION,
 
     // Automod
     AUTOMOD_NAME,
@@ -65,11 +67,12 @@ public enum KTStrings {
     CLAIM_HIGHLIGHTED_FOR,
     CLAIMS_SHOWED_GUI_TO,
     CLAIMS_NONEXISTENT,
-    CLAIM_INFO,
     CLAIM_OP_DELETE,
     CLAIM_DELETED,
     CLAIMS_YOU_HAVE,
     CLAIMS_THEY_HAVE,
+    CLAIMS_NOT_CLAIMING,
+    CLAIMS_CANT_FOR_OTHERS,
 
     PERMS_DEFAULT_PLAYER,
     PERMS_DEFAULT_ENTITY,
@@ -99,12 +102,10 @@ public enum KTStrings {
     LC_DISABLED,
     LC_ENABLING,
     LC_REENABLED,
-    LC_CANT_FOR_OTHERS,
     LC_ALREADY_CLAIMING,
     LC_MAXED_SLOTS,
     LC_START_CLAIMING,
     LC_STOPPED_CLAIMING,
-    CLAIMS_NOT_CLAIMING,
     LC_ALREADY_CLAIMED,
     LC_CORNER2,
     LC_EXTENDABLE_TOO_LARGE,
@@ -115,12 +116,22 @@ public enum KTStrings {
     LC_CLAIMED,
     LC_ACROSS_DIMENSIONS,
     LC_SLOTS,
+    LC_INFO,
+    LC_NO_PERM,
 
     EC,
     ENTITY,
     EC_INTERACT,
     EC_DAMAGE,
     EC_AGGRO,
+    EC_INFO,
+    EC_MAX,
+    EC_UNCLAIMABLE,
+    EC_ALREADY_CLAIMED,
+    EC_CLAIMED,
+    EC_TAMED,
+    EC_CONFIRM,
+    EC_NO_PERM,
 
     // Graves
     GRAVE_INFO,
@@ -294,6 +305,12 @@ public enum KTStrings {
             case THE_SERVER -> {
                 return Component.translatable("kamstweaks.generic.the_server", "The Server", args);
             }
+            case SAVED -> {
+                return Component.translatable("kamstweaks.generic.saved", "Saved KamsTweaks.", args);
+            }
+            case VERSION -> {
+                return Component.translatable("kamstweaks.generic.version", "KamsTweaks is on version %s.", args);
+            }
 
             case AUTOMOD_NAME -> {
                 return Component.translatable("kamstweaks.automod.name", "Nickname by %s was caught by the %s automod: %s", args);
@@ -406,9 +423,6 @@ public enum KTStrings {
             case CLAIMS_NONEXISTENT -> {
                 return Component.translatable("kamstweaks.claims.not_exist", "This claim does not exist.", args);
             }
-            case CLAIM_INFO -> {
-                return Component.translatable("kamstweaks.claims.info", "(%s) %s (priority %s): %s to %s in %s %s", args);
-            }
             case CLAIM_OP_DELETE -> {
                 return Component.translatable("kamstweaks.claims.op_delete", "[%s: Deleted %s's %s]", args);
             }
@@ -421,7 +435,9 @@ public enum KTStrings {
             case CLAIMS_THEY_HAVE -> {
                 return Component.translatable("kamstweaks.claims.claims_other_has", "%s has %s %s.", args);
             }
-
+            case CLAIMS_CANT_FOR_OTHERS -> {
+                return Component.translatable("kamstweaks.claims.cant_for_others", "You can't claim for other people.", args);
+            }
             case PERMS_DEFAULT_PLAYER -> {
                 return Component.translatable("kamstweaks.claims.perms.default_player", "Default Player Permissions", args);
             }
@@ -504,9 +520,6 @@ public enum KTStrings {
             case LC_REENABLED -> {
                 return Component.translatable("kamstweaks.claims.land.end_reenabled", "Claims are now re-enabled in this dimension.", args);
             }
-            case LC_CANT_FOR_OTHERS -> {
-                return Component.translatable("kamstweaks.claims.land.cant_for_others", "You can't claim for other people.", args);
-            }
             case LC_ALREADY_CLAIMING -> {
                 return Component.translatable("kamstweaks.claims.land.already", "You're already claiming land. (run %s to cancel)", args);
             }
@@ -552,6 +565,12 @@ public enum KTStrings {
             case LC_SLOTS -> {
                 return Component.translatable("kamstweaks.claims.land.slots", "(%s slots)", args);
             }
+            case LC_INFO -> {
+                return Component.translatable("kamstweaks.claims.land.info", "(%s) %s (priority %s): %s to %s in %s %s", args);
+            }
+            case LC_NO_PERM -> {
+                return Component.translatable("kamstweaks.claims.land.no_perms", "You don't have permission to %s here! (Claim owned by %s)", args);
+            }
 
             case EC -> {
                 return Component.translatable("kamstweaks.claims.entity", "Entity Claims", args);
@@ -567,6 +586,30 @@ public enum KTStrings {
             }
             case EC_AGGRO -> {
                 return Component.translatable("kamstweaks.claims.entity.aggro", "Can Aggro", args);
+            }
+            case EC_INFO -> {
+                return Component.translatable("kamstweaks.claims.entity.info", "(%s) %s (priority %s): %s to %s in %s %s", args);
+            }
+            case EC_MAX -> {
+                return Component.translatable("kamstweaks.claims.entity.max", "You already have the max number of claims! (%s/%s)", args);
+            }
+            case EC_UNCLAIMABLE -> {
+                return Component.translatable("kamstweaks.claims.entity.unclaimable", "This entity is not claimable!", args);
+            }
+            case EC_ALREADY_CLAIMED -> {
+                return Component.translatable("kamstweaks.claims.entity.already_claimed", "This entity is already claimed by %s.", args);
+            }
+            case EC_CLAIMED -> {
+                return Component.translatable("kamstweaks.claims.entity.claimed", "Claimed %s successfully (%s).", args);
+            }
+            case EC_TAMED -> {
+                return Component.translatable("kamstweaks.claims.entity.tamed", "This entity is tamed and cannot be claimed.", args);
+            }
+            case EC_CONFIRM -> {
+                return Component.translatable("kamstweaks.claims.entity.confirm", "Claim %s?", args);
+            }
+            case EC_NO_PERM -> {
+                return Component.translatable("kamstweaks.claims.entity.no_perms", "You don't have permission to %s! (Entity claimed by %s)", args);
             }
 
             case GRAVE_INFO -> {
