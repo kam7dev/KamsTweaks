@@ -8,6 +8,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.Logger;
 import kam.kamsTweaks.features.Names;
@@ -389,19 +390,19 @@ public class EntityClaims {
     }
 
     public enum EntityPermission {
-        INTERACT("Interact with this entity"),
-        DAMAGE("Damage this entity"),
+        INTERACT(KTStrings.getFor(KTStrings.EC_INTERACT)),
+        DAMAGE(KTStrings.getFor(KTStrings.EC_DAMAGE)),
 
         ;
 
-        public final String label;
+        public final Component label;
         public final OptBool defaultValue;
 
-        EntityPermission(String label, OptBool defaultValue) {
+        EntityPermission(Component label, OptBool defaultValue) {
             this.label = label;
             this.defaultValue = defaultValue;
         }
-        EntityPermission(String label) {
+        EntityPermission(Component label) {
             this.label = label;
             this.defaultValue = OptBool.False;
         }
@@ -411,14 +412,14 @@ public class EntityClaims {
 
         ;
 
-        public final String label;
+        public final Component label;
         public final OptBool defaultValue;
 
-        AdvancedEntityPermission(String label, OptBool defaultValue) {
+        AdvancedEntityPermission(Component label, OptBool defaultValue) {
             this.label = label;
             this.defaultValue = defaultValue;
         }
-        AdvancedEntityPermission(String label) {
+        AdvancedEntityPermission(Component label) {
             this.label = label;
             this.defaultValue = OptBool.False;
         }
@@ -647,7 +648,7 @@ public class EntityClaims {
             return Claims.ManagementType.None;
         }
 
-        public record MPRes(boolean result, String message) {}
+        public record MPRes(boolean result, Component message) {}
         @SuppressWarnings("BooleanMethodIsAlwaysInverted") // what is it talking about
         public MPRes hasPermissions(Object who, EntityPermission gen, AdvancedEntityPermission... perms) {
             for (var perm : perms) {

@@ -59,7 +59,7 @@ public class LandClaims implements Listener {
                 if (val == 0) {
                     disabled.remove(world);
                     for (var plr : world.getPlayers()) {
-                        plr.sendMessage(Component.text("Claims are now re-enabled in this dimension.").color(NamedTextColor.GREEN));
+                        plr.sendMessage(KTStrings.getFor(KTStrings.LC_REENABLED).color(NamedTextColor.GREEN));
                     }
                 } else {
                     disabled.put(world, val);
@@ -113,13 +113,13 @@ public class LandClaims implements Listener {
             var who = config.getString(path + ".who");
             if (who != null) perms.who = UUID.fromString(who);
             if (config.contains(path + ".bools")) {
-                for (var ps : nonNull(config.getConfigurationSection(path  + ".bools")).getKeys(false)) {
+                for (var ps : nonNull(config.getConfigurationSection(path + ".bools")).getKeys(false)) {
                     var perm = LandPermission.valueOf(ps);
                     perms.bools.put(perm, OptBool.valueOf(config.getString(path + ".bools." + ps)));
                 }
             }
             if (config.contains(path + ".advbools")) {
-                for (var ps : nonNull(config.getConfigurationSection(path  + ".advbools")).getKeys(false)) {
+                for (var ps : nonNull(config.getConfigurationSection(path + ".advbools")).getKeys(false)) {
                     var perm = AdvancedLandPermission.valueOf(ps);
                     perms.advancedBools.put(perm, OptBool.valueOf(config.getString(path + ".advbools." + ps)));
                 }
@@ -203,20 +203,20 @@ public class LandClaims implements Listener {
                             claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.False);
                             for (String def : Objects.requireNonNull(cfg.getStringList("claims." + key + ".defaults"))) {
                                 switch (def) {
-                                    case "INTERACT_DOOR":  {
+                                    case "INTERACT_DOOR": {
                                         claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.True);
                                         break;
                                     }
-                                    case "INTERACT_BLOCK":  {
+                                    case "INTERACT_BLOCK": {
                                         claim.defaultPerms.bools.put(LandPermission.BLOCK_INTERACT, OptBool.True);
                                         claim.defaultPerms.bools.put(LandPermission.DOOR_INTERACT, OptBool.True);
                                         break;
                                     }
-                                    case "BLOCK_BREAK":  {
+                                    case "BLOCK_BREAK": {
                                         claim.defaultPerms.bools.put(LandPermission.BLOCK_BREAK, OptBool.True);
                                         break;
                                     }
-                                    case "BLOCK_PLACE":  {
+                                    case "BLOCK_PLACE": {
                                         claim.defaultPerms.bools.put(LandPermission.BLOCK_PLACE, OptBool.True);
                                         break;
                                     }
@@ -238,20 +238,20 @@ public class LandClaims implements Listener {
                                 perms.bools.put(LandPermission.DOOR_INTERACT, OptBool.False);
                                 for (String def : Objects.requireNonNull(cfg.getStringList("claims." + key + ".permissions." + uuidStr))) {
                                     switch (def) {
-                                        case "INTERACT_DOOR":  {
+                                        case "INTERACT_DOOR": {
                                             perms.bools.put(LandPermission.DOOR_INTERACT, OptBool.True);
                                             break;
                                         }
-                                        case "INTERACT_BLOCK":  {
+                                        case "INTERACT_BLOCK": {
                                             perms.bools.put(LandPermission.BLOCK_INTERACT, OptBool.True);
                                             perms.bools.put(LandPermission.DOOR_INTERACT, OptBool.True);
                                             break;
                                         }
-                                        case "BLOCK_BREAK":  {
+                                        case "BLOCK_BREAK": {
                                             perms.bools.put(LandPermission.BLOCK_BREAK, OptBool.True);
                                             break;
                                         }
-                                        case "BLOCK_PLACE":  {
+                                        case "BLOCK_PLACE": {
                                             perms.bools.put(LandPermission.BLOCK_PLACE, OptBool.True);
                                             break;
                                         }
@@ -282,11 +282,11 @@ public class LandClaims implements Listener {
                 new LandClaimPage(player).show();
 
                 if (player != sender) {
-                    sender.sendMessage(Component.text("Showed land claims gui to ").append(Names.instance.getRenderedName(player), Component.text(".")).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getRenderedName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims land")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         };
 
@@ -299,14 +299,14 @@ public class LandClaims implements Listener {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
-                sender.sendMessage(Component.text("You can't start claiming for someone else.").color(NamedTextColor.RED));
+                sender.sendMessage(KTStrings.getFor(KTStrings.LC_CANT_FOR_OTHERS).color(NamedTextColor.RED));
                 return Command.SINGLE_SUCCESS;
             }
             if (executor instanceof Player player) {
                 startClaiming(player, true);
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims land create")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         });
         cmdList.add(create);
@@ -327,13 +327,13 @@ public class LandClaims implements Listener {
             if (executor instanceof Player player) {
                 var claim = getClaim(id);
                 if (claim == null) {
-                    sender.sendMessage(Component.text("This claim doesn't exist.").color(NamedTextColor.RED));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_NONEXISTENT).color(NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;
                 }
                 deleteClaim(claim, player);
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims land delete")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }));
         cmdList.add(delete);
@@ -342,7 +342,7 @@ public class LandClaims implements Listener {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
-                sender.sendMessage(Component.text("You can't create claims for someone else.").color(NamedTextColor.RED));
+                sender.sendMessage(KTStrings.getFor(KTStrings.LC_CANT_FOR_OTHERS).color(NamedTextColor.RED));
                 return Command.SINGLE_SUCCESS;
             }
             if (executor instanceof Player player) {
@@ -350,12 +350,13 @@ public class LandClaims implements Listener {
                 var claim = currentlyClaiming.get(player);
                 var pos1 = ctx.getArgument("pos1", BlockPositionResolver.class).resolve(ctx.getSource());
                 var pos2 = ctx.getArgument("pos2", BlockPositionResolver.class).resolve(ctx.getSource());
-                if (!setCorner1(player, claim, pos1.toLocation(player.getWorld()), false)) return Command.SINGLE_SUCCESS;
+                if (!setCorner1(player, claim, pos1.toLocation(player.getWorld()), false))
+                    return Command.SINGLE_SUCCESS;
                 if (!setCorner2(player, claim, pos2.toLocation(claim.start.getWorld()))) return Command.SINGLE_SUCCESS;
 
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims land create")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         })));
 
@@ -363,14 +364,14 @@ public class LandClaims implements Listener {
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
-                sender.sendMessage(Component.text("You can't stop claiming for someone else.").color(NamedTextColor.RED));
+                sender.sendMessage(KTStrings.getFor(KTStrings.LC_CANT_FOR_OTHERS).color(NamedTextColor.RED));
                 return Command.SINGLE_SUCCESS;
             }
             if (executor instanceof Player player) {
                 stopClaiming(player);
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims land cancel")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }));
 
@@ -381,7 +382,7 @@ public class LandClaims implements Listener {
                 listClaims(player, sender);
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims land list")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }));
 
@@ -391,13 +392,13 @@ public class LandClaims implements Listener {
             if (executor instanceof Player player) {
                 Claims.get().landClaims.showClaims(player);
                 if (sender == player) {
-                    sender.sendMessage(Component.text("Nearby claims are being highlighted."));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_HIGHLIGHTED));
                 } else {
-                    sender.sendMessage(Component.text("Highlighting nearby claims for ").append(Names.instance.getRenderedName(player), Component.text(".")));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_HIGHLIGHTED_FOR, Names.instance.getRenderedName(player)));
                 }
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims land view")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }));
 
@@ -417,7 +418,7 @@ public class LandClaims implements Listener {
 
     public @Nullable LandClaim getClaim(Location where, boolean ignoresWorldDisable) {
         if (!ignoresWorldDisable && ((where.getWorld().getEnderDragonBattle() != null && where.getWorld().getEnderDragonBattle().getEnderDragon() != null) || disabled.containsKey(where.getWorld()))) {
-            if (where.distance(new Location(where.getWorld(),0.f, where.y(), 0.f)) < 200) return null;
+            if (where.distance(new Location(where.getWorld(), 0.f, where.y(), 0.f)) < 200) return null;
         }
         LandClaims.LandClaim ret = null;
         for (var claim : claims) {
@@ -436,17 +437,18 @@ public class LandClaims implements Listener {
 
     public boolean startClaiming(Player who, boolean sMessage) {
         if (currentlyClaiming.containsKey(who)) {
-            who.sendMessage(Component.text("You're already claiming land. (run ").append(Component.text("/claims land cancel").clickEvent(ClickEvent.runCommand("claims land cancel")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(" to cancel)")).color(NamedTextColor.RED));
+            who.sendMessage(KTStrings.getFor(KTStrings.LC_ALREADY_CLAIMING, Component.text("/claims land cancel").clickEvent(ClickEvent.runCommand("claims land cancel")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED)).color(NamedTextColor.RED));
         } else {
             var total = 0;
             for (var c : claims) {
                 if (c.owner != null && c.owner.getUniqueId() == who.getUniqueId()) total += c.slots;
             }
             if (total + 1 > KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30)) {
-                who.sendMessage(Component.text("You have used all of your claim slots. Delete some to free up slots.").color(NamedTextColor.RED));
+                who.sendMessage(KTStrings.getFor(KTStrings.LC_MAXED_SLOTS).color(NamedTextColor.RED));
                 return false;
             }
-            if (sMessage) who.sendMessage(Component.text("Right click the first corner of where you want to claim with your claim tool. (If you lost it, run ").append(Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(")")).color(NamedTextColor.GOLD));
+            if (sMessage)
+                who.sendMessage(KTStrings.getFor(KTStrings.LC_START_CLAIMING, Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED)).color(NamedTextColor.GOLD));
             currentlyClaiming.put(who, new LandClaim(who, null, null));
         }
         return true;
@@ -454,10 +456,10 @@ public class LandClaims implements Listener {
 
     public void stopClaiming(Player who) {
         if (currentlyClaiming.containsKey(who)) {
-            who.sendMessage(Component.text("Stopped claiming.").color(NamedTextColor.GOLD));
+            who.sendMessage(KTStrings.getFor(KTStrings.LC_STOPPED_CLAIMING).color(NamedTextColor.GOLD));
             currentlyClaiming.remove(who);
         } else {
-            who.sendMessage(Component.text("You aren't currently claiming land. (run ").append(Component.text("/claims land create").clickEvent(ClickEvent.runCommand("claims land cancel")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED), Component.text(" or use the claim tool to start)")).color(NamedTextColor.RED));
+            who.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_NOT_CLAIMING, Component.text("/claims land create").clickEvent(ClickEvent.runCommand("claims land cancel")).color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED)).color(NamedTextColor.RED));
         }
     }
 
@@ -465,21 +467,14 @@ public class LandClaims implements Listener {
         for (var c : claims) {
             if (c.inBounds(loc)) {
                 if (c.owner == null || (!c.owner.getUniqueId().equals(who.getUniqueId()))) {
-                    Component name;
-                    if (c.owner == null) {
-                        name = Component.text("the server").color(NamedTextColor.GOLD);
-                    } else {
-                        name = Names.instance.getRenderedName(c.owner);
-                    }
-                    who.sendMessage(Component.text("This land is already claimed by ").append(name, Component.text(".")).color(NamedTextColor.RED));
+                    who.sendMessage(KTStrings.getFor(KTStrings.LC_ALREADY_CLAIMED, c.getOwnerName()).color(NamedTextColor.RED));
                     return false;
                 }
             }
         }
         claim.start = loc;
-        if (sMessage) who.sendMessage(Component.text("Now click the other corner with your claim tool. (If you lost it, run ").append(
-                Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW),
-                Component.text(")").color(NamedTextColor.BLUE)).color(NamedTextColor.BLUE));
+        if (sMessage)
+            who.sendMessage(KTStrings.getFor(KTStrings.LC_CORNER2, Component.text("/claims get-tool").clickEvent(ClickEvent.runCommand("claims get-tool")).color(NamedTextColor.YELLOW)).color(NamedTextColor.BLUE));
         return true;
     }
 
@@ -497,18 +492,18 @@ public class LandClaims implements Listener {
         if (value > 1) {
             if (total + value > maxCt) {
                 var diff = (value + total - maxCt);
-                who.sendMessage(Component.text("You can't claim more than " + maxArea + " blocks in an unextended claim, while you are trying to claim " + has + ". You need " + diff + " more claim slot" + (diff == 1 ? "" : "s") + " for an extension (costs " + value + ").").color(NamedTextColor.RED));
+                who.sendMessage(KTStrings.getFor(KTStrings.LC_EXTENDABLE_TOO_LARGE, Component.text(maxArea), Component.text(has), Component.text(diff), Component.text(value)));
                 return false;
             }
-            new FLAlertLayer(who, Component.text("Extend claim?"),
-                    Component.text("This claim is larger than " + maxArea + " blocks. Do you want to use " + (value - 1) + " extra claim slot" + (value == 2 ? "" : "s") + " to extend it?"),
-                    Component.text("Yes").color(NamedTextColor.GREEN), Component.text("No").color(NamedTextColor.RED), second -> {
+            new FLAlertLayer(who, KTStrings.getFor(KTStrings.LC_EXTEND),
+                    KTStrings.getFor(KTStrings.LC_EXTEND_DESC, Component.text(maxArea), Component.text(value - 1)),
+                    KTStrings.getFor(KTStrings.YES).color(NamedTextColor.GREEN), KTStrings.getFor(KTStrings.NO).color(NamedTextColor.RED), second -> {
                 if (!second) {
                     finishClaiming(who, claim, loc);
                 }
             }).show();
         } else if (total + 1 > maxCt) {
-            who.sendMessage(Component.text("You have used all of your claim slots. Delete some to free up slots.").color(NamedTextColor.RED));
+            who.sendMessage(KTStrings.getFor(KTStrings.LC_NO_SLOTS));
             return false;
         }
         finishClaiming(who, claim, loc);
@@ -520,25 +515,16 @@ public class LandClaims implements Listener {
         for (var other : claims) {
             if (claim.intersects(other)) {
                 if (other.owner == null || !other.owner.getUniqueId().equals(who.getUniqueId())) {
-                    Component name;
-                    if (other.owner == null) {
-                        name = Component.text("the server").color(NamedTextColor.GOLD);
-                    } else {
-                        name = Names.instance.getRenderedName(other.owner);
-                    }
-                    who.sendMessage(Component.text("This land intersects a claim by ")
-                            .append(name, Component.text(".")).color(NamedTextColor.RED));
+                    who.sendMessage(KTStrings.getFor(KTStrings.LC_INTERSECTS, other.getOwnerName()).color(NamedTextColor.RED));
                     return;
-                } else if (other.owner.getUniqueId().equals(who.getUniqueId())
-                        && other.config.priority >= claim.config.priority) {
+                } else if (other.owner.getUniqueId().equals(who.getUniqueId()) && other.config.priority >= claim.config.priority) {
                     claim.config.priority = other.config.priority + 1;
                 }
             }
         }
         claims.add(claim);
         currentlyClaiming.remove(who);
-        who.sendMessage(Component.text("Territory claimed (").color(NamedTextColor.GREEN).append(
-                Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(")").color(NamedTextColor.GREEN)));
+        who.sendMessage(KTStrings.getFor(KTStrings.LC_CLAIMED, Component.text(claim.id).color(NamedTextColor.GOLD)).color(NamedTextColor.GREEN));
     }
 
     public void handleTool(Player plr, Location loc) {
@@ -548,9 +534,7 @@ public class LandClaims implements Listener {
                 setCorner1(plr, claim, loc, true);
             } else {
                 if (claim.start.getWorld() != loc.getWorld()) {
-                    plr.sendMessage(
-                            Component.text("You can't claim across dimensions - go back to the dimension you started in!")
-                                    .color(NamedTextColor.RED));
+                    plr.sendMessage(KTStrings.getFor(KTStrings.LC_ACROSS_DIMENSIONS).color(NamedTextColor.RED));
                     return;
                 }
                 setCorner2(plr, claim, loc);
@@ -564,64 +548,65 @@ public class LandClaims implements Listener {
     public void deleteClaim(LandClaim claim, Player who) {
         var mt = claim.getManagementType(who);
         if (mt == Claims.ManagementType.None) {
-            who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
+            who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_CANT_MANAGE).color(NamedTextColor.RED));
             return;
         } else if (mt == Claims.ManagementType.Op) {
-            KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Deleted " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+            KamsTweaks.get().sendToOps(KTStrings.getFor(KTStrings.CLAIM_OP_DELETE, Component.text(who.getName()), Component.text(claim.getOwnerUsername()), KTStrings.getFor(KTStrings.LAND)).decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
             Logger.warn("[Claim management] " + who.getName() + " just deleted " + claim.getOwnerUsername() + "'s land claim.");
         }
         claims.remove(claim);
-        who.sendMessage(Component.text("Deleted claim successfully.").color(NamedTextColor.GREEN));
+        who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_DELETED).color(NamedTextColor.GREEN));
     }
 
     public enum LandPermission {
-        DOOR_INTERACT("Interact with Doors", OptBool.True),
-        BLOCK_INTERACT("Interact with Blocks"),
-        BLOCK_BREAK("Break Blocks"),
-        BLOCK_PLACE("Place Blocks"),
+        DOOR_INTERACT(KTStrings.getFor(KTStrings.LC_DOOR_INTERACT), OptBool.True),
+        BLOCK_INTERACT(KTStrings.getFor(KTStrings.LC_BLOCK_INTERACT)),
+        BLOCK_BREAK(KTStrings.getFor(KTStrings.LC_BLOCK_BREAK)),
+        BLOCK_PLACE(KTStrings.getFor(KTStrings.LC_BLOCK_PLACE)),
 
         ;
 
-        public final String label;
+        public final Component label;
         public final OptBool defaultValue;
 
-        LandPermission(String label, OptBool defaultValue) {
+        LandPermission(Component label, OptBool defaultValue) {
             this.label = label;
             this.defaultValue = defaultValue;
         }
-        LandPermission(String label) {
+
+        LandPermission(Component label) {
             this.label = label;
             this.defaultValue = OptBool.False;
         }
     }
 
     public enum AdvancedLandPermission {
-        LECTERN_INSERT("Place into Lecterns"),
-        LECTERN_TAKE("Take from Lecterns"),
-        DRAIN_CAULDRON("Drain Cauldrons"),
-        DAMAGE_ANVIL("Damage Anvils"),
+        LECTERN_INSERT(KTStrings.getFor(KTStrings.LC_LECTERN_INSERT)),
+        LECTERN_TAKE(KTStrings.getFor(KTStrings.LC_LECTERN_TAKE)),
+        DRAIN_CAULDRON(KTStrings.getFor(KTStrings.LC_DRAIN_CAULDRON)),
+        DAMAGE_ANVIL(KTStrings.getFor(KTStrings.LC_DAMAGE_ANVIL)),
 
-        EMPTY_BUCKETS("Empty Buckets"),
-        FILL_BUCKETS("Fill Buckets"),
+        EMPTY_BUCKETS(KTStrings.getFor(KTStrings.LC_EMPTY_BUCKETS)),
+        FILL_BUCKETS(KTStrings.getFor(KTStrings.LC_FILL_BUCKETS)),
 
-        ITEM_FRAME_ITEM_ROTATE("Rotate Items in Frames"),
-        ITEM_FRAME_ITEM_TAKE("Take Items from Frames"),
-        ITEM_FRAME_ITEM_PLACE("Place Items into Frames"),
-        ARMOR_STAND_ITEM_TAKE("Take from Armor Stands"),
-        ARMOR_STAND_ITEM_PLACE("Place onto Armor Stands"),
-
+        ITEM_FRAME_ITEM_ROTATE(KTStrings.getFor(KTStrings.LC_ITEM_FRAME_ITEM_ROTATE)),
+        ITEM_FRAME_ITEM_TAKE(KTStrings.getFor(KTStrings.LC_ITEM_FRAME_ITEM_TAKE)),
+        ITEM_FRAME_ITEM_PLACE(KTStrings.getFor(KTStrings.LC_ITEM_FRAME_ITEM_PLACE)),
+        ARMOR_STAND_ITEM_TAKE(KTStrings.getFor(KTStrings.LC_ARMOR_STAND_ITEM_TAKE)),
+        ARMOR_STAND_ITEM_PLACE(KTStrings.getFor(KTStrings.LC_ARMOR_STAND_ITEM_PLACE)),
 
 
         ;
 
-        public final String label;
+        public final Component label;
         public final OptBool defaultValue;
 
-        AdvancedLandPermission(String label, OptBool defaultValue) {
+        AdvancedLandPermission(Component label, OptBool defaultValue) {
             this.label = label;
             this.defaultValue = defaultValue;
         }
-        AdvancedLandPermission(String label) {
+
+        AdvancedLandPermission(Component label) {
             this.label = label;
             this.defaultValue = OptBool.False;
         }
@@ -841,7 +826,9 @@ public class LandClaims implements Listener {
             return defaultPerms.getBoolPermission(perm);
         }
 
-        public record MPRes(boolean result, String message) {}
+        public record MPRes(boolean result, Component message) {
+        }
+
         @SuppressWarnings("BooleanMethodIsAlwaysInverted") // what is it talking about
         public MPRes hasPermissions(Object who, LandPermission gen, AdvancedLandPermission... perms) {
             for (var perm : perms) {
@@ -935,7 +922,7 @@ public class LandClaims implements Listener {
         }
 
         public Component getOwnerName() {
-            if (owner == null) return Component.text("the server").color(NamedTextColor.GOLD);
+            if (owner == null) return KTStrings.getFor(KTStrings.THE_SERVER).color(NamedTextColor.GOLD);
             return Names.instance.getRenderedName(owner);
         }
 
@@ -1003,18 +990,22 @@ public class LandClaims implements Listener {
         for (LandClaim claim : claims) {
             if (claim.owner != null && who.getUniqueId().equals(claim.owner.getUniqueId())) {
                 i++;
-                msg = msg.append(Component.newline(),
-                        Component.text("("), Component.text(claim.id).color(NamedTextColor.GOLD), Component.text(") "),
+                msg = msg.appendNewline().append(KTStrings.getFor(KTStrings.CLAIM_INFO,
+                        Component.text(claim.id).color(NamedTextColor.GOLD),
                         Component.text(claim.config.name).color(NamedTextColor.AQUA),
-                        Component.text(" (priority "), Component.text(claim.config.priority).color(NamedTextColor.YELLOW), Component.text("): "),
+                        Component.text(claim.config.priority).color(NamedTextColor.YELLOW),
                         Component.text(claim.start.getBlockX() + ", " + claim.start.getBlockY() + ", " + claim.start.getBlockZ()).color(NamedTextColor.GREEN),
-                        Component.text(" to "), Component.text(claim.end.getBlockX() + ", " + claim.end.getBlockY() + ", " + claim.end.getBlockZ()).color(NamedTextColor.GREEN),
-                        Component.text(" in "), Component.text(claim.start.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE),
-                        claim.slots > 1 ? (Component.text(" (").append(Component.text(claim.slots).color(NamedTextColor.YELLOW), Component.text(" slots)"))) : Component.empty());
+                        Component.text(claim.end.getBlockX() + ", " + claim.end.getBlockY() + ", " + claim.end.getBlockZ()).color(NamedTextColor.GREEN),
+                        Component.text(claim.start.getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE),
+                        claim.slots > 1 ? KTStrings.getFor(KTStrings.LC_SLOTS, Component.text(claim.slots)).color(NamedTextColor.YELLOW) : Component.empty()));
             }
         }
+        if (receiver == who) {
+            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_YOU_HAVE, Component.text(i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.LC)).append(msg));
+        } else {
+            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.instance.getRenderedName(who), Component.text(i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.LC)).append(msg));
+        }
 
-        receiver.sendMessage(Component.text().append(who == receiver ? Component.text("You have ") : Names.instance.getRenderedName(who).append(Component.text(" has ")), Component.text(i).color(NamedTextColor.GOLD), Component.text(" land claims"), Component.text("."), msg));
     }
 
     public void listClaims(Player who) {
@@ -1047,9 +1038,9 @@ public class LandClaims implements Listener {
     public void onJoinWorld(EntityAddToWorldEvent event) {
         if (event.getEntity() instanceof Player player) {
             if (event.getWorld().getEnderDragonBattle() != null && event.getWorld().getEnvironment() == World.Environment.THE_END && event.getWorld().getEnderDragonBattle().getEnderDragon() != null) {
-                player.sendMessage(Component.text("Claims are currently disabled at the end island due to an ongoing dragon fight. They will be re-enabled 5 minutes after the fight.").color(NamedTextColor.YELLOW));
+                player.sendMessage(KTStrings.getFor(KTStrings.LC_DISABLED).color(NamedTextColor.YELLOW));
             } else if (disabled.containsKey(event.getWorld())) {
-                player.sendMessage(Component.text("Claims are currently disabled at the end island due to a recent dragon fight. They will be re-enabled in " + disabled.get(event.getWorld()) + " seconds.").color(NamedTextColor.YELLOW));
+                player.sendMessage(KTStrings.getFor(KTStrings.LC_ENABLING, Component.text(disabled.get(event.getWorld()))).color(NamedTextColor.YELLOW));
             }
         }
     }

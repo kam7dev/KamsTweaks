@@ -10,9 +10,11 @@ import org.bukkit.entity.Player;
 public abstract class GuiLayer {
     protected Dialog dialog;
     protected Player who;
+
     protected GuiLayer(Player who) {
         this.who = who;
     }
+
     public void show() {
         if (who == null) return;
         if (dialog == null) {

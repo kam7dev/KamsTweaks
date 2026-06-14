@@ -76,7 +76,7 @@ public class LandProtections implements Listener {
         if (claim == null) return;
         var res = claim.hasPermissions(player, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.LECTERN_TAKE);
         if (!res.result()) {
-            message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
             e.setCancelled(true);
         }
     }
@@ -90,7 +90,7 @@ public class LandProtections implements Listener {
         if (claim == null) return;
         var res = claim.hasPermissions(player, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.LECTERN_INSERT);
         if (!res.result()) {
-            message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
             e.setCancelled(true);
         }
     }
@@ -103,7 +103,7 @@ public class LandProtections implements Listener {
         if (claim == null) return;
         var res = claim.hasPermissions(who, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.DRAIN_CAULDRON);
         if (!res.result()) {
-            if (who != null) message(who, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            if (who != null) message(who, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
             e.setCancelled(true);
         }
     }
@@ -120,7 +120,7 @@ public class LandProtections implements Listener {
                     if (claim == null) return;
                     var res = claim.hasPermissions(player, LandPermission.BLOCK_INTERACT, AdvancedLandPermission.DAMAGE_ANVIL);
                     if (!res.result()) {
-                        message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                        message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
                         e.setCancelled(true);
                     }
                 });
@@ -137,7 +137,7 @@ public class LandProtections implements Listener {
         var res = claim.hasPermissions(player, LandPermission.BLOCK_PLACE, AdvancedLandPermission.EMPTY_BUCKETS);
         if (!res.result()) {
             e.setCancelled(true);
-            message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
             applyCooldowns(player);
         }
     }
@@ -152,7 +152,7 @@ public class LandProtections implements Listener {
         var res = claim.hasPermissions(player, LandPermission.BLOCK_BREAK, AdvancedLandPermission.FILL_BUCKETS);
         if (!res.result()) {
             e.setCancelled(true);
-            message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+            message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
         }
     }
 
@@ -421,7 +421,7 @@ public class LandProtections implements Listener {
                 res = claim.hasPermissions(player, LandPermission.BLOCK_PLACE, AdvancedLandPermission.ITEM_FRAME_ITEM_PLACE);
             }
             if (!res.result()) {
-                message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
                 e.setCancelled(true);
             }
         }
@@ -458,7 +458,7 @@ public class LandProtections implements Listener {
             if (!res.result()) {
                 // Shouldn't need to keep message for the origin one.
                 if (origin == null || !origin.hasPermissions(player, LandPermission.BLOCK_INTERACT, actions.toArray(new AdvancedLandPermission[0])).result()) {
-                    message(player, Component.text("You don't have permission to " + res.message().toLowerCase() + " here! (Claim owned by ").append(claim.getOwnerName(), Component.text(")")));
+                    message(player, Component.text("You don't have permission to ").append(res.message(), Component.text(" here! (Claim owned by "), claim.getOwnerName(), Component.text(")")));
                     e.setCancelled(true);
                 }
             }

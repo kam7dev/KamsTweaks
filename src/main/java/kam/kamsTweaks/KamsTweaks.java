@@ -30,20 +30,18 @@ public final class KamsTweaks extends JavaPlugin {
     List<Feature> features = new ArrayList<>();
 
     KamsTweaks() {
-        // this being shortest name to tallest wasn't originally intentional lmao
         features.add(new Names());
         features.add(new Claims());
         features.add(new Graves());
+        features.add(new NoBoom());
+        features.add(new MobEdits());
         features.add(new SlashHat());
+        features.add(new ChatFilter());
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
-        features.add(new TeleportFeatures());
-        features.add(new MobEdits());
-        features.add(new ChatFilter());
-        features.add(new NoBoom());
         features.add(new ItemDataFilter());
         features.add(new PlayerPVPToggle());
-//    features.add(new DIFeature());
+        features.add(new TeleportFeatures());
     }
 
     @Override

@@ -22,10 +22,12 @@ public class FLAlertLayer extends GuiLayer {
             dia.type(DialogType.confirmation(first, second));
         });
     }
+
     public FLAlertLayer(Player who, Component title, Component body, ActionButton first, ActionButton second) {
         super(who);
         init(title, body, first, second);
     }
+
     public FLAlertLayer(Player who, Component title, Component body, Component first, Component second, Consumer<Boolean> callback) {
         super(who);
         var firstBtn = ActionButton.builder(first).action(DialogAction.customClick((view, audience) -> callback.accept(false), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();

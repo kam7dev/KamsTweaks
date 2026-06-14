@@ -55,11 +55,11 @@ public class Claims extends Feature {
                 new Homepage(player).show();
 
                 if (player != sender) {
-                    sender.sendMessage(Component.text("Showed claims gui to ").append(Names.instance.getRenderedName(player), Component.text(".")).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getRenderedName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         });
 
@@ -69,13 +69,13 @@ public class Claims extends Feature {
             if (executor instanceof Player player) {
                 player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIM_TOOL));
                 if (player == sender) {
-                    sender.sendMessage(Component.text("Right click to use the claim tool.").color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_TOOL_HINT).color(NamedTextColor.GOLD));
                 } else {
-                    sender.sendMessage(Component.text("Gave claim tool to ").append(Names.instance.getRenderedName(player), Component.text(".")).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_GAVE_TOOL_TO, Names.instance.getRenderedName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
-            sender.sendMessage(Component.text("Only a player can run this.").color(NamedTextColor.RED));
+            sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims get-tool")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         });
 
@@ -137,9 +137,9 @@ public class Claims extends Feature {
             assert event.getClickedBlock() != null;
             var claim = landClaims.getClaim(event.getClickedBlock().getLocation());
             if (claim == null) {
-                plr.sendMessage(Component.text("This land isn't claimed"));
+                plr.sendMessage(KTStrings.getFor(KTStrings.LC_UNCLAIMED));
             } else {
-                plr.sendMessage(Component.text("This land is owned by ").append(claim.getOwnerName()));
+                plr.sendMessage(KTStrings.getFor(KTStrings.LC_OWNED_BY, claim.getOwnerName()));
             }
             return true;
         }

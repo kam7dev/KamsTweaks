@@ -5,10 +5,29 @@ import net.kyori.adventure.text.ComponentLike;
 import org.jetbrains.annotations.NotNull;
 
 public enum KTStrings {
+    // Items
+    ITEM_CLAIM_TOOL,
+
     // Generic
     PLAYERS_ONLY,
     DISABLED_SINGULAR,
     DISABLED_PLURAL,
+    CLOSE,
+    YES,
+    NO,
+    ON,
+    OFF,
+    DEFAULT,
+    CONFIRM,
+    CONFIRM_DESC,
+    DISCARD,
+    DISCARD_DESC,
+    IRREVERSIBLE,
+    SETTINGS,
+    DELETE,
+    NAME,
+    PRIORITY,
+    THE_SERVER,
 
     // Automod
     AUTOMOD_NAME,
@@ -16,6 +35,92 @@ public enum KTStrings {
     AUTOMOD_SIGN,
     AUTOMOD_CHAT,
     AUTOMOD_CLAIM,
+
+    // Claims
+    CLAIMS,
+    CLAIM_TOOL_INFO,
+    CLAIM_DESC,
+    CLAIM_CREATE,
+    CLAIM_CANCEL,
+    CLAIM_EDIT,
+    CLAIM_EDIT_TITLE,
+    CLAIM_VIEW_ALL,
+    CLAIM_HIGHLIGHTED,
+    CLAIM_LIST,
+    CLAIM_DELETE_ALL,
+    CLAIM_DELETE_TITLE,
+    CLAIMS_DELETE_ALL_TITLE,
+    CLAIM_DELETE_CONFIRM,
+    CLAIM_DELETE_ALL_CONFIRM,
+    CLAIM_ALL_DELETED,
+    CLAIM_CANT_MANAGE,
+    CLAIM_OP_WARNING,
+    CLAIM_OP_EDIT_SETTINGS,
+    CLAIM_OP_EDIT_PERMS,
+    CLAIM_SETTINGS,
+    CLAIM_REGULAR,
+    CLAIM_REGULAR_DESC,
+    CLAIM_ADVANCED,
+    CLAIM_ADVANCED_DESC,
+    CLAIM_HIGHLIGHTED_FOR,
+    CLAIMS_SHOWED_GUI_TO,
+    CLAIMS_NONEXISTENT,
+    CLAIM_INFO,
+    CLAIM_OP_DELETE,
+    CLAIM_DELETED,
+    CLAIMS_YOU_HAVE,
+    CLAIMS_THEY_HAVE,
+
+    PERMS_DEFAULT_PLAYER,
+    PERMS_DEFAULT_ENTITY,
+    PERMS_PLAYER,
+    PERMS_EDIT,
+    PERMS_EDIT_ENTITY,
+    PERMS_EDIT_DEFAULT,
+    PERMS_EDIT_ENTITY_DEFAULT,
+
+    LC,
+    LAND,
+    LC_DOOR_INTERACT,
+    LC_BLOCK_INTERACT,
+    LC_BLOCK_BREAK,
+    LC_BLOCK_PLACE,
+    LC_LECTERN_INSERT,
+    LC_LECTERN_TAKE,
+    LC_DRAIN_CAULDRON,
+    LC_DAMAGE_ANVIL,
+    LC_EMPTY_BUCKETS,
+    LC_FILL_BUCKETS,
+    LC_ITEM_FRAME_ITEM_ROTATE,
+    LC_ITEM_FRAME_ITEM_TAKE,
+    LC_ITEM_FRAME_ITEM_PLACE,
+    LC_ARMOR_STAND_ITEM_TAKE,
+    LC_ARMOR_STAND_ITEM_PLACE,
+    LC_DISABLED,
+    LC_ENABLING,
+    LC_REENABLED,
+    LC_CANT_FOR_OTHERS,
+    LC_ALREADY_CLAIMING,
+    LC_MAXED_SLOTS,
+    LC_START_CLAIMING,
+    LC_STOPPED_CLAIMING,
+    CLAIMS_NOT_CLAIMING,
+    LC_ALREADY_CLAIMED,
+    LC_CORNER2,
+    LC_EXTENDABLE_TOO_LARGE,
+    LC_EXTEND,
+    LC_EXTEND_DESC,
+    LC_NO_SLOTS,
+    LC_INTERSECTS,
+    LC_CLAIMED,
+    LC_ACROSS_DIMENSIONS,
+    LC_SLOTS,
+
+    EC,
+    ENTITY,
+    EC_INTERACT,
+    EC_DAMAGE,
+    EC_AGGRO,
 
     // Graves
     GRAVE_INFO,
@@ -63,19 +168,19 @@ public enum KTStrings {
     SLASHHAT_EQUIP,
 
     // TP
-    TP_IMMUNITY_LOST, //
-    TP_CANCEL, //
-    TP_CANCEL_DAMAGE, //
-    TP_CANCEL_DEATH, //
-    TP_CANCEL_TP, //
-    TP_CANCEL_MOVE, //
-    TP_CANCEL_OTHER_DAMAGE, //
-    TP_CANCEL_OTHER_LEFT, //
+    TP_IMMUNITY_LOST,
+    TP_CANCEL,
+    TP_CANCEL_DAMAGE,
+    TP_CANCEL_DEATH,
+    TP_CANCEL_TP,
+    TP_CANCEL_MOVE,
+    TP_CANCEL_OTHER_DAMAGE,
+    TP_CANCEL_OTHER_LEFT,
     TP_CANCEL_OTHER_DEATH,
-    TP_CANCEL_OTHER_TP, //
-    TP_CANCEL_OTHER_MOVE, //
-    TP_CANCEL_PASSENGER, //
-    TP_CANCEL_PASSENGER_INFO, //
+    TP_CANCEL_OTHER_TP,
+    TP_CANCEL_OTHER_MOVE,
+    TP_CANCEL_PASSENGER,
+    TP_CANCEL_PASSENGER_INFO,
     TP_ALREADY_TELEPORTING,
     TP_COOLDOWN,
     TP_OTHER_COOLDOWN,
@@ -84,7 +189,6 @@ public enum KTStrings {
     WARP_NOT_EXIST,
     WARP_CREATED,
     WARP_DELETED,
-    WARP_LIST,
     WARP_COUNT,
     WARP_INFO,
     TP_TO_WARP,
@@ -125,11 +229,14 @@ public enum KTStrings {
     TPA_AUTO_DISABLED,
     TPA_CANCELLED,
     TPA_OTHER_CANCELLED,
-    TPA_CANCEL
-    ;
+    TPA_CANCEL;
 
     public static Component getFor(KTStrings key, @NotNull ComponentLike... args) {
         switch (key) {
+            case ITEM_CLAIM_TOOL -> {
+                return Component.translatable("kamstweaks.item.claim_tool", "Claim Tool", args);
+            }
+
             case PLAYERS_ONLY -> {
                 return Component.translatable("kamstweaks.commands.players_only", "Only players can use %s.", args);
             }
@@ -138,6 +245,54 @@ public enum KTStrings {
             }
             case DISABLED_PLURAL -> {
                 return Component.translatable("kamstweaks.commands.disabled_plural", "%s are disabled.", args);
+            }
+            case CLOSE -> {
+                return Component.translatable("kamstweaks.generic.close", "Close", args);
+            }
+            case YES -> {
+                return Component.translatable("kamstweaks.generic.yes", "Yes", args);
+            }
+            case NO -> {
+                return Component.translatable("kamstweaks.generic.no", "No", args);
+            }
+            case ON -> {
+                return Component.translatable("kamstweaks.generic.on", "On", args);
+            }
+            case OFF -> {
+                return Component.translatable("kamstweaks.generic.off", "Off", args);
+            }
+            case DEFAULT -> {
+                return Component.translatable("kamstweaks.generic.default", "Default (%s)", args);
+            }
+            case CONFIRM -> {
+                return Component.translatable("kamstweaks.generic.confirm", "Confirm", args);
+            }
+            case CONFIRM_DESC -> {
+                return Component.translatable("kamstweaks.generic.confirm_desc", "Click to confirm your changes.", args);
+            }
+            case DISCARD -> {
+                return Component.translatable("kamstweaks.generic.discard", "Discard", args);
+            }
+            case DISCARD_DESC -> {
+                return Component.translatable("kamstweaks.generic.discard_desc", "Click to discard your changes.", args);
+            }
+            case IRREVERSIBLE -> {
+                return Component.translatable("kamstweaks.generic.irreversible", "This is irreversible.", args);
+            }
+            case SETTINGS -> {
+                return Component.translatable("kamstweaks.generic.settings", "Settings", args);
+            }
+            case DELETE -> {
+                return Component.translatable("kamstweaks.generic.delete", "Delete", args);
+            }
+            case NAME -> {
+                return Component.translatable("kamstweaks.generic.name", "Name", args);
+            }
+            case PRIORITY -> {
+                return Component.translatable("kamstweaks.generic.priority", "Priority", args);
+            }
+            case THE_SERVER -> {
+                return Component.translatable("kamstweaks.generic.the_server", "The Server", args);
             }
 
             case AUTOMOD_NAME -> {
@@ -154,6 +309,264 @@ public enum KTStrings {
             }
             case AUTOMOD_CLAIM -> {
                 return Component.translatable("kamstweaks.automod.claim", "Claim rename by %s was caught by the %s automod: %s", args);
+            }
+
+            case CLAIMS -> {
+                return Component.translatable("kamstweaks.claims", "Claims", args);
+            }
+            case CLAIM_TOOL_INFO -> {
+                return Component.translatable("kamstweaks.claims.tool_info", "Claim Tool Info", args);
+            }
+            case CLAIM_DESC -> {
+                return Component.translatable("kamstweaks.claims.description", """
+                        Welcome to the Claim Tool! This explanation will guide you through its usage.
+                        
+                        To create a land claim, you must select an area by right-clicking two different blocks (or the same block twice if you want). Claims do not extend upward or downward infinitely, so to claim a tall build you need to select the lowest point and the highest point as well.
+                        
+                        You can also claim mobs, armor stands, boats, etc. These are entity claims.
+                        
+                        You are able to edit your claims to set the default permissions (which apply to all players) and give specific permissions for specific players, or set the behavior of the claimed entity. You can also change the name of your land claims and set their priority.
+                        
+                        Server operators are able to edit or delete your claims at any time if they need to.
+                        
+                        Written by Jaid""", args);
+            }
+            case CLAIM_CREATE -> {
+                return Component.translatable("kamstweaks.claims.create", "Create a Claim", args);
+            }
+            case CLAIM_CANCEL -> {
+                return Component.translatable("kamstweaks.claims.cancel", "Cancel Claiming", args);
+            }
+            case CLAIM_EDIT -> {
+                return Component.translatable("kamstweaks.claims.edit", "Edit Claim", args);
+            }
+            case CLAIM_EDIT_TITLE -> {
+                return Component.translatable("kamstweaks.claims.edit", "Edit Claim: %s", args);
+            }
+            case CLAIM_VIEW_ALL -> {
+                return Component.translatable("kamstweaks.claims.view_all", "View All Claims", args);
+            }
+            case CLAIM_HIGHLIGHTED -> {
+                return Component.translatable("kamstweaks.claims.highlighted", "Nearby claims are being highlighted.", args);
+            }
+            case CLAIM_LIST -> {
+                return Component.translatable("kamstweaks.claims.list", "List Your Claims", args);
+            }
+            case CLAIM_DELETE_ALL -> {
+                return Component.translatable("kamstweaks.claims.delete_all", "Delete ALL of Your Claims", args);
+            }
+            case CLAIM_DELETE_TITLE -> {
+                return Component.translatable("kamstweaks.claims.delete_title", "Delete this %s?", args);
+            }
+            case CLAIMS_DELETE_ALL_TITLE -> {
+                return Component.translatable("kamstweaks.claims.delete_all_title", "Delete ALL of your %s?", args);
+            }
+            case CLAIM_DELETE_CONFIRM -> {
+                return Component.translatable("kamstweaks.claims.delete_confirm", "Are you sure you want to delete this %s?", args);
+            }
+            case CLAIM_DELETE_ALL_CONFIRM -> {
+                return Component.translatable("kamstweaks.claims.delete_all_confirm", "Are you sure you want to ALL of your %s?", args);
+            }
+            case CLAIM_ALL_DELETED -> {
+                return Component.translatable("kamstweaks.claims.all_deleted", "Deleted all of your %s successfully.", args);
+            }
+            case CLAIM_CANT_MANAGE -> {
+                return Component.translatable("kamstweaks.claims.cant_manage", "You cannot manage this claim.", args);
+            }
+            case CLAIM_OP_WARNING -> {
+                return Component.translatable("kamstweaks.claims.op_warning", "Careful! This claim is owned by %s!\nYou can only edit this because you are an operator.\nOther ops will be notified.", args);
+            }
+            case CLAIM_OP_EDIT_SETTINGS -> {
+                return Component.translatable("kamstweaks.claims.op_settings", "[%s: Edited settings for %s's %s]", args);
+            }
+            case CLAIM_OP_EDIT_PERMS -> {
+                return Component.translatable("kamstweaks.claims.op_perms", "[%s: Edited permissions for %s's %s]", args);
+            }
+            case CLAIM_SETTINGS -> {
+                return Component.translatable("kamstweaks.claims.edit_settings", "Edit Claim Settings: %s", args);
+            }
+            case CLAIM_REGULAR -> {
+                return Component.translatable("kamstweaks.claims.regular", "Regular Options", args);
+            }
+            case CLAIM_REGULAR_DESC -> {
+                return Component.translatable("kamstweaks.claims.regular_desc", "Click to edit regular options", args);
+            }
+            case CLAIM_ADVANCED -> {
+                return Component.translatable("kamstweaks.claims.advanced", "Advanced Options", args);
+            }
+            case CLAIM_ADVANCED_DESC -> {
+                return Component.translatable("kamstweaks.claims.advanced_desc", "Click to edit advanced options", args);
+            }
+            case CLAIM_HIGHLIGHTED_FOR -> {
+                return Component.translatable("kamstweaks.claims.highlighted_for", "Highlighting nearby claims for %s.", args);
+            }
+            case CLAIMS_SHOWED_GUI_TO -> {
+                return Component.translatable("kamstweaks.claims.showed_gui_to", "Showed claims gui to %s.", args);
+            }
+            case CLAIMS_NONEXISTENT -> {
+                return Component.translatable("kamstweaks.claims.not_exist", "This claim does not exist.", args);
+            }
+            case CLAIM_INFO -> {
+                return Component.translatable("kamstweaks.claims.info", "(%s) %s (priority %s): %s to %s in %s %s", args);
+            }
+            case CLAIM_OP_DELETE -> {
+                return Component.translatable("kamstweaks.claims.op_delete", "[%s: Deleted %s's %s]", args);
+            }
+            case CLAIM_DELETED -> {
+                return Component.translatable("kamstweaks.claims.deleted", "Deleted claim successfully.", args);
+            }
+            case CLAIMS_YOU_HAVE -> {
+                return Component.translatable("kamstweaks.claims.claims_have", "You have %s %s.", args);
+            }
+            case CLAIMS_THEY_HAVE -> {
+                return Component.translatable("kamstweaks.claims.claims_other_has", "%s has %s %s.", args);
+            }
+
+            case PERMS_DEFAULT_PLAYER -> {
+                return Component.translatable("kamstweaks.claims.perms.default_player", "Default Player Permissions", args);
+            }
+            case PERMS_DEFAULT_ENTITY -> {
+                return Component.translatable("kamstweaks.claims.perms.default_entity", "Default Entity Permissions", args);
+            }
+            case PERMS_PLAYER -> {
+                return Component.translatable("kamstweaks.claims.perms.player", "Player Permissions", args);
+            }
+            case PERMS_EDIT -> {
+                return Component.translatable("kamstweaks.claims.perms.edit", "Edit Permissions: %s", args);
+            }
+            case PERMS_EDIT_ENTITY -> {
+                return Component.translatable("kamstweaks.claims.perms.edit_entity", "Edit %s's Perms: %s", args);
+            }
+            case PERMS_EDIT_DEFAULT -> {
+                return Component.translatable("kamstweaks.claims.perms.edit_default_player", "Edit Default Player Permissions", args);
+            }
+            case PERMS_EDIT_ENTITY_DEFAULT -> {
+                return Component.translatable("kamstweaks.claims.perms.edit_default_entity", "Edit Default Entity Permissions", args);
+            }
+
+            case LC -> {
+                return Component.translatable("kamstweaks.claims.land", "Land Claims", args);
+            }
+            case LAND -> {
+                return Component.translatable("kamstweaks.claims.land.singular", "Land Claim", args);
+            }
+            case LC_DOOR_INTERACT -> {
+                return Component.translatable("kamstweaks.claims.land.door_interact", "Interact with Doors", args);
+            }
+            case LC_BLOCK_INTERACT -> {
+                return Component.translatable("kamstweaks.claims.land.block_interact", "Interact with Blocks", args);
+            }
+            case LC_BLOCK_BREAK -> {
+                return Component.translatable("kamstweaks.claims.land.block_break", "Break Blocks", args);
+            }
+            case LC_BLOCK_PLACE -> {
+                return Component.translatable("kamstweaks.claims.land.block_place", "Place Blocks", args);
+            }
+            case LC_LECTERN_INSERT -> {
+                return Component.translatable("kamstweaks.claims.land.lectern_insert", "Place into Lecterns", args);
+            }
+            case LC_LECTERN_TAKE -> {
+                return Component.translatable("kamstweaks.claims.land.lectern_take", "Take from Lecterns", args);
+            }
+            case LC_DRAIN_CAULDRON -> {
+                return Component.translatable("kamstweaks.claims.land.drain_cauldron", "Drain Cauldrons", args);
+            }
+            case LC_DAMAGE_ANVIL -> {
+                return Component.translatable("kamstweaks.claims.land.damage_anvil", "Damage Anvils", args);
+            }
+            case LC_EMPTY_BUCKETS -> {
+                return Component.translatable("kamstweaks.claims.land.empty_buckets", "Empty Buckets", args);
+            }
+            case LC_FILL_BUCKETS -> {
+                return Component.translatable("kamstweaks.claims.land.fill_buckets", "Fill Buckets", args);
+            }
+            case LC_ITEM_FRAME_ITEM_ROTATE -> {
+                return Component.translatable("kamstweaks.claims.land.item_frame_rotate", "Rotate Items in Frames", args);
+            }
+            case LC_ITEM_FRAME_ITEM_TAKE -> {
+                return Component.translatable("kamstweaks.claims.land.item_frame_take", "Take Items from Frames", args);
+            }
+            case LC_ITEM_FRAME_ITEM_PLACE -> {
+                return Component.translatable("kamstweaks.claims.land.item_frame_place", "Place Items into Frames", args);
+            }
+            case LC_ARMOR_STAND_ITEM_TAKE -> {
+                return Component.translatable("kamstweaks.claims.land.armor_stand_take", "Take from Armor Stands", args);
+            }
+            case LC_ARMOR_STAND_ITEM_PLACE -> {
+                return Component.translatable("kamstweaks.claims.land.armor_stand_place", "Place onto Armor Stands", args);
+            }
+            case LC_DISABLED -> {
+                return Component.translatable("kamstweaks.claims.land.end_disable", "Claims are currently disabled at the end island due to an ongoing dragon fight. They will be re-enabled 5 minutes after the fight.", args);
+            }
+            case LC_ENABLING -> {
+                return Component.translatable("kamstweaks.claims.land.end_enabling", "Claims are currently disabled at the end island due to a recent dragon fight. They will be re-enabled in %s seconds.", args);
+            }
+            case LC_REENABLED -> {
+                return Component.translatable("kamstweaks.claims.land.end_reenabled", "Claims are now re-enabled in this dimension.", args);
+            }
+            case LC_CANT_FOR_OTHERS -> {
+                return Component.translatable("kamstweaks.claims.land.cant_for_others", "You can't claim for other people.", args);
+            }
+            case LC_ALREADY_CLAIMING -> {
+                return Component.translatable("kamstweaks.claims.land.already", "You're already claiming land. (run %s to cancel)", args);
+            }
+            case LC_MAXED_SLOTS -> {
+                return Component.translatable("kamstweaks.claims.land.maxed-slots", "You have used all of your claim slots. Delete some to free up slots.", args);
+            }
+            case LC_START_CLAIMING -> {
+                return Component.translatable("kamstweaks.claims.land.start", "Right click the first corner of where you want to claim with your claim tool. (If you lost it, run %s)", args);
+            }
+            case LC_STOPPED_CLAIMING -> {
+                return Component.translatable("kamstweaks.claims.land.stop", "Stopped claiming land.", args);
+            }
+            case CLAIMS_NOT_CLAIMING -> {
+                return Component.translatable("kamstweaks.claims.land.not_claiming", "You aren't currently claiming land. (run %s or use the claim tool to start)", args);
+            }
+            case LC_ALREADY_CLAIMED -> {
+                return Component.translatable("kamstweaks.claims.land.already_claimed", "This land is already claimed by %s.", args);
+            }
+            case LC_CORNER2 -> {
+                return Component.translatable("kamstweaks.claims.land.corner2", "Now click the other corner with your claim tool. (If you lost it, run %s)", args);
+            }
+            case LC_EXTENDABLE_TOO_LARGE -> {
+                return Component.translatable("kamstweaks.claims.land.too_large", "You can't claim more than %s blocks in an unextended claim, while you are trying to claim %s. You need %s more claim slot(s) for an extension (costs %s).", args);
+            }
+            case LC_EXTEND -> {
+                return Component.translatable("kamstweaks.claims.land.extend", "Extend claim?", args);
+            }
+            case LC_EXTEND_DESC -> {
+                return Component.translatable("kamstweaks.claims.land.extend_desc", "This claim is larger than %s blocks. Do you want to use %s extra claim slot(s) to extend it?", args);
+            }
+            case LC_NO_SLOTS -> {
+                return Component.translatable("kamstweaks.claims.land.no_slots", "You have used up too many slots to claim this. Delete some to free up slots.", args);
+            }
+            case LC_INTERSECTS -> {
+                return Component.translatable("kamstweaks.claims.land.intersects", "This land is intersects a claim by %s.", args);
+            }
+            case LC_CLAIMED -> {
+                return Component.translatable("kamstweaks.claims.land.claimed", "Territory claimed (%s)", args);
+            }
+            case LC_ACROSS_DIMENSIONS -> {
+                return Component.translatable("kamstweaks.claims.land.dimensions", "You can't claim across dimensions - go back to the dimension you started in!", args);
+            }
+            case LC_SLOTS -> {
+                return Component.translatable("kamstweaks.claims.land.slots", "(%s slots)", args);
+            }
+
+            case EC -> {
+                return Component.translatable("kamstweaks.claims.entity", "Entity Claims", args);
+            }
+            case ENTITY -> {
+                return Component.translatable("kamstweaks.claims.entity.singular", "Entity Claim", args);
+            }
+            case EC_INTERACT -> {
+                return Component.translatable("kamstweaks.claims.entity.interact", "Interact with this entity", args);
+            }
+            case EC_DAMAGE -> {
+                return Component.translatable("kamstweaks.claims.entity.damage", "Damage this entity", args);
+            }
+            case EC_AGGRO -> {
+                return Component.translatable("kamstweaks.claims.entity.aggro", "Can Aggro", args);
             }
 
             case GRAVE_INFO -> {

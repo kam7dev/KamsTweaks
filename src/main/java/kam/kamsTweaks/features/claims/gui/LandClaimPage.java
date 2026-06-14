@@ -27,53 +27,55 @@ import java.util.*;
 @SuppressWarnings("UnstableApiUsage")
 public class LandClaimPage extends GuiLayer {
     LandClaim target;
+
     void init() {
         if (target == null) {
             this.target = Claims.get().landClaims.getClaim(who.getLocation());
         }
         dialog = Dialog.create(builder -> {
-            var base = DialogBase.builder(Component.text("Land Claims"));
+            var base = DialogBase.builder(KTStrings.getFor(KTStrings.LC));
             var dia = builder.empty().base(base.build());
 
             var btns = new ArrayList<ActionButton>();
 
             int totalClaims = 0;
             for (var claim : Claims.get().landClaims.claims) {
-                if (claim.owner != null && who.getUniqueId().equals(claim.owner.getUniqueId())) totalClaims += claim.slots;
+                if (claim.owner != null && who.getUniqueId().equals(claim.owner.getUniqueId()))
+                    totalClaims += claim.slots;
             }
 
             if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30) && !Claims.get().landClaims.currentlyClaiming.containsKey(who)) {
-                var createBtn = ActionButton.builder(Component.text("Create a Claim")).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.startClaiming(who, true), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var createBtn = ActionButton.builder(KTStrings.getFor(KTStrings.CLAIM_CREATE)).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.startClaiming(who, true), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
                 btns.add(createBtn);
             }
 
             if (Claims.get().landClaims.currentlyClaiming.containsKey(who)) {
-                var createBtn = ActionButton.builder(Component.text("Cancel Claiming")).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.stopClaiming(who), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var createBtn = ActionButton.builder(KTStrings.getFor(KTStrings.CLAIM_CANCEL)).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.stopClaiming(who), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
                 btns.add(createBtn);
             }
 
             if (target != null && target.getManagementType(who) != Claims.ManagementType.None) {
-                var editBtn = ActionButton.builder(Component.text("Edit Claim")).action(DialogAction.customClick((view, audience) -> new EditPage(who, target).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var editBtn = ActionButton.builder(KTStrings.getFor(KTStrings.CLAIM_EDIT)).action(DialogAction.customClick((view, audience) -> new EditPage(who, target).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
                 btns.add(editBtn);
             }
 
-            var viewBtn = ActionButton.builder(Component.text("View All Claims")).action(DialogAction.customClick((view, audience) -> {
+            var viewBtn = ActionButton.builder(KTStrings.getFor(KTStrings.CLAIM_VIEW_ALL)).action(DialogAction.customClick((view, audience) -> {
                 Claims.get().landClaims.showClaims(who);
-                who.sendMessage(Component.text("Nearby claims are being highlighted."));
+                who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_HIGHLIGHTED));
             }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
             btns.add(viewBtn);
 
-            var listBtn = ActionButton.builder(Component.text("List Your Claims")).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.listClaims(who), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+            var listBtn = ActionButton.builder(KTStrings.getFor(KTStrings.CLAIM_LIST)).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.listClaims(who), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
             btns.add(listBtn);
 
-            var deleteBtn = ActionButton.builder(Component.text("Delete ALL of Your Claims")).action(DialogAction.customClick((view, audience) -> new FLAlertLayer(who, Component.text("Delete ALL of your land claims?"),
-                    Component.text("Are you sure you want to ALL of your land claims?").append(Component.text(" This is irreversible.", NamedTextColor.RED)),
-                    Component.text("Yes").color(NamedTextColor.GREEN), Component.text("No").color(NamedTextColor.RED), second -> {
+            var deleteBtn = ActionButton.builder(KTStrings.getFor(KTStrings.CLAIM_DELETE_ALL)).action(DialogAction.customClick((view, audience) -> new FLAlertLayer(who, KTStrings.getFor(KTStrings.CLAIMS_DELETE_ALL_TITLE, KTStrings.getFor(KTStrings.LC)),
+                    KTStrings.getFor(KTStrings.CLAIM_DELETE_ALL_CONFIRM, KTStrings.getFor(KTStrings.LC)).append(Component.newline(), KTStrings.getFor(KTStrings.IRREVERSIBLE).color(NamedTextColor.RED)),
+                    KTStrings.getFor(KTStrings.YES).color(NamedTextColor.GREEN), KTStrings.getFor(KTStrings.NO).color(NamedTextColor.RED), second -> {
                 if (second) {
                     show();
                 } else {
                     Claims.get().landClaims.claims.removeIf(claim -> claim.owner == who);
-                    who.sendMessage(Component.text("Deleted all of your claims successfully.").color(NamedTextColor.GREEN));
+                    who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_ALL_DELETED, KTStrings.getFor(KTStrings.LC)).color(NamedTextColor.GREEN));
                 }
             }).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
             btns.add(deleteBtn);
@@ -105,31 +107,37 @@ public class LandClaimPage extends GuiLayer {
 
     public static class EditPage extends GuiLayer {
         LandClaim claim;
+
         public EditPage(Player who, LandClaim claim) {
             super(who);
             this.claim = claim;
             dialog = Dialog.create(builder -> {
-                var base = DialogBase.builder(Component.text("Edit Claim: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)));
+                var base = DialogBase.builder(KTStrings.getFor(KTStrings.CLAIM_EDIT_TITLE, Component.text(claim.config.name).color(NamedTextColor.GOLD)));
                 if (claim.owner == null || !claim.owner.getUniqueId().equals(who.getUniqueId())) {
-                    base.body(List.of(DialogBody.plainMessage(
-                            Component.text("Careful! This claim is owned by ").append(
-                                    claim.getOwnerName(),
-                                    Component.text("!\nYou can only edit this because you are an operator.")
-                            ).color(NamedTextColor.RED))));
+                    base.body(List.of(DialogBody.plainMessage(KTStrings.getFor(KTStrings.CLAIM_OP_WARNING, claim.getOwnerName()).color(NamedTextColor.RED))));
                 }
                 var dia = builder.empty().base(base.build());
 
-                var defaultBtn = ActionButton.builder(Component.text("Default Player Permissions")).action(DialogAction.customClick((view, audience) -> new PermissionPage(who, claim, PermMode.DEFAULT).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var defaultBtn = ActionButton.builder(KTStrings.getFor(KTStrings.PERMS_DEFAULT_PLAYER))
+                        .action(DialogAction.customClick((view, audience) -> new PermissionPage(who, claim, PermMode.DEFAULT).show(),
+                                ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                var entityBtn = ActionButton.builder(Component.text("Default Entity Permissions")).action(DialogAction.customClick((view, audience) -> new PermissionPage(who, claim, PermMode.ENTITY_DEFAULT).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var entityBtn = ActionButton.builder(KTStrings.getFor(KTStrings.PERMS_DEFAULT_ENTITY))
+                        .action(DialogAction.customClick((view, audience) -> new PermissionPage(who, claim, PermMode.ENTITY_DEFAULT).show(),
+                                ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                var permBtn = ActionButton.builder(Component.text("Player Permissions")).action(DialogAction.customClick((view, audience) -> new UserListPage(who, Component.text("Edit Permissions: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)), plr -> new PermissionPage(who, claim, plr).show()).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var permBtn = ActionButton.builder(KTStrings.getFor(KTStrings.PERMS_PLAYER))
+                        .action(DialogAction.customClick((view, audience) -> new UserListPage(who, KTStrings.getFor(KTStrings.PERMS_EDIT,
+                                        Component.text(claim.config.name).color(NamedTextColor.GOLD)),plr -> new PermissionPage(who, claim, plr).show()).show(),
+                                ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                var settingsBtn = ActionButton.builder(Component.text("Settings")).action(DialogAction.customClick((view, audience) -> new SettingsPage(who, claim).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var settingsBtn = ActionButton.builder(KTStrings.getFor(KTStrings.SETTINGS))
+                        .action(DialogAction.customClick((view, audience) -> new SettingsPage(who, claim).show(),
+                                ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                var deleteBtn = ActionButton.builder(Component.text("Delete")).action(DialogAction.customClick((view, audience) -> new FLAlertLayer(who, Component.text("Delete claim?"),
-                        Component.text("Are you sure you want to delete this land claim?"),
-                        Component.text("Yes").color(NamedTextColor.GREEN), Component.text("No").color(NamedTextColor.RED), second -> {
+                var deleteBtn = ActionButton.builder(KTStrings.getFor(KTStrings.DELETE)).action(DialogAction.customClick((view, audience) -> new FLAlertLayer(who, KTStrings.getFor(KTStrings.CLAIM_DELETE_TITLE, KTStrings.getFor(KTStrings.LC)),
+                        KTStrings.getFor(KTStrings.CLAIM_DELETE_CONFIRM, KTStrings.getFor(KTStrings.LAND)),
+                        KTStrings.getFor(KTStrings.YES).color(NamedTextColor.GREEN), KTStrings.getFor(KTStrings.NO).color(NamedTextColor.RED), second -> {
                     if (second) {
                         show();
                     } else {
@@ -144,29 +152,30 @@ public class LandClaimPage extends GuiLayer {
 
     public static class SettingsPage extends GuiLayer {
         LandClaim claim;
+
         public SettingsPage(Player who, LandClaim claim) {
             super(who);
             this.claim = claim;
             dialog = Dialog.create(builder -> {
-                var base = DialogBase.builder(Component.text("Edit Claim Settings: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD)));
+                var base = DialogBase.builder(KTStrings.getFor(KTStrings.CLAIM_SETTINGS, Component.text(claim.config.name).color(NamedTextColor.GOLD)));
 
-                var nameInp = DialogInput.text("name", Component.text("Name")).initial(claim.config.name).build();
-                var prioDrag = DialogInput.numberRange("prio", Component.text("Priority"), -100, 100).step(1f).initial(claim.config.priority.floatValue()).build();
+                var nameInp = DialogInput.text("name", KTStrings.getFor(KTStrings.NAME)).initial(claim.config.name).build();
+                var prioDrag = DialogInput.numberRange("prio", KTStrings.getFor(KTStrings.PRIORITY), -100, 100).step(1f).initial(claim.config.priority.floatValue()).build();
                 base.inputs(List.of(nameInp, prioDrag));
 
                 var dia = builder.empty().base(base.build());
 
                 var confirmBtn = ActionButton.create(
-                        Component.text("Confirm", NamedTextColor.GREEN),
-                        Component.text("Click to confirm your changes."),
+                        KTStrings.getFor(KTStrings.CONFIRM).color(NamedTextColor.GREEN),
+                        KTStrings.getFor(KTStrings.CONFIRM_DESC),
                         100,
                         DialogAction.customClick((view, audience) -> {
                             var mt = claim.getManagementType(who);
                             if (mt == Claims.ManagementType.None) {
-                                who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
+                                who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_CANT_MANAGE).color(NamedTextColor.RED));
                                 return;
                             } else if (mt == Claims.ManagementType.Op) {
-                                KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited settings for " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+                                KamsTweaks.get().sendToOps(KTStrings.getFor(KTStrings.CLAIM_OP_EDIT_SETTINGS, Component.text(who.getName()), Component.text(claim.getOwnerUsername()), KTStrings.getFor(KTStrings.LAND)).decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
                                 Logger.warn("[Claim management] " + who.getName() + " just edited settings for " + claim.getOwnerUsername() + "'s land claim.");
                             }
                             claim.config.priority = Objects.requireNonNullElse(view.getFloat("prio"), 0).intValue();
@@ -186,8 +195,8 @@ public class LandClaimPage extends GuiLayer {
                 dia.type(DialogType.confirmation(
                         confirmBtn,
                         ActionButton.create(
-                                Component.text("Discard", NamedTextColor.RED),
-                                Component.text("Click to discard your changes."),
+                                KTStrings.getFor(KTStrings.DISCARD).color(NamedTextColor.RED),
+                                KTStrings.getFor(KTStrings.DISCARD_DESC),
                                 100,
                                 null
                         )
@@ -214,10 +223,10 @@ public class LandClaimPage extends GuiLayer {
         void save(DialogResponseView view) {
             var mt = claim.getManagementType(who);
             if (mt == Claims.ManagementType.None) {
-                who.sendMessage(Component.text("You cannot manage this claim.").color(NamedTextColor.RED));
+                who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_CANT_MANAGE).color(NamedTextColor.RED));
                 return;
             } else if (mt == Claims.ManagementType.Op) {
-                KamsTweaks.get().sendToOps(Component.text("[" + who.getName() + ": Edited permissions for " + claim.getOwnerUsername() + "'s land claim]").decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
+                KamsTweaks.get().sendToOps(KTStrings.getFor(KTStrings.CLAIM_OP_EDIT_PERMS, Component.text(who.getName()), Component.text(claim.getOwnerUsername()), KTStrings.getFor(KTStrings.LAND)).decorate(TextDecoration.ITALIC).color(NamedTextColor.GRAY), who);
                 Logger.warn("[Claim management] " + who.getName() + " just edited permissions for " + claim.getOwnerUsername() + "'s land claim.");
             }
             if (isAdvanced) {
@@ -233,16 +242,20 @@ public class LandClaimPage extends GuiLayer {
 
         void init() {
             dialog = Dialog.create(builder -> {
-                var base = DialogBase.builder(switch(mode) {
-                    case ENTITY -> Component.text("Edit ").append(Names.instance.getEntityRenderedName(entity), Component.text("'s Perms: "), Component.text(claim.config.name).color(NamedTextColor.GOLD));
-                    case OFFLINE_PLAYER -> Component.text("Edit ").append(Names.instance.getRenderedName(player, true), Component.text("'s Perms: "), Component.text(claim.config.name).color(NamedTextColor.GOLD));
-                    case DEFAULT -> Component.text("Edit Default Player Permissions: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD));
-                    case ENTITY_DEFAULT -> Component.text("Edit Default Entity Permissions: ").append(Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                var base = DialogBase.builder(switch (mode) {
+                    case ENTITY ->
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getEntityRenderedName(entity), Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                    case OFFLINE_PLAYER ->
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getRenderedName(player, true), Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                    case DEFAULT ->
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_DEFAULT, Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                    case ENTITY_DEFAULT ->
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY_DEFAULT, Component.text(claim.config.name).color(NamedTextColor.GOLD));
                 });
 
                 var l = new ArrayList<>();
 
-                perms = switch(mode) {
+                perms = switch (mode) {
                     case ENTITY -> claim.getPerms(entity.getUniqueId());
                     case OFFLINE_PLAYER -> claim.getPerms(player.getUniqueId());
                     case DEFAULT -> claim.defaultPerms;
@@ -250,36 +263,36 @@ public class LandClaimPage extends GuiLayer {
                 };
 
                 List<DialogInput> opts = new ArrayList<>();
-                switch(mode) {
+                switch (mode) {
                     case DEFAULT:
                         if (isAdvanced) {
                             for (var perm : AdvancedLandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) != Claims.OptBool.True);
-                                opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(onEntry, offEntry)).build());
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", KTStrings.getFor(KTStrings.ON).color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", KTStrings.getFor(KTStrings.OFF).color(NamedTextColor.RED), perms.getBoolPermission(perm) != Claims.OptBool.True);
+                                opts.add(DialogInput.singleOption(perm.name(), perm.label, List.of(onEntry, offEntry)).build());
                             }
                         } else {
                             for (var perm : LandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) != Claims.OptBool.True);
-                                opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(onEntry, offEntry)).build());
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", KTStrings.getFor(KTStrings.ON).color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", KTStrings.getFor(KTStrings.OFF).color(NamedTextColor.RED), perms.getBoolPermission(perm) != Claims.OptBool.True);
+                                opts.add(DialogInput.singleOption(perm.name(), perm.label, List.of(onEntry, offEntry)).build());
                             }
                         }
                         break;
                     case OFFLINE_PLAYER, ENTITY_DEFAULT: {
                         if (isAdvanced) {
                             for (var perm : AdvancedLandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
-                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", Component.text("Default (" + (claim.defaultPerms.getBoolPermission(perm) == Claims.OptBool.True ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
-                                opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(defaultEntry, onEntry, offEntry)).build());
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", KTStrings.getFor(KTStrings.ON).color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", KTStrings.getFor(KTStrings.OFF).color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
+                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", KTStrings.getFor(KTStrings.DEFAULT, KTStrings.getFor(claim.defaultPerms.getBoolPermission(perm) == Claims.OptBool.True ? KTStrings.ON : KTStrings.OFF)).color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
+                                opts.add(DialogInput.singleOption(perm.name(), perm.label, List.of(defaultEntry, onEntry, offEntry)).build());
                             }
                         } else {
                             for (var perm : LandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
-                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", Component.text("Default (" + (claim.defaultPerms.getBoolPermission(perm) == Claims.OptBool.True ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
-                                opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(defaultEntry, onEntry, offEntry)).build());
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", KTStrings.getFor(KTStrings.ON).color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", KTStrings.getFor(KTStrings.OFF).color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
+                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", KTStrings.getFor(KTStrings.DEFAULT, KTStrings.getFor(claim.defaultPerms.getBoolPermission(perm) == Claims.OptBool.True ? KTStrings.ON : KTStrings.OFF)).color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
+                                opts.add(DialogInput.singleOption(perm.name(), perm.label, List.of(defaultEntry, onEntry, offEntry)).build());
                             }
                         }
                         break;
@@ -287,17 +300,17 @@ public class LandClaimPage extends GuiLayer {
                     case ENTITY: {
                         if (isAdvanced) {
                             for (var perm : AdvancedLandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
-                                 var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", Component.text("Default (" + (claim.defaultEntityPerms.getBoolPermission(perm, claim.defaultPerms) == Claims.OptBool.True ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
-                                opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(defaultEntry, onEntry, offEntry)).build());
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", KTStrings.getFor(KTStrings.ON).color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", KTStrings.getFor(KTStrings.OFF).color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
+                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", KTStrings.getFor(KTStrings.DEFAULT, KTStrings.getFor(claim.defaultEntityPerms.getBoolPermission(perm, claim.defaultPerms) == Claims.OptBool.True ? KTStrings.ON : KTStrings.OFF)).color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
+                                opts.add(DialogInput.singleOption(perm.name(), perm.label, List.of(defaultEntry, onEntry, offEntry)).build());
                             }
                         } else {
                             for (var perm : LandPermission.values()) {
-                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", Component.text("On").color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
-                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", Component.text("Off").color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
-                                 var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", Component.text("Default (" + (claim.defaultEntityPerms.getBoolPermission(perm, claim.defaultPerms) == Claims.OptBool.True ? "On" : "Off") + ")").color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
-                                opts.add(DialogInput.singleOption(perm.name(), Component.text(perm.label), List.of(defaultEntry, onEntry, offEntry)).build());
+                                var onEntry = SingleOptionDialogInput.OptionEntry.create("True", KTStrings.getFor(KTStrings.ON).color(NamedTextColor.GREEN), perms.getBoolPermission(perm) == Claims.OptBool.True);
+                                var offEntry = SingleOptionDialogInput.OptionEntry.create("False", KTStrings.getFor(KTStrings.OFF).color(NamedTextColor.RED), perms.getBoolPermission(perm) == Claims.OptBool.False);
+                                var defaultEntry = SingleOptionDialogInput.OptionEntry.create("Default", KTStrings.getFor(KTStrings.DEFAULT, KTStrings.getFor(claim.defaultEntityPerms.getBoolPermission(perm, claim.defaultPerms) == Claims.OptBool.True ? KTStrings.ON : KTStrings.OFF)).color(NamedTextColor.YELLOW), perms.getBoolPermission(perm) == Claims.OptBool.Default);
+                                opts.add(DialogInput.singleOption(perm.name(), perm.label, List.of(defaultEntry, onEntry, offEntry)).build());
                             }
                         }
                         break;
@@ -309,37 +322,39 @@ public class LandClaimPage extends GuiLayer {
 
                 dia.type(DialogType.multiAction(List.of(
                         ActionButton.create(
-                                Component.text("Confirm", NamedTextColor.GREEN),
-                                Component.text("Click to confirm your changes."),
+                                KTStrings.getFor(KTStrings.CONFIRM).color(NamedTextColor.GREEN),
+                                KTStrings.getFor(KTStrings.CONFIRM_DESC),
                                 100,
                                 DialogAction.customClick((view, audience) -> save(view), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                         ),
                         ActionButton.create(
-                                Component.text("Discard", NamedTextColor.RED),
-                                Component.text("Click to discard your changes."),
+                                KTStrings.getFor(KTStrings.DISCARD).color(NamedTextColor.RED),
+                                KTStrings.getFor(KTStrings.DISCARD_DESC),
                                 100,
                                 null
                         ),
                         isAdvanced ? ActionButton.create(
-                                Component.text("Regular Options"),
-                                Component.text("Click to edit regular options."),
+                                KTStrings.getFor(KTStrings.CLAIM_REGULAR),
+                                KTStrings.getFor(KTStrings.CLAIM_REGULAR_DESC),
                                 100,
                                 DialogAction.customClick((view, audience) -> {
                                     save(view);
-                                    switch(mode) {
-                                        case DEFAULT, ENTITY_DEFAULT -> new PermissionPage(who, claim, mode, false).show();
+                                    switch (mode) {
+                                        case DEFAULT, ENTITY_DEFAULT ->
+                                                new PermissionPage(who, claim, mode, false).show();
                                         case OFFLINE_PLAYER -> new PermissionPage(who, claim, player, false).show();
                                         case ENTITY -> new PermissionPage(who, claim, entity, false).show();
                                     }
                                 }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                         ) : ActionButton.create(
-                                Component.text("Advanced Options"),
-                                Component.text("Click to edit advanced options."),
+                                KTStrings.getFor(KTStrings.CLAIM_ADVANCED),
+                                KTStrings.getFor(KTStrings.CLAIM_ADVANCED_DESC),
                                 100,
                                 DialogAction.customClick((view, audience) -> {
                                     save(view);
-                                    switch(mode) {
-                                        case DEFAULT, ENTITY_DEFAULT -> new PermissionPage(who, claim, mode, true).show();
+                                    switch (mode) {
+                                        case DEFAULT, ENTITY_DEFAULT ->
+                                                new PermissionPage(who, claim, mode, true).show();
                                         case OFFLINE_PLAYER -> new PermissionPage(who, claim, player, true).show();
                                         case ENTITY -> new PermissionPage(who, claim, entity, true).show();
                                     }
