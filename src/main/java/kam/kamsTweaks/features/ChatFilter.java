@@ -173,7 +173,10 @@ public class ChatFilter extends Feature {
             try {
                 var channel = DiscordUtil.getTextChannelById("1487994679579508836");
                 if (channel != null) {
-                    var ignored = channel.sendMessage("<@&1488275345252810882> " + message);
+                    var pt = Names.instance.pt.serialize(message);
+                    channel.sendMessage("<@&1488275345252810882> " + pt).queue();
+                } else {
+                    Logger.info("Automod channel did not exist.");
                 }
             } catch (Exception e) {
                 Logger.error("Failed to send message to discord. Exception printed below.");
