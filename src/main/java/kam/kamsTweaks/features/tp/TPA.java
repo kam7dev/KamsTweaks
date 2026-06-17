@@ -83,7 +83,7 @@ public class TPA extends Feature {
                 target.displayName(),
                 Component.text("/tpcancel").clickEvent(ClickEvent.runCommand("tpcancel")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED)).color(NamedTextColor.GOLD));
         target.sendMessage(KTStrings.getFor(KTStrings.TPA_RECIEVED,
-                target.displayName(),
+                sender.displayName(),
                 KTStrings.getFor(here ? KTStrings.TPA_HERE : KTStrings.TPA),
                 Component.text("/tpaccept").clickEvent(ClickEvent.runCommand("tpaccept")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED),
                 Component.text("/tpdecline").clickEvent(ClickEvent.runCommand("tpdecline")).color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED)).color(NamedTextColor.GOLD));
