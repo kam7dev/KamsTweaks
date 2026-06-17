@@ -645,28 +645,28 @@ public class Graves extends Feature {
             this.mainInv = Bukkit.createInventory(null, MAIN_SIZE, KTStrings.getFor(KTStrings.GRAVE_TITLE));
             for (int i = 0; i < 36; i++) {
                 ItemStack item = inv.getItem(i);
-                if (item != null && !item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                if (item != null && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
                     mainInv.setItem(i, item);
                     inv.setItem(i, null);
                 }
             }
             {
                 var item = inv.getHelmet();
-                if (!item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                if (!item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
                     mainInv.setItem(36, item);
                     inv.setHelmet(null);
                 }
             }
             {
                 var item = inv.getChestplate();
-                if (!item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                if (!item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
                     mainInv.setItem(37, item);
                     inv.setChestplate(null);
                 }
             }
             {
                 var item = inv.getLeggings();
-                if (item.isEmpty() && !item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                if (!item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
                     mainInv.setItem(38, item);
                     inv.setLeggings(null);
                 }
