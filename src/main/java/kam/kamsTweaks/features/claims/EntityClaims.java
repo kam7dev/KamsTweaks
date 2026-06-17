@@ -296,7 +296,12 @@ public class EntityClaims {
                     loadPerms(cfg, path + ".entity", claim.defaultEntityPerms);
                     if (cfg.contains(path + ".perms")) {
                         for (var perm : nonNull(cfg.getConfigurationSection(path + ".perms")).getKeys(false)) {
-                            loadPerms(cfg, path + ".perms." + uuid, claim.getPerms(UUID.fromString(perm + ".who")));
+                            try {
+                                loadPerms(cfg, path + ".perms." + uuid, claim.getPerms(UUID.fromString(perm)));
+                            } catch (Exception e) {
+                                Logger.error("Failed to load permissions for " + uuid + " in entity claim " + id);
+                                Logger.handleException(e);
+                            }
                         }
                     }
 
@@ -306,7 +311,11 @@ public class EntityClaims {
                 }
             }
         }
-        loadLegacy();
+        try {
+            loadLegacy();
+        } catch (Exception e) {
+            Logger.handleException(e);
+        }
     }
 
     public void listClaims(Player who, CommandSender receiver) {

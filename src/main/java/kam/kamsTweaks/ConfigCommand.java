@@ -10,6 +10,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.command.ConsoleCommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.PrintWriter;
@@ -172,7 +173,8 @@ public class ConfigCommand {
                             var e = Logger.exceptions.get(ctx.getArgument("id", Integer.class));
                             StringWriter sw = new StringWriter();
                             e.printStackTrace(new PrintWriter(sw));
-                            Logger.error("Stack trace print requested by " + ctx.getSource().getSender().getName() + ":\n" + sw);
+                            if (!(ctx.getSource().getSender() instanceof ConsoleCommandSender))
+                                Logger.error("Stack trace print requested by " + ctx.getSource().getSender().getName() + ":\n" + sw);
                             ctx.getSource().getSender().sendMessage(sw.toString());
                             return Command.SINGLE_SUCCESS;
                         }).requires(source -> source.getSender().hasPermission("kamstweaks.logger")))
