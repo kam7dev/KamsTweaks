@@ -833,7 +833,7 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.tp.homes.set", "Your home has been set.", args);
             }
             case TP_TO_HOME -> {
-                return Component.translatable("kamstweaks.tp.homes.to", "Teleporting to spawn in %s seconds, please do not move.", args);
+                return Component.translatable("kamstweaks.tp.homes.to", "Teleporting to your home in %s seconds, please do not move.", args);
             }
 
             case TPA_ALREADY_OUTGOING -> {
