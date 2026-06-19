@@ -101,6 +101,8 @@ public enum KTStrings {
     LC_ITEM_FRAME_ITEM_PLACE,
     LC_ARMOR_STAND_ITEM_TAKE,
     LC_ARMOR_STAND_ITEM_PLACE,
+    LC_VEHICLE_PLACE,
+    LC_VEHICLE_DESTROY,
     LC_DISABLED,
     LC_ENABLING,
     LC_REENABLED,
@@ -157,6 +159,8 @@ public enum KTStrings {
     GRAVE_30_SEC,
     GRAVE_EXPIRE_NOW,
     GRAVE_WELCOME,
+    GRAVE_TOGGLED,
+    GRAVE_STATUS,
 
     // Names
     NAMES,
@@ -521,6 +525,12 @@ public enum KTStrings {
             case LC_ARMOR_STAND_ITEM_PLACE -> {
                 return Component.translatable("kamstweaks.claims.land.armor_stand_place", "Place onto Armor Stands", args);
             }
+            case LC_VEHICLE_DESTROY -> {
+                return Component.translatable("kamstweaks.claims.land.vehicle_destroy", "Destroy Vehicles", args);
+            }
+            case LC_VEHICLE_PLACE -> {
+                return Component.translatable("kamstweaks.claims.land.vehicle_place", "Place Vehicles", args);
+            }
             case LC_DISABLED -> {
                 return Component.translatable("kamstweaks.claims.land.end_disable", "Claims are currently disabled at the end island due to an ongoing dragon fight. They will be re-enabled 5 minutes after the fight.", args);
             }
@@ -684,6 +694,12 @@ public enum KTStrings {
             }
             case GRAVE_WELCOME -> {
                 return Component.translatable("kamstweaks.graves.welcome", "You have %s active grave(s) and %s expired grave(s).", args);
+            }
+            case GRAVE_TOGGLED -> {
+                return Component.translatable("kamstweaks.graves.toggled", "Graves are now %s.", args);
+            }
+            case GRAVE_STATUS -> {
+                return Component.translatable("kamstweaks.graves.status", "Graves are currently %s.", args);
             }
 
             case NAMES -> {

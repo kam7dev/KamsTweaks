@@ -158,6 +158,25 @@ public class Graves extends Feature {
                             ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_NO_ID, Component.text(id)).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         })))
+                        .then(Commands.literal("toggle").executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            if (ctx.getSource().getExecutor() instanceof Player player) {
+                                var newState = !UserDataManager.get(player.getUniqueId(), "graves-enabled", true);
+                                UserDataManager.set(player.getUniqueId(), "graves-enabled", newState);
+                                player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_TOGGLED, KTStrings.getFor(newState ? KTStrings.ON : KTStrings.OFF)));
+                            } else {
+                                sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
+                            }
+                            return Command.SINGLE_SUCCESS;
+                        })).executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            if (ctx.getSource().getExecutor() instanceof Player player) {
+                                player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_STATUS, KTStrings.getFor(UserDataManager.get(player.getUniqueId(), "graves-enabled", true) ? KTStrings.ON : KTStrings.OFF)));
+                            } else {
+                                sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
+                            }
+                            return Command.SINGLE_SUCCESS;
+                        })
                 .build());
     }
 
@@ -275,6 +294,7 @@ public class Graves extends Feature {
             return;
 
         Player player = event.getPlayer();
+        if (!UserDataManager.get(player.getUniqueId(), "graves-enabled", true)) return;
         if (player.getInventory().isEmpty() && player.getTotalExperience() == 0) return;
         var loc = checkLocation(player.getLocation());
         if (loc == null) loc = player.getLocation();

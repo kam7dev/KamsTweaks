@@ -104,7 +104,7 @@ public class LandClaims implements Listener {
     }
 
     // I got tired of typing the long thing
-    public static <T> @NotNull T nonNull(@Nullable T t) {
+    public static <T> @NotNull T nonNull(@Nullable T t) throws NullPointerException {
         return Objects.requireNonNull(t);
     }
 
@@ -604,7 +604,8 @@ public class LandClaims implements Listener {
         ARMOR_STAND_ITEM_TAKE(KTStrings.getFor(KTStrings.LC_ARMOR_STAND_ITEM_TAKE)),
         ARMOR_STAND_ITEM_PLACE(KTStrings.getFor(KTStrings.LC_ARMOR_STAND_ITEM_PLACE)),
 
-
+        VEHICLE_PLACE(KTStrings.getFor(KTStrings.LC_VEHICLE_PLACE)),
+        VEHICLE_BREAK(KTStrings.getFor(KTStrings.LC_VEHICLE_DESTROY)),
         ;
 
         public final Component label;

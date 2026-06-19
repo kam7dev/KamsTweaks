@@ -30,6 +30,8 @@ public final class KamsTweaks extends JavaPlugin {
     List<Feature> features = new ArrayList<>();
 
     KamsTweaks() {
+        features.add(new UserDataManager());
+
         features.add(new Names());
         features.add(new Claims());
         features.add(new Graves());
@@ -52,10 +54,18 @@ public final class KamsTweaks extends JavaPlugin {
         loadConfigs();
 
         for (var feature : features) {
-            feature.loadData();
+            try {
+                feature.loadData();
+            } catch(Exception e) {
+                Logger.handleException(e);
+            }
         }
         for (var feature : features) {
-            feature.setup();
+            try {
+                feature.setup();
+            }  catch(Exception e) {
+                Logger.handleException(e);
+            }
         }
         for (var feature : features) {
             getServer().getPluginManager().registerEvents(feature, this);
@@ -64,7 +74,11 @@ public final class KamsTweaks extends JavaPlugin {
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             for (var feature : features) {
-                feature.registerCommands(commands);
+                try {
+                    feature.registerCommands(commands);
+                }  catch(Exception e) {
+                    Logger.handleException(e);
+                }
             }
             ConfigCommand.registerCommand(commands);
         });
@@ -82,13 +96,21 @@ public final class KamsTweaks extends JavaPlugin {
     public void onDisable() {
         save();
         for (var feature : features) {
-            feature.shutdown();
+            try {
+                feature.shutdown();
+            } catch(Exception e) {
+                Logger.handleException(e);
+            }
         }
     }
 
     public void save() {
         for (var feature : features) {
-            feature.saveData();
+            try {
+                feature.saveData();
+            } catch(Exception e) {
+                Logger.handleException(e);
+            }
         }
         saveConfigs();
         Logger.info("Saved KamsTweaks.");

@@ -508,11 +508,21 @@ public class LandProtections implements Listener {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
             return;
         if (e.getPlayer() instanceof Player player) {
-        LandClaim claim = claims.getClaim(e.getEntity().getLocation());
+            LandClaim claim = claims.getClaim(e.getEntity().getLocation());
             if (claim == null) return;
-            var perm = LandPermission.BLOCK_PLACE;
-            if (!claim.hasPermission(player, perm)) {
-                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
+            boolean res;
+            Component msg;
+            if (e.getEntity() instanceof Vehicle) {
+                var r = claim.hasPermissions(player, LandPermission.BLOCK_PLACE, AdvancedLandPermission.VEHICLE_PLACE);
+                msg = r.message();
+                res = r.result();
+            } else {
+                var perm = LandPermission.BLOCK_PLACE;
+                res = claim.hasPermission(player, perm);
+                msg = perm.label;
+            }
+            if (!res) {
+                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, msg, claim.getOwnerName()));
                 e.setCancelled(true);
             } else {
                 e.getEntity().getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING, LocationUtils.serializeBlockPos(e.getEntity().getLocation()));
@@ -525,14 +535,12 @@ public class LandProtections implements Listener {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
             return;
         Entity entity = e.getVehicle();
-        if (!(entity instanceof ChestBoat || entity instanceof StorageMinecart))
-            return;
         var attacker = e.getAttacker();
         LandClaim claim = claims.getClaim(e.getVehicle().getLocation());
         if (claim == null) return;
-        var perm = LandPermission.BLOCK_BREAK;
-        if (!claim.hasPermission(attacker, perm)) {
-            message(attacker, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
+        var res = claim.hasPermissions(attacker, LandPermission.BLOCK_BREAK, AdvancedLandPermission.VEHICLE_BREAK);
+        if (!res.result()) {
+            message(attacker, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
             e.setCancelled(true);
         }
 
