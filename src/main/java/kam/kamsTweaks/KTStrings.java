@@ -604,7 +604,7 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.claims.entity.aggro", "Can Aggro", args);
             }
             case EC_INFO -> {
-                return Component.translatable("kamstweaks.claims.entity.info", "(%s) %s (priority %s): %s to %s in %s %s", args);
+                return Component.translatable("kamstweaks.claims.entity.info", "(%s) %s: %s in %s", args);
             }
             case EC_MAX -> {
                 return Component.translatable("kamstweaks.claims.entity.max", "You already have the max number of claims! (%s/%s)", args);
