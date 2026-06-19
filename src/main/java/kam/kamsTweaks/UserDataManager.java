@@ -39,18 +39,19 @@ public class UserDataManager extends Feature {
         ud.put(id, value);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T get(UUID who, String id, T defaultValue) {
         if (!data.containsKey(who)) return defaultValue;
         var ud = data.get(who);
         if (!ud.containsKey(id)) return defaultValue;
-        //noinspection unchecked
         return (T) ud.get(id);
     }
+
+    @SuppressWarnings("unchecked")
     public static <T> Map<String, T> getMap(UUID who, String id, Map<String, T> defaultValue) {
         if (!data.containsKey(who)) return defaultValue;
         var ud = data.get(who);
         if (!ud.containsKey(id)) return defaultValue;
-        //noinspection unchecked
         return (Map<String, T>) ((MemorySection) ud.get(id)).getValues(false);
     }
 }
