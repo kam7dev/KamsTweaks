@@ -28,6 +28,7 @@ public class Claims extends Feature {
     FileConfiguration claimsConfig;
 
     final List<UUID> hasMessaged = new ArrayList<>();
+    final List<UUID> hasMessagedTM = new ArrayList<>();
 
     public Claims() {
         instance = this;
@@ -43,7 +44,10 @@ public class Claims extends Feature {
         landClaims.setup(this);
         entityClaims.setup(this);
 
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), hasMessaged::clear, 1, 1);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), () -> {
+            hasMessaged.clear();
+            hasMessagedTM.clear();
+        }, 1, 1);
     }
 
     @Override
@@ -157,6 +161,14 @@ public class Claims extends Feature {
             return;
         hasMessaged.add(player.getUniqueId());
         player.sendActionBar(message);
+    }
+
+    public void messageTest(Entity player) {
+        if (!(player instanceof Player)) return;
+        if (hasMessagedTM.contains(player.getUniqueId()))
+            return;
+        hasMessagedTM.add(player.getUniqueId());
+        player.sendMessage(KTStrings.getFor(KTStrings.PERMS_TEST_MODE_HINT));
     }
 
     public enum OptBool {

@@ -161,7 +161,8 @@ public class LandClaimPage extends GuiLayer {
 
                 var nameInp = DialogInput.text("name", KTStrings.getFor(KTStrings.NAME)).initial(claim.config.name).build();
                 var prioDrag = DialogInput.numberRange("prio", KTStrings.getFor(KTStrings.PRIORITY), -100, 100).step(1f).initial(claim.config.priority.floatValue()).build();
-                base.inputs(List.of(nameInp, prioDrag));
+                var testBox = DialogInput.bool("test", KTStrings.getFor(KTStrings.PERMS_TEST_MODE)).initial(claim.config.testMode).build();
+                base.inputs(List.of(nameInp, prioDrag, testBox));
 
                 var dia = builder.empty().base(base.build());
 
@@ -179,6 +180,7 @@ public class LandClaimPage extends GuiLayer {
                                 Logger.warn("[Claim management] " + who.getName() + " just edited settings for " + claim.getOwnerUsername() + "'s land claim.");
                             }
                             claim.config.priority = Objects.requireNonNullElse(view.getFloat("prio"), 0).intValue();
+                            claim.config.testMode = Objects.requireNonNullElse(view.getBoolean("test"), false);
 
                             var name = Objects.requireNonNullElse(view.getText("name"), "Unnamed Claim");
                             var res = ChatFilter.instance.isFiltered(name);

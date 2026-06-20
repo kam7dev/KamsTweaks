@@ -159,6 +159,7 @@ public class EntityClaims {
             if (claim.owner != null) cfg.set(path + ".owner", claim.owner.getUniqueId().toString());
 
             cfg.set(path + ".config.aggro", claim.config.canAggro);
+            cfg.set(path + ".config.test", claim.config.testMode);
 
             savePerms(cfg, path + ".default", claim.defaultPerms);
             savePerms(cfg, path + ".entity", claim.defaultEntityPerms);
@@ -291,6 +292,7 @@ public class EntityClaims {
                     var id = cfg.getInt(path + ".id");
                     var claim = new EntityClaim(oUuid != null ? Bukkit.getOfflinePlayer(oUuid) : null, id, uuid);
                     claim.config.canAggro = cfg.getBoolean(path + ".config.aggro");
+                    claim.config.testMode = cfg.getBoolean(path + ".config.test");
 
                     loadPerms(cfg, path + ".default", claim.defaultPerms);
                     loadPerms(cfg, path + ".entity", claim.defaultEntityPerms);
@@ -497,7 +499,9 @@ public class EntityClaims {
     }
 
     public static class ClaimConfig {
-        public boolean canAggro = false;
+        public Boolean testMode = false;
+
+        public Boolean canAggro = false;
     }
 
     public static class EntityClaim {
@@ -542,6 +546,7 @@ public class EntityClaims {
             this.entity = entity;
 
             config.canAggro = orig.config.canAggro;
+            config.testMode = orig.config.testMode;
 
             orig.perms.forEach((uuid, perm) -> {
                 var clone = perm.clone();
@@ -566,6 +571,7 @@ public class EntityClaims {
             this.entity = entity;
 
             config.canAggro = orig.config.canAggro;
+            config.testMode = orig.config.testMode;
 
             orig.perms.forEach((uuid, perm) -> {
                 var clone = perm.clone();
@@ -595,7 +601,10 @@ public class EntityClaims {
             }
 
             // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) return true;
+            if (owner != null && owner.getUniqueId().equals(uuid)) {
+                if (config.testMode) Claims.get().messageTest((Entity) who);
+                else return true;
+            }
 
             // explicit perms
             if (perms.containsKey(uuid)) {
@@ -630,7 +639,10 @@ public class EntityClaims {
             }
 
             // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) return OptBool.Default;
+            if (owner != null && owner.getUniqueId().equals(uuid)) {
+                if (config.testMode) Claims.get().messageTest((Entity) who);
+                else return OptBool.Default;
+            }
 
             // explicit perms
             if (perms.containsKey(uuid)) {

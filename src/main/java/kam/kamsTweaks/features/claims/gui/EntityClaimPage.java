@@ -130,8 +130,9 @@ public class EntityClaimPage extends GuiLayer {
             dialog = Dialog.create(builder -> {
                 var base = DialogBase.builder(KTStrings.getFor(KTStrings.CLAIM_SETTINGS, Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD)));
                 var aggroBtn = DialogInput.bool("aggro", KTStrings.getFor(KTStrings.EC_AGGRO)).initial(claim.config.canAggro).build();
+                var testBtn = DialogInput.bool("test", KTStrings.getFor(KTStrings.PERMS_TEST_MODE)).initial(claim.config.testMode).build();
 
-                base.inputs(List.of(aggroBtn));
+                base.inputs(List.of(aggroBtn, testBtn));
 
                 var dia = builder.empty().base(base.build());
 
@@ -149,6 +150,7 @@ public class EntityClaimPage extends GuiLayer {
                                 Logger.warn("[Claim management] " + who.getName() + " just edited settings for " + claim.getOwnerUsername() + "'s entity claim.");
                             }
                             claim.config.canAggro = Objects.requireNonNullElse(view.getBoolean("aggro"), false);
+                            claim.config.testMode = Objects.requireNonNullElse(view.getBoolean("test"), false);
                         }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())
                 );
 

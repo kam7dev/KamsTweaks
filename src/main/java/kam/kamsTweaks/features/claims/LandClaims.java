@@ -90,6 +90,7 @@ public class LandClaims implements Listener {
 
             cfg.set(path + ".config.name", claim.config.name);
             cfg.set(path + ".config.prio", claim.config.priority);
+            cfg.set(path + ".config.test", claim.config.testMode);
 //            cfg.set(path + ".config.grass-spread", claim.config.grassSpread.name());
 //            cfg.set(path + ".config.fire-spread", claim.config.fireSpread.name());
 //            cfg.set(path + ".config.water-flow", claim.config.waterFlow.name());
@@ -147,6 +148,7 @@ public class LandClaims implements Listener {
 
                     claim.config.name = nonNull(cfg.getString(path + ".config.name"));
                     claim.config.priority = cfg.getInt(path + ".config.priority");
+                    claim.config.testMode = cfg.getBoolean(path + ".config.test");
 //                    claim.config.grassSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.grass-spread")));
 //                    claim.config.fireSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.fire-spread")));
 //                    claim.config.waterFlow = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.water-flow")));
@@ -696,6 +698,7 @@ public class LandClaims implements Listener {
     public static class ClaimConfig {
         public String name = "Unnamed Claim";
         public Integer priority = 0;
+        public Boolean testMode = false;
 
 //        // TODO: these
 //        public ConfigEnum1 grassSpread = ConfigEnum1.FromInside;
@@ -778,7 +781,11 @@ public class LandClaims implements Listener {
             }
 
             // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) return true;
+            if (owner != null && owner.getUniqueId().equals(uuid)) {
+                if (config.testMode) Claims.get().messageTest((Entity) who);
+                else return true;
+            }
+            if (!config.testMode && owner != null && owner.getUniqueId().equals(uuid)) return true;
 
             // explicit perms
             if (perms.containsKey(uuid)) {
@@ -813,7 +820,10 @@ public class LandClaims implements Listener {
             }
 
             // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) return OptBool.Default;
+            if (owner != null && owner.getUniqueId().equals(uuid)) {
+                if (config.testMode) Claims.get().messageTest((Entity) who);
+                else return OptBool.True;
+            }
 
             // explicit perms
             if (perms.containsKey(uuid)) {

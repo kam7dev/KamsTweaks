@@ -1084,7 +1084,6 @@ public class LandProtections implements Listener {
             return;
         LandClaim claim = claims.getClaim(event.getBlock().getLocation());
         var perm = LandPermission.BLOCK_BREAK;
-        Logger.info(event.getEntity() + "");
         switch (event.getEntity()) {
             case Player player -> {
                 if (claim != null && !claim.hasPermission(player, perm)) {

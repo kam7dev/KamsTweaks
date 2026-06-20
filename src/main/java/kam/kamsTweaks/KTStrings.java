@@ -83,6 +83,8 @@ public enum KTStrings {
     PERMS_EDIT_ENTITY,
     PERMS_EDIT_DEFAULT,
     PERMS_EDIT_ENTITY_DEFAULT,
+    PERMS_TEST_MODE,
+    PERMS_TEST_MODE_HINT,
 
     LC,
     LAND,
@@ -472,6 +474,12 @@ public enum KTStrings {
             }
             case PERMS_EDIT_ENTITY_DEFAULT -> {
                 return Component.translatable("kamstweaks.claims.perms.edit_default_entity", "Edit Default Entity Permissions", args);
+            }
+            case PERMS_TEST_MODE -> {
+                return Component.translatable("kamstweaks.claims.perms.test_mode", "Test Mode");
+            }
+            case PERMS_TEST_MODE_HINT -> {
+                return Component.translatable("kamstweaks.claims.perms.test_mode_hint", "You're currently in test mode. Disable this in your claim's settings.");
             }
 
             case LC -> {
