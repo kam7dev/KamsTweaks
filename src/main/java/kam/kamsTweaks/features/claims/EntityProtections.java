@@ -101,15 +101,9 @@ public class EntityProtections implements Listener {
         EntityClaim claim = claims.getClaim(entity);
         if (claim == null) return;
         var perm = EntityPermission.DAMAGE;
-        if (e.getAttacker() instanceof Player player) {
-            if (!claim.hasPermission(player, perm)) {
-                message(player, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
-                e.setCancelled(true);
-            }
-        } else {
-            if (!claim.hasPermission(null, perm)) {
-                e.setCancelled(true);
-            }
+        if (!claim.hasPermission(e.getAttacker(), perm)) {
+            message(e.getAttacker(), KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
+            e.setCancelled(true);
         }
     }
 
@@ -121,15 +115,9 @@ public class EntityProtections implements Listener {
         EntityClaim claim = claims.getClaim(entity);
         if (claim == null) return;
         var perm = EntityPermission.DAMAGE;
-        if (e.getAttacker() instanceof Player player) {
-            if (!claim.hasPermission(player, perm)) {
-                message(player, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
-                e.setCancelled(true);
-            }
-        } else {
-            if (!claim.hasPermission(null, perm)) {
-                e.setCancelled(true);
-            }
+        if (!claim.hasPermission(e.getAttacker(), perm)) {
+            message(e.getAttacker(), KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
+            e.setCancelled(true);
         }
     }
 
@@ -158,14 +146,11 @@ public class EntityProtections implements Listener {
                         event.setCancelled(true);
                         return;
                     }
-                    if (claim == null) return;
-                    if (claim.hasPermission(player, perm)) return;
-                    message(player, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
-                    event.setCancelled(true);
-                } else if (claim != null) {
-                    if (claim.hasPermission(null, perm)) return;
-                    event.setCancelled(true);
                 }
+                if (claim == null) return;
+                if (claim.hasPermission(event.getDamageSource().getCausingEntity(), perm)) return;
+                message(event.getDamageSource().getCausingEntity(), KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
+                event.setCancelled(true);
             }
             case PROJECTILE -> {
                 if (event.getDamageSource().getCausingEntity() instanceof Player player) {

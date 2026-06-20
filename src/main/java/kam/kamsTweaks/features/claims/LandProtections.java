@@ -1039,13 +1039,13 @@ public class LandProtections implements Listener {
             return;
         LandClaim claim = claims.getClaim(event.getBlock().getLocation());
         if (event.getBlock().getType() == Material.FARMLAND) {
-            if (claim != null && !claim.hasPermission(null, LandPermission.BLOCK_BREAK)) {
+            if (claim != null && !claim.hasPermission(event.getEntity(), LandPermission.BLOCK_BREAK)) {
                 event.setCancelled(true);
             }
         } else if (event.getEntity() instanceof ArmorStand stand && stand.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "grave"))) {
             event.setCancelled(true);
         } else {
-            if (claim != null && !claim.hasPermission(null, LandPermission.BLOCK_INTERACT)) {
+            if (claim != null && !claim.hasPermission(event.getEntity(), LandPermission.BLOCK_INTERACT)) {
                 event.setCancelled(true);
             }
         }
@@ -1084,59 +1084,59 @@ public class LandProtections implements Listener {
             return;
         LandClaim claim = claims.getClaim(event.getBlock().getLocation());
         var perm = LandPermission.BLOCK_BREAK;
-        if (event.getEntity() instanceof Player player) {
-            if (claim != null && !claim.hasPermission(player, perm)) {
-                message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
-                event.setCancelled(true);
+        Logger.info(event.getEntity() + "");
+        switch (event.getEntity()) {
+            case Player player -> {
+                if (claim != null && !claim.hasPermission(player, perm)) {
+                    message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
+                    event.setCancelled(true);
+                }
             }
-        } else if (event.getEntityType() == EntityType.ENDERMAN) {
-            if (claim != null && !claim.hasPermission(null, perm)) {
-                event.setCancelled(true);
-            }
-        } else if (event.getEntity() instanceof ArmorStand stand && stand.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "grave"))) {
-            event.setCancelled(true);
-        } else if (event.getEntity() instanceof FallingBlock fb) {
-            if (event.getTo() == org.bukkit.Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
-                var newClaim = claims.getClaim(event.getBlock().getRelative(BlockFace.DOWN).getLocation());
+            case ArmorStand stand when stand.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "grave")) -> event.setCancelled(true);
+            case FallingBlock fb -> {
+                if (event.getTo() == Material.AIR && !fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
+                    var newClaim = claims.getClaim(event.getBlock().getRelative(BlockFace.DOWN).getLocation());
 
-                if (claim != null && !claim.hasPermission(newClaim != null ? newClaim.owner : null, perm)) {
-                    event.setCancelled(true);
-                    fb.remove();
-                }
+                    if (claim != null && !claim.hasPermission(newClaim != null ? newClaim.owner : null, perm)) {
+                        event.setCancelled(true);
+                        fb.remove();
+                    }
 
-                if (newClaim != null && !newClaim.hasPermission(claim != null ? claim.owner : null, perm)) {
-                    event.setCancelled(true);
-                    org.bukkit.inventory.ItemStack drop = new org.bukkit.inventory.ItemStack(event.getBlockData().getMaterial());
-                    org.bukkit.inventory.meta.ItemMeta meta = drop.getItemMeta();
-                    if (meta instanceof org.bukkit.inventory.meta.BlockDataMeta bdMeta) {
-                        bdMeta.setBlockData(event.getBlockData());
-                        drop.setItemMeta(bdMeta);
+                    if (newClaim != null && !newClaim.hasPermission(claim != null ? claim.owner : null, perm)) {
+                        event.setCancelled(true);
+                        ItemStack drop = new ItemStack(event.getBlockData().getMaterial());
+                        ItemMeta meta = drop.getItemMeta();
+                        if (meta instanceof BlockDataMeta bdMeta) {
+                            bdMeta.setBlockData(event.getBlockData());
+                            drop.setItemMeta(bdMeta);
+                        }
+                        fb.getWorld().dropItemNaturally(fb.getLocation(), drop);
+                        fb.remove();
                     }
-                    fb.getWorld().dropItemNaturally(fb.getLocation(), drop);
-                    fb.remove();
-                }
-                fb.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING, LocationUtils.serializeBlockPos(fb.getLocation()));
-            } else {
-                LandClaim orig = null;
-                if (fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
-                    Location origin = LocationUtils.deserializeBlockPos(Objects.requireNonNull(fb.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)));
-                    orig = claims.getClaim(origin);
-                }
-                if (claim != null && !claim.hasPermission(orig != null ? orig.owner : null, perm)) {
-                    event.setCancelled(true);
-                    org.bukkit.inventory.ItemStack drop = new org.bukkit.inventory.ItemStack(event.getBlockData().getMaterial());
-                    org.bukkit.inventory.meta.ItemMeta meta = drop.getItemMeta();
-                    if (meta instanceof org.bukkit.inventory.meta.BlockDataMeta bdMeta) {
-                        bdMeta.setBlockData(event.getBlockData());
-                        drop.setItemMeta(bdMeta);
+                    fb.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING, LocationUtils.serializeBlockPos(fb.getLocation()));
+                } else {
+                    LandClaim orig = null;
+                    if (fb.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)) {
+                        Location origin = LocationUtils.deserializeBlockPos(Objects.requireNonNull(fb.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "startlocation"), PersistentDataType.STRING)));
+                        orig = claims.getClaim(origin);
                     }
-                    fb.getWorld().dropItemNaturally(fb.getLocation(), drop);
-                    fb.remove();
+                    if (claim != null && !claim.hasPermission(orig != null ? orig.owner : null, perm)) {
+                        event.setCancelled(true);
+                        ItemStack drop = new ItemStack(event.getBlockData().getMaterial());
+                        ItemMeta meta = drop.getItemMeta();
+                        if (meta instanceof BlockDataMeta bdMeta) {
+                            bdMeta.setBlockData(event.getBlockData());
+                            drop.setItemMeta(bdMeta);
+                        }
+                        fb.getWorld().dropItemNaturally(fb.getLocation(), drop);
+                        fb.remove();
+                    }
                 }
             }
-        } else {
-            if (claim != null && !claim.hasPermission(null, perm)) {
-                event.setCancelled(true);
+            default -> {
+                if (claim != null && !claim.hasPermission(event.getEntity(), perm)) {
+                    event.setCancelled(true);
+                }
             }
         }
     }
