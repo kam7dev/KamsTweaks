@@ -18,6 +18,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -25,6 +26,7 @@ import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import static kam.kamsTweaks.features.claims.LandClaims.nonNull;
@@ -692,9 +694,13 @@ public class EntityClaims {
         }
     }
 
+    NamespacedKey unclaimable = new NamespacedKey("kamstweaks", "unclaimable");
+
     public boolean isClaimable(Entity e) {
         if (e instanceof Boat) return true;
         if (!(e instanceof Mob)) return false;
+        if (e.getEntitySpawnReason() == CreatureSpawnEvent.SpawnReason.TRIAL_SPAWNER) return false;
+        if (e.getPersistentDataContainer().has(unclaimable)) return false;
         switch (e.getType()) {
             case ELDER_GUARDIAN, ENDER_DRAGON, WITHER, WARDEN -> {
                 return false;
