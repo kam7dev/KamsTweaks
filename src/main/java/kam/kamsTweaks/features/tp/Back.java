@@ -95,11 +95,4 @@ public class Back extends Feature {
             if (loc != null) config.set("back-locs." + uuid, LocationUtils.serializeLocation(loc));
         });
     }
-
-    @EventHandler
-    public void onDeath(PlayerDeathEvent e) {
-        Player player = e.getPlayer();
-        TeleportFeatures.get().locations.put(player.getUniqueId(), Graves.checkLocation(player.getLocation()));
-        player.sendMessage(KTStrings.getFor(KTStrings.BACK_INFO, Component.text("/back").color(NamedTextColor.RED).clickEvent(ClickEvent.runCommand("/back"))).color(NamedTextColor.GOLD));
-    }
 }

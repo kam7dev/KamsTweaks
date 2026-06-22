@@ -219,7 +219,6 @@ public enum KTStrings {
     WARP_INFO,
     TP_TO_WARP,
 
-    BACK_INFO,
     BACK_NO_RECENT,
     TP_TO_BACK,
 
@@ -848,9 +847,6 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.tp.warp.to", "Teleporting to the %s warp in %s seconds, please do not move.", args);
             }
 
-            case BACK_INFO -> {
-                return Component.translatable("kamstweaks.tp.back.info", "Return to your death location with %s.", args);
-            }
             case BACK_NO_RECENT -> {
                 return Component.translatable("kamstweaks.tp.back.no_recent", "You have not teleported anywhere recently.", args);
             }
