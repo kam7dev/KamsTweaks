@@ -332,7 +332,7 @@ public class EntityClaims {
                 var entity = Bukkit.getEntity(uuid);
                 if (entity != null) {
                     ref.i++;
-                    ref.msg = ref.msg.appendNewline().append(KTStrings.getFor(KTStrings.LC_INFO,
+                    ref.msg = ref.msg.appendNewline().append(KTStrings.getFor(KTStrings.EC_INFO,
                             Component.text(claim.id).color(NamedTextColor.GOLD),
                         Names.instance.getEntityRenderedName(entity).color(NamedTextColor.AQUA),
                             Component.text(entity.getLocation().getBlockX() + ", " + entity.getLocation().getBlockY() + ", " + entity.getLocation().getBlockZ()).color(NamedTextColor.GREEN),

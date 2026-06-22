@@ -112,7 +112,7 @@ public class PlayerPVPToggle extends Feature {
         if (e.getEntity() instanceof Player target && e.getDamageSource().getCausingEntity() instanceof Player causer) {
             if (!pvp.getOrDefault(target.getUniqueId(), true)) {
                 e.setCancelled(true);
-                causer.sendMessage(KTStrings.getFor(KTStrings.PVP_TARGET_DISABLED).color(NamedTextColor.RED));
+                causer.sendMessage(KTStrings.getFor(KTStrings.PVP_TARGET_DISABLED, Names.instance.getRenderedName(target)).color(NamedTextColor.RED));
             } else if (!pvp.getOrDefault(causer.getUniqueId(), true)) {
                 e.setCancelled(true);
                 causer.sendMessage(KTStrings.getFor(KTStrings.PVP_YOU_DISABLED).color(NamedTextColor.RED));

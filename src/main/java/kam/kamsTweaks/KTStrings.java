@@ -626,7 +626,7 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.claims.entity.aggro", "Can Aggro", args);
             }
             case EC_INFO -> {
-                return Component.translatable("kamstweaks.claims.entity.info", "(%s) %s (priority %s): %s to %s in %s %s", args);
+                return Component.translatable("kamstweaks.claims.entity.info", "(%s) %s: %s in %s", args);
             }
             case EC_MAX -> {
                 return Component.translatable("kamstweaks.claims.entity.max", "You already have the max number of claims! (%s/%s)", args);
@@ -868,7 +868,7 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.tp.homes.set", "Your home has been set.", args);
             }
             case TP_TO_HOME -> {
-                return Component.translatable("kamstweaks.tp.homes.to", "Teleporting to spawn in %s seconds, please do not move.", args);
+                return Component.translatable("kamstweaks.tp.homes.to", "Teleporting to your home in %s seconds, please do not move.", args);
             }
 
             case TPA_ALREADY_OUTGOING -> {
