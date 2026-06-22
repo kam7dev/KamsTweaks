@@ -1,57 +1,110 @@
 package kam.kamsTweaks;
 
-import org.bukkit.configuration.MemorySection;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import static kam.kamsTweaks.features.claims.LandClaims.nonNull;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.*;
+import java.util.*;
+import java.io.*;
+import java.nio.file.*;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 
 public class UserDataManager extends Feature {
-    static Map<UUID, Map<String, Object>> data = new HashMap<>();
+    static class Entry {
+        String type;
+        JsonElement value;
+    }
+
+    static Map<UUID, Map<String, Entry>> data = new HashMap<>();
+
+    private static File file;
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
+    private static final Type TYPE = new TypeToken<Map<UUID, Map<String, Entry>>>() {}.getType();
+
+    @Override
+    public void setup() {
+        file = new File(KamsTweaks.get().getDataFolder(),  "user-data.json");
+    }
 
     @Override
     public void saveData() {
-        var cfg = KamsTweaks.get().getDataConfig();
-        data.forEach((uuid, map) -> cfg.set("user-data." + uuid, map));
+        try {
+            Path target = file.toPath();
+            Path tmp = target.resolveSibling(target.getFileName().toString() + ".tmp");
+
+            try (Writer writer = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
+                GSON.toJson(data, writer);
+                writer.flush();
+            }
+
+            try {
+                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException ex) {
+                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch(Exception e) {
+            Logger.handleException(e);
+        }
     }
 
     @Override
     public void loadData() {
-        var cfg = KamsTweaks.get().getDataConfig();
-        var uds = cfg.getConfigurationSection("user-data");
-        if (uds == null) return;
-        for (var key : uds.getKeys(false)) {
-            var uuid = UUID.fromString(key);
-            data.put(uuid, nonNull(uds.getConfigurationSection(key)).getValues(false));
+        if (file == null || !file.exists()) {
+            data = new HashMap<>();
+            return;
+        }
+
+        try(Reader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
+            data = GSON.fromJson(reader, TYPE);
+            if (data == null) data = new HashMap<>();
+        } catch (Exception e) {
+            Logger.handleException(e);
         }
     }
 
-    public static <T> void set(UUID who, String id, T value) {
-        Map<String, Object> ud;
-        if (!data.containsKey(who)) {
-            ud = new HashMap<>();
-            data.put(who, ud);
-        } else {
-            ud = data.get(who);
+    public static <T> T get(UUID id, String key, T defaultValue, Class<T> clazz) {
+        if (id == null || key == null || clazz == null) return defaultValue;
+
+        Map<String, Entry> inner = data.get(id);
+        if (inner == null) return defaultValue;
+
+        Entry e = inner.get(key);
+        if (e == null || e.type == null || e.value == null) return defaultValue;
+
+        String name = clazz.getName();
+        if (!name.equals(e.type)) throw new IllegalArgumentException(key + " is not of type " + name);
+
+        return GSON.fromJson(e.value, clazz);
+    }
+
+    public static <T> void put(UUID id, String key, T value, Class<T> clazz) {
+        if (id == null || key == null || clazz == null) return;
+
+        data.computeIfAbsent(id, k -> new HashMap<>());
+
+        if (value == null) {
+            data.get(id).remove(key);
+            return;
         }
-        ud.put(id, value);
+
+        Entry e = new Entry();
+        e.type = clazz.getName();
+        e.value = GSON.toJsonTree(value);
+        data.get(id).put(key, e);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> T get(UUID who, String id, T defaultValue) {
-        if (!data.containsKey(who)) return defaultValue;
-        var ud = data.get(who);
-        if (!ud.containsKey(id)) return defaultValue;
-        return (T) ud.get(id);
+    public static void erase(UUID id, String key) {
+        if (id == null || key == null) return;
+        if (!data.containsKey(id)) return;
+        data.get(id).remove(key);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> Map<String, T> getMap(UUID who, String id, Map<String, T> defaultValue) {
-        if (!data.containsKey(who)) return defaultValue;
-        var ud = data.get(who);
-        if (!ud.containsKey(id)) return defaultValue;
-        return (Map<String, T>) ((MemorySection) ud.get(id)).getValues(false);
+    // some easier helpers
+    // adding as i need em
+    public static boolean get(UUID id, String key, boolean defaultValue) {
+        return get(id, key, defaultValue, Boolean.class);
+    }
+
+    public static void put(UUID id, String key, boolean value) {
+        put(id, key, value, Boolean.class);
     }
 }

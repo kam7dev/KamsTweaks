@@ -50,7 +50,7 @@ teleportation:
     enabled: true
 
 graves:
-  enabled: true
+  enabled: false
 
 zombify:
   enabled: true
@@ -80,4 +80,7 @@ not-too-expensive:
   enabled: true
 
 player-pvp:
+  enabled: true
+
+keepinv:
   enabled: true

@@ -164,6 +164,11 @@ public enum KTStrings {
     GRAVE_TOGGLED,
     GRAVE_STATUS,
 
+    // User Keep Inventory
+    KEEPINV,
+    KEEPINV_TOGGLED,
+    KEEPINV_STATUS,
+
     // Names
     NAMES,
     NAME_LENGTH,
@@ -344,9 +349,9 @@ public enum KTStrings {
             case CLAIM_TOOL_INFO -> {
                 return Component.translatable("kamstweaks.claims.tool_info", "Claim Tool Info", args);
             }
-	    case CLAIM_TOOL_HINT -> {
-		return Component.translatable("kamstweaks.claims.tool_hint", "Right click to use the claim tool.", args);
-	    }
+	        case CLAIM_TOOL_HINT -> {
+		        return Component.translatable("kamstweaks.claims.tool_hint", "Right click to use the claim tool.", args);
+	        }
             case CLAIM_DESC -> {
                 return Component.translatable("kamstweaks.claims.description", """
                         Welcome to the Claim Tool! This explanation will guide you through its usage.
@@ -708,6 +713,16 @@ public enum KTStrings {
             }
             case GRAVE_STATUS -> {
                 return Component.translatable("kamstweaks.graves.status", "Graves are currently %s.", args);
+            }
+
+            case KEEPINV -> {
+                return Component.translatable("kamstweaks.keepinv", "Keep Inventory", args);
+            }
+            case KEEPINV_TOGGLED -> {
+                return Component.translatable("kamstweaks.keepinv.toggled", "Keep inventory is now %s.", args);
+            }
+            case KEEPINV_STATUS -> {
+                return Component.translatable("kamstweaks.keepinv.status", "Keep inventory is currently %s.", args);
             }
 
             case NAMES -> {

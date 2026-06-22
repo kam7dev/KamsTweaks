@@ -161,8 +161,8 @@ public class Graves extends Feature {
                         .then(Commands.literal("toggle").executes(ctx -> {
                             CommandSender sender = ctx.getSource().getSender();
                             if (ctx.getSource().getExecutor() instanceof Player player) {
-                                var newState = !UserDataManager.get(player.getUniqueId(), "graves-enabled", true);
-                                UserDataManager.set(player.getUniqueId(), "graves-enabled", newState);
+                                var newState = !UserDataManager.get(player.getUniqueId(), "graves.enabled", true);
+                                UserDataManager.put(player.getUniqueId(), "graves.enabled", newState, Boolean.class);
                                 player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_TOGGLED, KTStrings.getFor(newState ? KTStrings.ON : KTStrings.OFF)));
                             } else {
                                 sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
@@ -171,7 +171,7 @@ public class Graves extends Feature {
                         })).executes(ctx -> {
                             CommandSender sender = ctx.getSource().getSender();
                             if (ctx.getSource().getExecutor() instanceof Player player) {
-                                player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_STATUS, KTStrings.getFor(UserDataManager.get(player.getUniqueId(), "graves-enabled", true) ? KTStrings.ON : KTStrings.OFF)));
+                                player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_STATUS, KTStrings.getFor(UserDataManager.get(player.getUniqueId(), "graves.enabled", true) ? KTStrings.ON : KTStrings.OFF)));
                             } else {
                                 sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
                             }
@@ -290,11 +290,11 @@ public class Graves extends Feature {
 
     @EventHandler
     public void onDie(PlayerDeathEvent event) {
-        if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
+        if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", false))
             return;
 
         Player player = event.getPlayer();
-        if (!UserDataManager.get(player.getUniqueId(), "graves-enabled", true)) return;
+        if (!UserDataManager.get(player.getUniqueId(), "graves.enabled", true)) return;
         if (player.getInventory().isEmpty() && player.getTotalExperience() == 0) return;
         var loc = checkLocation(player.getLocation());
         if (loc == null) loc = player.getLocation();
@@ -490,8 +490,8 @@ public class Graves extends Feature {
         if (entity instanceof ArmorStand stand) {
             if (!stand.getPersistentDataContainer().has(graveKey, PersistentDataType.INTEGER)) return;
             e.setCancelled(true);
-            if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
-                return;
+//            if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
+//                return;
             @SuppressWarnings("DataFlowIssue")
             int id = stand.getPersistentDataContainer().get(graveKey, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
@@ -550,8 +550,8 @@ public class Graves extends Feature {
             Player player = e.getPlayer();
             if (!stand.getPersistentDataContainer().has(graveKey, PersistentDataType.INTEGER)) return;
             e.setCancelled(true);
-            if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
-                return;
+//            if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
+//                return;
             @SuppressWarnings("DataFlowIssue")
             int id = stand.getPersistentDataContainer().get(graveKey, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;

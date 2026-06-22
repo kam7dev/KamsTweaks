@@ -39,6 +39,7 @@ public final class KamsTweaks extends JavaPlugin {
         features.add(new MobEdits());
         features.add(new SlashHat());
         features.add(new ChatFilter());
+        features.add(new UserKeepInv());
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
         features.add(new ItemDataFilter());
@@ -55,15 +56,15 @@ public final class KamsTweaks extends JavaPlugin {
 
         for (var feature : features) {
             try {
-                feature.loadData();
-            } catch(Exception e) {
+                feature.setup();
+            }  catch(Exception e) {
                 Logger.handleException(e);
             }
         }
         for (var feature : features) {
             try {
-                feature.setup();
-            }  catch(Exception e) {
+                feature.loadData();
+            } catch(Exception e) {
                 Logger.handleException(e);
             }
         }
