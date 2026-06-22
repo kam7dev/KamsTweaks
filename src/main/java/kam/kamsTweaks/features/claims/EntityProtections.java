@@ -1,5 +1,7 @@
 package kam.kamsTweaks.features.claims;
 
+import io.papermc.paper.event.entity.EntityIgniteEvent;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
@@ -9,6 +11,7 @@ import kam.kamsTweaks.features.claims.gui.FLAlertLayer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Directional;
@@ -20,10 +23,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerBedEnterEvent;
+import org.bukkit.event.player.PlayerBucketEntityEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.vehicle.*;
 import kam.kamsTweaks.features.claims.EntityClaims.*;
+import org.bukkit.inventory.ItemStack;
 
 public class EntityProtections implements Listener {
     private EntityClaims claims;
@@ -37,11 +42,44 @@ public class EntityProtections implements Listener {
         claims.instance.message(player, component);
     }
 
+    @EventHandler
+    public void onEntityPreAttack(PrePlayerAttackEntityEvent e) {
+        if (!(e.getAttacked() instanceof SulfurCube entity)) return;
+        var who = e.getPlayer();
+
+        if (claims.isClaimable(entity)) {
+            var claim = claims.getClaim(entity);
+            if (claim == null) return;
+            var perm = EntityPermission.INTERACT;
+            if (!claim.hasPermission(who, perm)) {
+                message(who, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityIgnite(EntityIgniteEvent e) {
+        var entity = e.getEntity();
+
+        if (claims.isClaimable(entity)) {
+            var claim = claims.getClaim(entity);
+            if (claim == null) return;
+            var perm = EntityPermission.INTERACT;
+            if (!claim.hasPermission(null, perm)) {
+                e.setCancelled(true);
+            }
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityInteract(PlayerInteractEntityEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         var who = e.getPlayer();
         var entity = e.getRightClicked();
+        if (e.getPlayer().getInventory().getItemInMainHand().getType().equals(Material.BUCKET)) {
+            e.getPlayer().getInventory().setItemInMainHand(ItemStack.empty());
+        }
         if (claims.isClaimable(entity)) {
             var claim = claims.getClaim(entity);
             if (ItemManager.getType(who.getInventory().getItemInMainHand()) == ItemManager.ItemType.CLAIM_TOOL) {
@@ -240,6 +278,15 @@ public class EntityProtections implements Listener {
         if (e.getCaught() != null) {
             var claim = claims.getClaim(e.getCaught());
             if (claim != null && !claim.hasPermission(e.getPlayer(), EntityPermission.INTERACT)) e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBucket(PlayerBucketEntityEvent e) {
+        var claim = claims.getClaim(e.getEntity());
+        if (claim != null && !claim.hasPermission(e.getPlayer(), EntityPermission.INTERACT)) {
+            e.setCancelled(true);
+            message(e.getPlayer(), KTStrings.getFor(KTStrings.EC_NO_PERM, EntityPermission.INTERACT.label, claim.getOwnerName()));
         }
     }
 
