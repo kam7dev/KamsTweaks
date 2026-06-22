@@ -141,31 +141,20 @@ public class TeleportFeatures extends Feature {
                 onCooldown.put(player, val);
             }
         };
-        if (player.isSleeping()) player.wakeup(false);
-        player.setPose(Pose.STANDING);
         if (vehicle != null) {
-            var passengers = vehicle.getPassengers();
-            for (var passenger : passengers) {
-                passenger.leaveVehicle();
-                if (passenger instanceof Player passp && passp.isSleeping()) passp.wakeup(false);
-                passenger.setPose(Pose.STANDING);
-            }
+            if (vehicle instanceof Player p && p.isSleeping()) p.wakeup(false);
             vehicle.teleport(location);
             if (vehicle instanceof LivingEntity le) {
-                player.setPose(Pose.STANDING);
-                if (le instanceof Player passp && passp.isSleeping()) passp.wakeup(false);
-                le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
+                le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 10 * 15, 100));
             }
-            for (var passenger : passengers) {
-                passenger.teleport(location);
-                vehicle.addPassenger(passenger);
-                if (passenger instanceof LivingEntity le)
-                    le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
+            for (var passenger : vehicle.getPassengers()) {
+                if (passenger instanceof LivingEntity le) le.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 10 * 15, 100));
             }
             Bukkit.getScheduler().runTaskLater(KamsTweaks.get(), () -> vehicle.addPassenger(player), 1L);
         } else {
+            if (player.isSleeping()) player.wakeup(false);
             player.teleport(location);
-            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 15, 100));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 10 * 15, 100));
         }
 
         r.id = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), r, 20, 20);

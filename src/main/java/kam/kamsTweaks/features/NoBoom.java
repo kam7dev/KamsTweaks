@@ -28,15 +28,14 @@ public class NoBoom extends Feature {
         e.setCancelled(true);
     }
 
+    @SuppressWarnings("deprecation")
     @EventHandler
     public void onExplode(PlayerInteractEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("no-explode.enabled", false)) return;
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock() != null) {
-            //noinspection deprecation
             if (!e.getClickedBlock().getType().isInteractable()) return;
 
             // waiting on a replacement api for this
-            //noinspection deprecation
             if ((e.getClickedBlock().getType().equals(Material.RESPAWN_ANCHOR) && !e.getClickedBlock().getWorld().isRespawnAnchorWorks()) || (e.getClickedBlock().getType().name().contains("BED") && !e.getClickedBlock().getWorld().isBedWorks())) {
                 e.setCancelled(true);
             }
