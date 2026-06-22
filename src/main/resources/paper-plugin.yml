@@ -1,7 +1,7 @@
 name: KamsTweaks
 version: '${version}'
 main: kam.kamsTweaks.KamsTweaks
-api-version: '1.21'
+api-version: '26.2'
 bootstrapper: kam.kamsTweaks.Bootstrapper
 
 # i was lied to about plugin's permissions.yml
