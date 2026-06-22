@@ -82,6 +82,7 @@ public final class KamsTweaks extends JavaPlugin {
                 }
             }
             ConfigCommand.registerCommand(commands);
+            ItemManager.registerCommand(commands);
         });
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, this::save, 20 * 60 * 5, 20 * 60 * 5);

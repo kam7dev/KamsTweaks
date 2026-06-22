@@ -100,7 +100,7 @@ public class TeleportFeatures extends Feature {
             Listener listener;
         };
         o.listener = new Listener() {
-            @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             void onAttack(EntityDamageByEntityEvent e) {
                 if (e.getDamager() == player) {
                     player.sendMessage(KTStrings.getFor(KTStrings.TP_IMMUNITY_LOST).color(NamedTextColor.YELLOW));
@@ -178,14 +178,14 @@ public class TeleportFeatures extends Feature {
                 Bukkit.getScheduler().cancelTask(task);
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onPlayerLeave(PlayerQuitEvent event) {
                 if (event.getPlayer().equals(player)) {
                     cancel();
                 }
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onPlayerDeath(PlayerDeathEvent event) {
                 if (event.getPlayer().equals(player)) {
                     player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_DEATH)).color(NamedTextColor.GOLD));
@@ -193,7 +193,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onPlayerDamage(EntityDamageEvent event) {
                 if (event.getEntity().equals(player)) {
                     if (player.isBlocking()) {
@@ -204,7 +204,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onTeleport(PlayerTeleportEvent event) {
                 if (event.getPlayer().equals(player)) {
                     player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_TP)).color(NamedTextColor.GOLD));
@@ -212,7 +212,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onPlayerMove(PlayerMoveEvent event) {
                 if (event.getPlayer().equals(player) && event.hasChangedBlock()) {
                     player.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_MOVE)).color(NamedTextColor.GOLD));
@@ -241,7 +241,7 @@ public class TeleportFeatures extends Feature {
                 Bukkit.getScheduler().cancelTask(task);
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onPlayerLeave(PlayerQuitEvent event) {
                 if (event.getPlayer().equals(player)) {
                     target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_LEFT, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
@@ -252,7 +252,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onPlayerDie(PlayerDeathEvent event) {
                 if (event.getPlayer().equals(player)) {
                     target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_DEATH, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
@@ -265,7 +265,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onPlayerTeleport(PlayerTeleportEvent event) {
                 if (event.getPlayer().equals(player)) {
                     target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_TP, event.getPlayer().displayName())).color(NamedTextColor.GOLD));
@@ -278,7 +278,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onPlayerDamage(EntityDamageEvent event) {
                 if (event.getEntity().equals(player)) {
                     if (player.isBlocking()) {
@@ -297,7 +297,7 @@ public class TeleportFeatures extends Feature {
                 }
             }
 
-            @EventHandler
+            @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
             public void onPlayerMove(PlayerMoveEvent event) {
                 if (event.getPlayer().equals(player) && event.hasChangedBlock()) {
                     target.sendMessage(KTStrings.getFor(KTStrings.TP_CANCEL, KTStrings.getFor(KTStrings.TP_CANCEL_OTHER_MOVE, event.getPlayer().displayName())).color(NamedTextColor.GOLD));

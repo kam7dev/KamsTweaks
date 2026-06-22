@@ -126,10 +126,6 @@ public class Claims extends Feature {
     public boolean useClaimTool(PlayerInteractEvent event) {
         var plr = event.getPlayer();
         assert event.getItem() != null;
-        if (event.getItem().getPersistentDataContainer().has(ItemManager.ItemTag.YUMMY.key)) {
-            if (event.getAction() != Action.RIGHT_CLICK_AIR) event.setCancelled(true);
-            return true;
-        }
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
             assert event.getClickedBlock() != null;

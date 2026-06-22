@@ -1,7 +1,6 @@
 package kam.kamsTweaks.features;
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
-import io.papermc.paper.datacomponent.DataComponentTypes;
 import kam.kamsTweaks.*;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -9,7 +8,6 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.utils.Inventories;
 import kam.kamsTweaks.utils.LocationUtils;
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -799,10 +797,7 @@ public class Graves extends Feature {
         public void createStand() {
             stand = location.getWorld().spawn(location.clone().addRotation(90, 0).subtract(0, 1.4375, 0), ArmorStand.class);
             stand.setGravity(false);
-            var stack = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
-            //noinspection UnstableApiUsage
-            stack.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "stone_brick_wall"));
-            stand.setItem(EquipmentSlot.HEAD, stack);
+            stand.setItem(EquipmentSlot.HEAD, ItemManager.createItem(ItemManager.ItemType.GRAVE_HEAD));
             stand.setCustomNameVisible(true);
             stand.setBasePlate(false);
             stand.setPersistent(false);

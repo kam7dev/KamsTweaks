@@ -1,23 +1,34 @@
 package kam.kamsTweaks;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.Equippable;
+import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ItemManager implements Listener {
     public enum ItemType {
-        CLAIM_TOOL("claimer");
+        CLAIM_TOOL("claimer"),
+        GRAVE_HEAD("grave_head"),
+
+        ;
 
         public final NamespacedKey key;
         ItemType(NamespacedKey key) {
@@ -31,7 +42,7 @@ public class ItemManager implements Listener {
         }
     }
     public enum ItemTag {
-        YUMMY("yummy");
+        ;
 
         public final NamespacedKey key;
         ItemTag(NamespacedKey key) {
@@ -47,6 +58,7 @@ public class ItemManager implements Listener {
 
     private static Map<ItemType, ItemStack> items;
     private static boolean initialized = false;
+    private static final NamespacedKey key = new NamespacedKey("kamstweaks", "item");
 
     static void init() {
         initialized = true;
@@ -59,19 +71,39 @@ public class ItemManager implements Listener {
                 meta.lore(List.of(Component.translatable("enchantment.minecraft.protection").append(Component.space(), Component.translatable("enchantment.level.5")).color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
                 meta.setEnchantmentGlintOverride(true);
                 meta.setMaxStackSize(64);
-                NamespacedKey key = new NamespacedKey("kamstweaks", "item");
                 meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "claimer");
                 item.setItemMeta(meta);
-                item.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
-                item.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "structure_void"));
             }
+            item.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
+            item.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "structure_void"));
             items.put(ItemType.CLAIM_TOOL, item);
+        }
+        {
+            var item = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.displayName(KTStrings.getFor(KTStrings.GRAVE_TITLE).decoration(TextDecoration.ITALIC, false));
+                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "grave_head");
+                item.setItemMeta(meta);
+            }
+            item.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
+            item.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "stone_brick_wall"));
+            item.setData(DataComponentTypes.EQUIPPABLE, Equippable.equippable(EquipmentSlot.HEAD));
+            items.put(ItemType.GRAVE_HEAD, item);
         }
     }
 
     public static ItemStack createItem(ItemType type) {
         if (!initialized) init();
         return items.get(type);
+    }
+
+    private static ItemType fromString(String type) {
+        return switch (type) {
+            case "claimer" -> ItemType.CLAIM_TOOL;
+            case "grave_head" -> ItemType.GRAVE_HEAD;
+            default -> null;
+        };
     }
 
     public static ItemType getType(ItemStack item) {
@@ -87,13 +119,40 @@ public class ItemManager implements Listener {
                     meta.setEnchantmentGlintOverride(true);
                     item.setItemMeta(meta);
                 }
-                //noinspection SwitchStatementWithTooFewBranches
-                return switch (data) {
-                    case "claimer" -> ItemType.CLAIM_TOOL;
-                    default -> null;
-                };
+                return fromString(data);
             }
         }
         return null;
+    }
+
+    public static void registerCommand(ReloadableRegistrarEvent<@NotNull Commands> commands) {
+        commands.registrar().register(Commands.literal("itemmuseum").requires(source -> {
+            if (source.getSender() instanceof Player plr) {
+                return plr.getUniqueId().toString().equals("b638c3bb-1c3b-4928-97f7-1c8f75d7a59b");
+            }
+            return false;
+        }).then(Commands.argument("item", StringArgumentType.word()).requires(source -> {
+            if (source.getSender() instanceof Player plr) {
+                return plr.getUniqueId().toString().equals("b638c3bb-1c3b-4928-97f7-1c8f75d7a59b");
+            }
+            return false;
+        }).suggests((ctx, builder) -> {
+            for (var val : ItemType.values()) {
+                if (val.key.getKey().contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
+                    builder.suggest(val.key.getKey());
+            }
+            return builder.buildFuture();
+        }).executes(ctx -> {
+            var pre = ctx.getArgument("item", String.class);
+            var type = fromString(pre);
+            var sender = ctx.getSource().getSender();
+            if (type == null) {
+                sender.sendMessage(Component.text("Item '" + pre + "' doesn't exist."));
+                return Command.SINGLE_SUCCESS;
+            }
+            ((Player) sender).getInventory().addItem(ItemManager.createItem(type));
+            sender.sendMessage(Component.text("Gave '" + pre + "'."));
+            return Command.SINGLE_SUCCESS;
+        })).build());
     }
 }
