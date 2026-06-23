@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 public enum KTStrings {
     // Items
     ITEM_CLAIM_TOOL,
+    ITEM_STONE_BRICKSTEP,
 
     // Generic
     PLAYERS_ONLY,
@@ -260,6 +261,9 @@ public enum KTStrings {
         switch (key) {
             case ITEM_CLAIM_TOOL -> {
                 return Component.translatable("kamstweaks.item.claim_tool", "Claim Tool", args);
+            }
+            case ITEM_STONE_BRICKSTEP -> {
+                return Component.translatable("kamstweaks.item.stone_brickstep", "Stone Brickstep", args);
             }
 
             case PLAYERS_ONLY -> {

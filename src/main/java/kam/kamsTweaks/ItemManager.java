@@ -10,12 +10,17 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.SmithingTransformRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +32,7 @@ public class ItemManager implements Listener {
     public enum ItemType {
         CLAIM_TOOL("claimer"),
         GRAVE_HEAD("grave_head"),
+        STONE_BRICKSTEP("stone_brickstep"),
 
         ;
 
@@ -91,6 +97,18 @@ public class ItemManager implements Listener {
             item.setData(DataComponentTypes.EQUIPPABLE, Equippable.equippable(EquipmentSlot.HEAD));
             items.put(ItemType.GRAVE_HEAD, item);
         }
+        {
+            var item = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.displayName(KTStrings.getFor(KTStrings.ITEM_STONE_BRICKSTEP).decoration(TextDecoration.ITALIC, false));
+                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "stone_brickstep");
+                item.setItemMeta(meta);
+            }
+            item.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "stone_brick_wall"));
+            items.put(ItemType.STONE_BRICKSTEP, item);
+        }
+        Bukkit.addRecipe(new SmithingTransformRecipe(new NamespacedKey("kamstweaks", "stone_brickstep"), createItem(ItemType.STONE_BRICKSTEP), RecipeChoice.empty(), new RecipeChoice.ExactChoice(ItemStack.of(Material.MUSIC_DISC_PIGSTEP)), new RecipeChoice.ExactChoice(ItemStack.of(Material.STONE_BRICK_WALL))));
     }
 
     public static ItemStack createItem(ItemType type) {
@@ -102,6 +120,7 @@ public class ItemManager implements Listener {
         return switch (type) {
             case "claimer" -> ItemType.CLAIM_TOOL;
             case "grave_head" -> ItemType.GRAVE_HEAD;
+            case "stone_brickstep" -> ItemType.STONE_BRICKSTEP;
             default -> null;
         };
     }
@@ -154,5 +173,12 @@ public class ItemManager implements Listener {
             sender.sendMessage(Component.text("Gave '" + pre + "'."));
             return Command.SINGLE_SUCCESS;
         })).build());
+    }
+
+    @EventHandler
+    public void onAnvil(PrepareAnvilEvent event) {
+        var view = event.getView();
+        view.setMaximumRepairCost(Integer.MAX_VALUE);
+        if (view.getRepairCost() > 30) view.setRepairCost((int) (30 + (Math.log(view.getRepairCost()) * Math.log(view.getRepairCost()) * 2)));
     }
 }
