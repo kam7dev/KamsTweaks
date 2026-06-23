@@ -242,7 +242,7 @@ public class TPA extends Feature {
                         if (req != null) {
                             cancel(p, req.target);
                             req.target.sendMessage(KTStrings.getFor(KTStrings.TPA_OTHER_CANCELLED, p.displayName()).color(NamedTextColor.GOLD));
-                            p.sendMessage(KTStrings.getFor(KTStrings.TPA_CANCELLED, p.displayName()).color(NamedTextColor.GOLD));
+                            p.sendMessage(KTStrings.getFor(KTStrings.TPA_CANCELLED, req.target.displayName()).color(NamedTextColor.GOLD));
                         } else {
                             p.sendMessage(KTStrings.getFor(KTStrings.TPA_NO_PENDING, p.displayName()).color(NamedTextColor.GOLD));
                         }
