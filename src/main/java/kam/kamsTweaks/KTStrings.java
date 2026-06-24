@@ -31,6 +31,7 @@ public enum KTStrings {
     THE_SERVER,
     SAVED,
     VERSION,
+    COOLDOWN,
 
     // Automod
     AUTOMOD_NAME,
@@ -328,6 +329,9 @@ public enum KTStrings {
             }
             case VERSION -> {
                 return Component.translatable("kamstweaks.generic.version", "KamsTweaks is on version %s.", args);
+            }
+            case COOLDOWN -> {
+                return Component.translatable("kamstweaks.generic.cooldown", "%s is on cooldown for %s seconds.", args);
             }
 
             case AUTOMOD_NAME -> {

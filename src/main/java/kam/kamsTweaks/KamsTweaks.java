@@ -43,7 +43,7 @@ public final class KamsTweaks extends JavaPlugin {
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
         features.add(new ItemDataFilter());
-        features.add(new PlayerPVPToggle());
+        features.add(new PVP());
         features.add(new TeleportFeatures());
     }
 

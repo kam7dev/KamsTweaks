@@ -1,5 +1,8 @@
 package kam.kamsTweaks.features.claims;
 
+import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
+import io.papermc.paper.event.entity.EntityKnockbackEvent;
+import io.papermc.paper.event.entity.FishHookStateChangeEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
@@ -20,7 +23,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerBedEnterEvent;
-import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.vehicle.*;
 import kam.kamsTweaks.features.claims.EntityClaims.*;
@@ -35,6 +37,13 @@ public class EntityProtections implements Listener {
     // shortcut
     void message(Entity player, Component component) {
         claims.instance.message(player, component);
+    }
+
+    public static Entity getTrueHitter(Entity hitter) {
+        if (hitter instanceof Projectile proj) {
+            return (Entity) proj.getShooter();
+        }
+        return hitter;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -192,13 +201,16 @@ public class EntityProtections implements Listener {
     public void onTransform(EntityTransformEvent e) {
         if (e.getEntity() instanceof Mob entity) {
             var claim = claims.getClaim(entity);
-            if (e.getTransformReason() == EntityTransformEvent.TransformReason.LIGHTNING) {
-                if (claim != null) {
-                    if (!claim.hasPermission(null, EntityPermission.DAMAGE)) {
-                        e.setCancelled(true);
-                        return;
+            switch (e.getTransformReason()) {
+                case EntityTransformEvent.TransformReason.LIGHTNING, DROWNED, FROZEN:
+                    if (claim != null) {
+                        if (!claim.hasPermission(null, EntityPermission.DAMAGE)) {
+                            e.setCancelled(true);
+                            return;
+                        }
                     }
-                }
+                    break;
+                default: break;
             }
             if (claim != null) {
                 boolean hasReplaced = false;
@@ -236,10 +248,35 @@ public class EntityProtections implements Listener {
     }
 
     @EventHandler
-    public void onFish(PlayerFishEvent e) {
-        if (e.getCaught() != null) {
-            var claim = claims.getClaim(e.getCaught());
-            if (claim != null && !claim.hasPermission(e.getPlayer(), EntityPermission.INTERACT)) e.setCancelled(true);
+    public void onFish(FishHookStateChangeEvent e) {
+        if (e.getNewHookState() == FishHook.HookState.HOOKED_ENTITY) {
+            var caught = e.getEntity().getHookedEntity();
+            var claim = claims.getClaim(caught);
+            if (claim != null && !claim.hasPermission(e.getEntity().getShooter(), EntityPermission.INTERACT)) {
+                e.getEntity().setHookedEntity(null);
+                if (e.getEntity().getShooter() instanceof Player plr) message(plr, KTStrings.getFor(KTStrings.EC_NO_PERM, KTStrings.getFor(KTStrings.EC_INTERACT), claim.getOwnerName()));
+            }
+        }
+    }
+
+    @EventHandler
+    public void onKnockback(EntityKnockbackByEntityEvent e) {
+        var entity = e.getEntity();
+        var attacker = getTrueHitter(e.getHitBy());
+        var claim = claims.getClaim(entity);
+        if (claim != null && !claim.hasPermission(attacker, EntityPermission.DAMAGE)) {
+            e.setCancelled(true);
+            message(attacker, KTStrings.getFor(KTStrings.EC_NO_PERM, KTStrings.getFor(KTStrings.EC_DAMAGE), claim.getOwnerName()));
+        }
+    }
+
+    @EventHandler
+    public void onKnockback(EntityKnockbackEvent e) {
+        if (e instanceof EntityKnockbackByEntityEvent) return;
+        var entity = e.getEntity();
+        var claim = claims.getClaim(entity);
+        if (claim != null && !claim.hasPermission(null, EntityPermission.DAMAGE)) {
+            e.setCancelled(true);
         }
     }
 

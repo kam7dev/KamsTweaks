@@ -1,5 +1,6 @@
 package kam.kamsTweaks.features.claims;
 
+import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import kam.kamsTweaks.ItemManager;
 import kam.kamsTweaks.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
@@ -32,6 +33,8 @@ import com.destroystokyo.paper.event.block.*;
 import org.bukkit.event.world.*;
 
 import java.util.*;
+
+import static kam.kamsTweaks.features.claims.EntityProtections.getTrueHitter;
 
 public class LandProtections implements Listener {
     private LandClaims claims;
@@ -500,6 +503,19 @@ public class LandProtections implements Listener {
         if (!claim.hasPermission(remover, perm)) {
             message(remover, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
             e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onKnockback(EntityKnockbackByEntityEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
+            return;
+        var entity = e.getEntity();
+        LandClaim claim = claims.getClaim(entity.getLocation());
+        var attacker = getTrueHitter(e.getHitBy());
+        if (claim != null && !claim.hasPermission(attacker, LandPermission.BLOCK_BREAK)) {
+            e.setCancelled(true);
+            message(attacker, KTStrings.getFor(KTStrings.LC_NO_PERM, KTStrings.getFor(KTStrings.LC_BLOCK_BREAK), claim.getOwnerName()));
         }
     }
 

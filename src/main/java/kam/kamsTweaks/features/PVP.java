@@ -6,6 +6,7 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -18,12 +19,33 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-public class PlayerPVPToggle extends Feature {
+public class PVP extends Feature {
     private final Map<UUID, Boolean> pvp = new HashMap<>();
+    public Map<Player, Integer> onCooldown = new HashMap<>();
 
     @Override
     public void setup() {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("player-pvp-toggle.enabled", "player-pvp-toggle.enabled", false, "kamstweaks.configure"));
+    }
+
+    void cooldown(Player player) {
+        onCooldown.put(player, 15);
+        var r = new Runnable() {
+            int id = 0;
+
+            @Override
+            public void run() {
+                int val = onCooldown.get(player) - 1;
+                if (val <= 0) {
+                    Bukkit.getScheduler().cancelTask(id);
+                    onCooldown.remove(player);
+                    return;
+                }
+                onCooldown.put(player, val);
+            }
+        };
+
+        r.id = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), r, 20, 20);
     }
 
     @Override
@@ -37,9 +59,14 @@ public class PlayerPVPToggle extends Feature {
                             }
                             Entity exec = ctx.getSource().getExecutor();
                             if (exec instanceof Player p) {
+                                if (onCooldown.containsKey(p)) {
+                                    p.sendMessage(KTStrings.getFor(KTStrings.COOLDOWN, Component.text("/pvp"), Component.text(onCooldown.get(p))).color(NamedTextColor.RED));
+                                    return Command.SINGLE_SUCCESS;
+                                }
                                 UUID playerUUID = p.getUniqueId();
                                 pvp.put(playerUUID, true);
                                 p.sendMessage(KTStrings.getFor(KTStrings.PVP_ENABLE).color(NamedTextColor.GREEN));
+                                cooldown(p);
                                 return Command.SINGLE_SUCCESS;
                             }
                             ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
@@ -53,9 +80,14 @@ public class PlayerPVPToggle extends Feature {
                             }
                             Entity exec = ctx.getSource().getExecutor();
                             if (exec instanceof Player p) {
+                                if (onCooldown.containsKey(p)) {
+                                    p.sendMessage(KTStrings.getFor(KTStrings.COOLDOWN, Component.text("/pvp"), Component.text(onCooldown.get(p))).color(NamedTextColor.RED));
+                                    return Command.SINGLE_SUCCESS;
+                                }
                                 UUID playerUUID = p.getUniqueId();
                                 pvp.put(playerUUID, false);
                                 p.sendMessage(KTStrings.getFor(KTStrings.PVP_DISABLE).color(NamedTextColor.RED));
+                                cooldown(p);
                                 return Command.SINGLE_SUCCESS;
                             }
                             ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
