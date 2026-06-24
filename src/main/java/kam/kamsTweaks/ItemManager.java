@@ -5,14 +5,13 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Equippable;
+import io.papermc.paper.datacomponent.item.JukeboxPlayable;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,21 +29,32 @@ import java.util.*;
 @SuppressWarnings("UnstableApiUsage")
 public class ItemManager implements Listener {
     public enum ItemType {
-        CLAIM_TOOL("claimer"),
-        GRAVE_HEAD("grave_head"),
-        STONE_BRICKSTEP("stone_brickstep"),
+        CLAIM_TOOL("claimer", KTStrings.ITEM_CLAIM_TOOL),
+        GRAVE_HEAD("grave_head", KTStrings.GRAVE_TITLE),
+        STONE_BRICKSTEP("stone_brickstep", KTStrings.ITEM_STONE_BRICKSTEP),
 
         ;
 
         public final NamespacedKey key;
-        ItemType(NamespacedKey key) {
+        public final Component name;
+        ItemType(NamespacedKey key, Component name) {
             this.key = key;
+            this.name = name;
         }
-        ItemType(String namespace, String key) {
-            this.key = new NamespacedKey(namespace, key);
+        ItemType(String namespace, String key, Component name) {
+            this(new NamespacedKey(namespace, key), name);
         }
-        ItemType(String key) {
-            this.key = new NamespacedKey("kamstweaks", key);
+        ItemType(String key, Component name) {
+            this(new NamespacedKey("kamstweaks", key), name);
+        }
+        ItemType(NamespacedKey key, KTStrings name) {
+            this(key, KTStrings.getFor(name));
+        }
+        ItemType(String namespace, String key, KTStrings name) {
+            this(new NamespacedKey(namespace, key), KTStrings.getFor(name));
+        }
+        ItemType(String key, KTStrings name) {
+            this(new NamespacedKey("kamstweaks", key), KTStrings.getFor(name));
         }
     }
     public enum ItemTag {
@@ -65,45 +75,40 @@ public class ItemManager implements Listener {
     private static Map<ItemType, ItemStack> items;
     private static final NamespacedKey key = new NamespacedKey("kamstweaks", "item");
 
+    private static ItemStack makeBaseItem(ItemType type) {
+        ItemStack item = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.displayName(type.name.decoration(TextDecoration.ITALIC, false));
+            meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, type.key.getKey());
+            item.setItemMeta(meta);
+        }
+        item.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
+        return item;
+    }
+
     public static void init() {
         items = new HashMap<>();
         {
-            ItemStack item = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
+            var item = makeBaseItem(ItemType.CLAIM_TOOL);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.displayName(KTStrings.getFor(KTStrings.ITEM_CLAIM_TOOL).decoration(TextDecoration.ITALIC, false));
                 meta.lore(List.of(Component.translatable("enchantment.minecraft.protection").append(Component.space(), Component.translatable("enchantment.level.5")).color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
                 meta.setEnchantmentGlintOverride(true);
                 meta.setMaxStackSize(64);
-                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "claimer");
-                item.setItemMeta(meta);
             }
-            item.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
             item.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "structure_void"));
-            items.put(ItemType.CLAIM_TOOL, item);
         }
         {
-            var item = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                meta.displayName(KTStrings.getFor(KTStrings.GRAVE_TITLE).decoration(TextDecoration.ITALIC, false));
-                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "grave_head");
-                item.setItemMeta(meta);
-            }
-            item.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
+            var item = makeBaseItem(ItemType.GRAVE_HEAD);
             item.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "stone_brick_wall"));
             item.setData(DataComponentTypes.EQUIPPABLE, Equippable.equippable(EquipmentSlot.HEAD));
             items.put(ItemType.GRAVE_HEAD, item);
         }
         {
-            var item = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                meta.displayName(KTStrings.getFor(KTStrings.ITEM_STONE_BRICKSTEP).decoration(TextDecoration.ITALIC, false));
-                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, "stone_brickstep");
-                item.setItemMeta(meta);
-            }
+            var item = makeBaseItem(ItemType.STONE_BRICKSTEP);
             item.setData(DataComponentTypes.ITEM_MODEL, Key.key("minecraft", "stone_brick_wall"));
+            item.setData(DataComponentTypes.JUKEBOX_PLAYABLE, JukeboxPlayable.jukeboxPlayable(JukeboxSong.PIGSTEP));
             items.put(ItemType.STONE_BRICKSTEP, item);
         }
         Bukkit.addRecipe(new SmithingTransformRecipe(new NamespacedKey("kamstweaks", "stone_brickstep"), createItem(ItemType.STONE_BRICKSTEP), RecipeChoice.empty(), new RecipeChoice.ExactChoice(ItemStack.of(Material.MUSIC_DISC_PIGSTEP)), new RecipeChoice.ExactChoice(ItemStack.of(Material.STONE_BRICK_WALL))));
