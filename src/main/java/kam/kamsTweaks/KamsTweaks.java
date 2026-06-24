@@ -91,6 +91,8 @@ public final class KamsTweaks extends JavaPlugin {
             new KamsTweaksPlaceholder().register();
         }
 
+        ItemManager.init();
+
         if (getServer().getPluginManager().isPluginEnabled("Geyser-Spigot")) bits = new GeyserItemData();
     }
 

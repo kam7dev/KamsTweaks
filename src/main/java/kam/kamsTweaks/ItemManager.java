@@ -63,11 +63,9 @@ public class ItemManager implements Listener {
     }
 
     private static Map<ItemType, ItemStack> items;
-    private static boolean initialized = false;
     private static final NamespacedKey key = new NamespacedKey("kamstweaks", "item");
 
-    static void init() {
-        initialized = true;
+    public static void init() {
         items = new HashMap<>();
         {
             ItemStack item = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
@@ -112,7 +110,6 @@ public class ItemManager implements Listener {
     }
 
     public static ItemStack createItem(ItemType type) {
-        if (!initialized) init();
         return items.get(type);
     }
 
