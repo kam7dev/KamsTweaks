@@ -1,7 +1,7 @@
 package kam.kamsTweaks.features.claims.gui;
 
 import io.papermc.paper.dialog.Dialog;
-import kam.kamsTweaks.Logger;
+import kam.kamsTweaks.utils.Logger;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identity;
 import org.bukkit.Bukkit;

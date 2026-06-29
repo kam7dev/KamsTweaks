@@ -1,0 +1,31 @@
+{
+  "format_version": "1.14.0",
+  "sound_definitions": {
+    "kamstweaks:ice_mountain": {
+      "__use_legacy_max_distance": true,
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/kamstweaks/music/game/records/ice_mountain",
+          "stream": true,
+          "volume": 1
+        }
+      ]
+    },
+    "kamstweaks:lava_path": {
+      "__use_legacy_max_distance": true,
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/kamstweaks/music/game/records/lava_path",
+          "stream": true,
+          "volume": 1
+        }
+      ]
+    }
+  }
+}

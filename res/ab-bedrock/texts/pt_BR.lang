@@ -1,0 +1,6 @@
+death.attack.pike=%2$s espetou %1$s
+death.attack.pike.item=%2$s espetou %1$s usando %3$s
+death.attack.pike.player=%1$s se espetou enquanto tentava escapar de %2$s
+death.attack.invig=%1$s rebentou
+death.attack.invig.player=%1$s foi rebentado por %2$s
+death.attack.invig.player.item=%1$s foi rebentado por %2$s usando %3$s

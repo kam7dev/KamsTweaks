@@ -1,0 +1,12 @@
+{
+    "ice_mountain": {
+        "sounds": [
+            "kamstweaks:records/ice_mountain"
+        ]
+    },
+    "lava_path": {
+        "sounds": [
+            "kamstweaks:records/lava_path"
+        ]
+    }
+}

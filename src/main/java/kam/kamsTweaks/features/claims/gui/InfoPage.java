@@ -5,7 +5,7 @@ import io.papermc.paper.registry.data.dialog.*;
 import io.papermc.paper.registry.data.dialog.action.*;
 import io.papermc.paper.registry.data.dialog.body.*;
 import io.papermc.paper.registry.data.dialog.type.*;
-import kam.kamsTweaks.KTStrings;
+import kam.kamsTweaks.utils.KTStrings;
 import net.kyori.adventure.text.event.*;
 import org.bukkit.entity.Player;
 

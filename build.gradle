@@ -48,6 +48,40 @@ tasks {
     }
 }
 
+import groovy.json.JsonSlurper
+import groovy.json.JsonBuilder
+
+tasks.register("updateVersions") {
+    def jsonFile = file("res/kt-bedrock/manifest.json")
+    def parsedJson = new JsonSlurper().parse(jsonFile)
+    parsedJson["header"]["version"] = project.version;
+    (parsedJson["modules"] as List).get(0)["version"] = project.version;
+    jsonFile.text = new JsonBuilder(parsedJson).toPrettyString()
+}
+
+tasks.register("packABBedrockResources", Zip) {
+    from("res/ab-bedrock")
+    archiveFileName = 'abrp-bedrock.zip'
+    destinationDirectory = layout.getBuildDirectory().dir("resources/main")
+}
+tasks.register("packKTBedrockResources", Zip) {
+    dependsOn tasks.updateVersions
+    from("res/kt-bedrock")
+    archiveFileName = 'ktrp-bedrock.zip'
+    destinationDirectory = layout.getBuildDirectory().dir("resources/main")
+}
+tasks.register("packKTJavaResources", Zip) {
+    from("res/kt-java")
+    archiveFileName = "ktrp-java-${project.version}.zip"
+    destinationDirectory = layout.getBuildDirectory().dir("libs/packs")
+}
+
+tasks.named("compileJava") {
+    dependsOn tasks.packABBedrockResources
+    dependsOn tasks.packKTBedrockResources
+    dependsOn tasks.packKTJavaResources
+}
+
 tasks.named('jar') {
     enabled = false
 }

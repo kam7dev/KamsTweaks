@@ -1,7 +1,7 @@
 package kam.kamsTweaks.ext;
 
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.features.Names;
+import kam.kamsTweaks.features.fun.Names;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.OfflinePlayer;

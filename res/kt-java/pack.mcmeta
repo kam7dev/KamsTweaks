@@ -1,0 +1,9 @@
+{
+  "pack": {
+    "pack_format": 101.1,
+    "min_format": [32,0],
+    "max_format": [999,0],
+    "supported_formats": [32, 999],
+    "description": "The resource pack for the KamsTweaks plugin."
+  }
+}

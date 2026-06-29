@@ -1,0 +1,25 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:attachable": {
+    "description": {
+      "geometry": {
+        "default": "geometry.player.armor.helmet"
+      },
+      "identifier": "ltsmp:flowercrown",
+      "materials": {
+        "default": "armor",
+        "enchanted": "armor_enchanted"
+      },
+      "render_controllers": [
+        "controller.render.armor"
+      ],
+      "scripts": {
+        "parent_setup": "v.helmet_layer_visible = 0.0;"
+      },
+      "textures": {
+        "default": "textures/ltsmp/entity/equipment/humanoid/flower",
+        "enchanted": "textures/misc/enchanted_actor_glint"
+      }
+    }
+  }
+}

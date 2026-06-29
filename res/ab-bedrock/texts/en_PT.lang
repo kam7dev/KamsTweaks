@@ -1,0 +1,15 @@
+death.attack.pike=%1$s got shanked by %2$s
+death.attack.pike.item=%1$s got shanked by %2$s usin' a so called "%3$s"
+death.attack.pike.player=%1$s was shanked while tryin' to brawl with %2$s
+death.attack.invig=%1$s got plenty o' gunpowder up 'eir nose
+death.attack.invig.player=%1$s got %2$s's gunpowder up the nose
+death.attack.invig.player.item=%1$s got %2$s's gunpowder up the nose from a "%3$s"
+death.attack.totem=%1$s attempted to escape fate
+death.attack.totem.player=%1$s attempted to escape fate
+death.attack.totem.player.item=%1$s attempted to escape fate
+death.attack.unworthy=%1$s was unworthy
+death.attack.unworthy.player=%1$s was unworthy
+death.attack.unworthy.player.item=%1$s was unworthy
+enchantment.ltsmp.rehashing=Rehashin'
+enchantment.ltsmp.consternation=Constarnashion
+item.minecraft.tipped_arrow.effect.fatigue=Arr' o' Scurvy

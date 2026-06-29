@@ -1,0 +1,206 @@
+{
+  "resource_pack_name": "ltsmp",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "ltsmp.disc_23": {
+      "textures": [
+        "textures/ltsmp/items/23"
+      ]
+    },
+    "ltsmp.bbat": {
+      "textures": [
+        "textures/ltsmp/items/bbat"
+      ]
+    },
+    "ltsmp.benektelse": {
+      "textures": [
+        "textures/ltsmp/items/benektelse"
+      ]
+    },
+    "ltsmp.bisicle": {
+      "textures": [
+        "textures/ltsmp/items/bisicle"
+      ]
+    },
+    "ltsmp.blessedtrident": {
+      "textures": [
+        "textures/ltsmp/items/blessedtrident"
+      ]
+    },
+    "ltsmp.bottle_lightning": {
+      "textures": [
+        "textures/ltsmp/items/bottle_lightning"
+      ]
+    },
+    "ltsmp.bunkermap": {
+      "textures": [
+        "textures/ltsmp/items/bunkermap"
+      ]
+    },
+    "ltsmp.charged_fw": {
+      "textures": [
+        "textures/ltsmp/items/charged_fw"
+      ]
+    },
+    "ltsmp.cookedflesh": {
+      "textures": [
+        "textures/ltsmp/items/cookedflesh"
+      ]
+    },
+    "ltsmp.crystalized_ender_eye": {
+      "textures": [
+        "textures/ltsmp/items/crystalized_ender_eye"
+      ]
+    },
+    "ltsmp.ediblemessage": {
+      "textures": [
+        "textures/ltsmp/items/ediblemessage"
+      ]
+    },
+    "ltsmp.enchanted_disc": {
+      "textures": [
+        "textures/ltsmp/items/enchanted_disc"
+      ]
+    },
+    "ltsmp.end_key": {
+      "textures": [
+        "textures/ltsmp/items/end_key"
+      ]
+    },
+    "ltsmp.exdee": {
+      "textures": [
+        "textures/ltsmp/items/exdee"
+      ]
+    },
+    "ltsmp.flowercrown": {
+      "textures": [
+        "textures/ltsmp/items/flowercrown"
+      ]
+    },
+    "ltsmp.genderfluid": {
+      "textures": [
+        "textures/ltsmp/items/genderfluid"
+      ]
+    },
+    "ltsmp.hauntmuskie": {
+      "textures": [
+        "textures/ltsmp/items/hauntmuskie"
+      ]
+    },
+    "ltsmp.hauntmuskiecover": {
+      "textures": [
+        "textures/ltsmp/items/hauntmuskiecover"
+      ]
+    },
+    "ltsmp.hemelytra": {
+      "textures": [
+        "textures/ltsmp/items/hemelytra"
+      ]
+    },
+    "ltsmp.hypercoffee": {
+      "textures": [
+        "textures/ltsmp/items/hypercoffee"
+      ]
+    },
+    "ltsmp.journey": {
+      "textures": [
+        "textures/ltsmp/items/journey"
+      ]
+    },
+    "ltsmp.maraca": {
+      "textures": [
+        "textures/ltsmp/items/maraca"
+      ]
+    },
+    "ltsmp.ominous_end_key": {
+      "textures": [
+        "textures/ltsmp/items/ominous_end_key"
+      ]
+    },
+    "ltsmp.ominous_key": {
+      "textures": [
+        "textures/ltsmp/items/ominous_key"
+      ]
+    },
+    "ltsmp.ominous_nether_key": {
+      "textures": [
+        "textures/ltsmp/items/ominous_nether_key"
+      ]
+    },
+    "ltsmp.outpostmap": {
+      "textures": [
+        "textures/ltsmp/items/outpostmap"
+      ]
+    },
+    "ltsmp.permafrost": {
+      "textures": [
+        "textures/ltsmp/items/permafrost"
+      ]
+    },
+    "ltsmp.pike": {
+      "textures": [
+        "textures/ltsmp/items/pike"
+      ]
+    },
+    "ltsmp.pinkpot": {
+      "textures": [
+        "textures/ltsmp/items/pinkpot"
+      ]
+    },
+    "ltsmp.rib": {
+      "textures": [
+        "textures/ltsmp/items/rib"
+      ]
+    },
+    "ltsmp.sunglasses": {
+      "textures": [
+        "textures/ltsmp/items/sunglasses"
+      ]
+    },
+    "ltsmp.sunglasses_rad": {
+      "textures": [
+        "textures/ltsmp/items/sunglasses_rad"
+      ]
+    },
+    "ltsmp.sweetpoppedchorus": {
+      "textures": [
+        "textures/ltsmp/items/sweetpoppedchorus"
+      ]
+    },
+    "ltsmp.tungsten": {
+      "textures": [
+        "textures/ltsmp/items/tungsten"
+      ]
+    },
+    "ltsmp.unisicle": {
+      "textures": [
+        "textures/ltsmp/items/unisicle"
+      ]
+    },
+    "ltsmp.wild": {
+      "textures": [
+        "textures/ltsmp/items/wild"
+      ]
+    },
+    "ltsmp.winner_dinner": {
+      "textures": [
+        "textures/ltsmp/items/winner_dinner"
+      ]
+    },
+    "ltsmp.withered_potato": {
+      "textures": [
+        "textures/ltsmp/items/withered_potato"
+      ]
+    },
+    "ltsmp.woosh": {
+      "textures": [
+        "textures/ltsmp/items/woosh"
+      ]
+    },
+    "ltsmp.wrinkledmap": {
+      "textures": [
+        "textures/ltsmp/items/wrinkledmap"
+      ]
+    }
+  }
+}

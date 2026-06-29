@@ -1,0 +1,8 @@
+{
+  "description": "km7dev - Freezeflame (Lava)",
+  "comparator_output": 3,
+  "length_in_seconds": 75,
+  "sound_event": {
+    "sound_id": "kamstweaks:lava_path"
+  }
+}

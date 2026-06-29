@@ -1,0 +1,6 @@
+death.attack.pike=%1$s je bio perforiran od %2$s-a
+death.attack.pike.item=%1$s je bio perforiran od %2$s-a koristeći %3$s
+death.attack.pike.player=%1$s je bio perforiran dok je pokušavao pobjeći od %2$s
+death.attack.invig=%1$s je polijetnuo
+death.attack.invig.player=%1$s je poletjeo od %2$s
+death.attack.invig.player.item=%1$s je poletjeo od %2$s koji su korstili %3$s

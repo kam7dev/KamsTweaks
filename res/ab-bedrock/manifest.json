@@ -1,0 +1,23 @@
+{
+    "format_version": 3,
+    "header": {
+        "name": "Anvixo's Bits",
+        "description": "§l§7The Anvixo's Bits Resource Pack!",
+        "uuid": "81b4b65a-9e1f-4ee1-921c-19c6ce4e19e2",
+        "version": "1.2.0",
+        "min_engine_version": "1.21.130"
+    },
+    "modules": [
+        {
+            "type": "resources",
+            "uuid": "a27fc6bd-87bb-44a9-959b-8971f50dd25b",
+			"description": "Pack",
+            "version": "1.2.0"
+        }
+    ],
+    "metadata": {
+        "authors": ["Anvixo"],
+        "product_type": "addon"
+    },
+    "capabilities": ["pbr"] // Allows Vibrant Visuals to be enabled while this pack is activated.
+}

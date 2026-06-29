@@ -4,9 +4,19 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.ext.GeyserItemData;
 import kam.kamsTweaks.features.*;
 import kam.kamsTweaks.features.claims.Claims;
-//import kam.kamsTweaks.features.discord.DIFeature;
-import kam.kamsTweaks.features.tp.TeleportFeatures;
+import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.SlashHat;
+import kam.kamsTweaks.features.gameplay.*;
+import kam.kamsTweaks.features.moderation.ChatFilter;
+import kam.kamsTweaks.features.moderation.ItemDataFilter;
+import kam.kamsTweaks.features.moderation.NoBoom;
+import kam.kamsTweaks.features.moderation.Vanish;
+import kam.kamsTweaks.features.teleportation.TeleportFeatures;
 import kam.kamsTweaks.ext.KamsTweaksPlaceholder;
+import kam.kamsTweaks.gameplay.ItemManager;
+import kam.kamsTweaks.utils.ConfigCommand;
+import kam.kamsTweaks.utils.Logger;
+import kam.kamsTweaks.utils.UserDataManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -32,10 +42,12 @@ public final class KamsTweaks extends JavaPlugin {
     KamsTweaks() {
         features.add(new UserDataManager());
 
+        features.add(new PVP());
         features.add(new Names());
         features.add(new Claims());
         features.add(new Graves());
         features.add(new NoBoom());
+        features.add(new Vanish());
         features.add(new MobEdits());
         features.add(new SlashHat());
         features.add(new ChatFilter());
@@ -43,7 +55,6 @@ public final class KamsTweaks extends JavaPlugin {
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
         features.add(new ItemDataFilter());
-        features.add(new PVP());
         features.add(new TeleportFeatures());
     }
 

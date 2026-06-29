@@ -1,0 +1,180 @@
+{
+  "format_version": "1.14.0",
+  "sound_definitions": {
+    "ltsmpthesecond:hauntmuskie": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/hauntmuskie",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:hauntmuskiecover": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/hauntmuskiecover",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:daisybell": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/daisybell",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:featurepresentation": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/featurepresentation",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:enchanted": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/enchanted",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:wild": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/wild",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:woosh": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/woosh",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:exdee": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/exdee",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:conqueror": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/boss/conqueror",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:plush": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/fun/plush",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:rib": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/rib",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:ifyouwerehere": {
+
+      "category": "record",
+      "max_distance": 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory": true,
+          "name": "sounds/ltsmpthesecond/music/game/records/ifyouwerehere",
+          "stream": true,
+          "volume": 0.5
+        }
+      ]
+    },
+    "ltsmpthesecond:hawaii": {
+      "category" : "record",
+      "max_distance" : 64.0,
+      "sounds": [
+        {
+          "load_on_low_memory" : true,
+          "name": "sounds/ltsmpthesecond/music/game/records/hawaii",
+          "stream" : true,
+          "volume" : 0.50
+        }
+      ]
+    },
+    "invigoration_explosion": {
+      "__use_legacy_max_distance": true,
+      "category": "block",
+      "sounds": [{
+        "name": "sounds/ltsmpthesecond/misc/invig"
+      }]
+    }
+  }
+}

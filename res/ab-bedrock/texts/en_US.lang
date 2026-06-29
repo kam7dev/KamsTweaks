@@ -1,0 +1,15 @@
+death.attack.pike=%1$s was perforated by %2$s
+death.attack.pike.item=%1$s was perforated by %2$s using %3$s
+death.attack.pike.player=%1$s was perforated while trying to escape %2$s
+death.attack.invig=%1$s blasted off
+death.attack.invig.player=%1$s was blast off by %2$s
+death.attack.invig.player.item=%1$s was blast off by %2$s using %3$s
+death.attack.totem=%1$s attempted to escape fate
+death.attack.totem.player=%1$s attempted to escape fate
+death.attack.totem.player.item=%1$s attempted to escape fate
+death.attack.unworthy=%1$s was unworthy
+death.attack.unworthy.player=%1$s was unworthy
+death.attack.unworthy.player.item=%1$s was unworthy
+enchantment.ltsmp.rehashing=Rehashing
+enchantment.ltsmp.consternation=Consternation
+item.minecraft.tipped_arrow.effect.fatigue=Arrow of Fatigue

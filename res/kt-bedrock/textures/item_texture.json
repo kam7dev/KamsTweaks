@@ -1,0 +1,26 @@
+{
+  "resource_pack_name": "kamstweaks",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "kamstweaks.claim_tool": {
+      "textures": [
+        "textures/kamstweaks/items/structure_void.png"
+      ]
+    },
+    "kamstweaks.ice_mountain": {
+      "textures": [
+        "textures/kamstweaks/items/ice_mountain.png"
+      ]
+    },
+    "kamstweaks.stone_brickstep": {
+      "textures": [
+        "textures/kamstweaks/items/stone_brickstep.png"
+      ]
+    },
+    "kamstweaks.lava_path": {
+      "textures": [
+        "textures/kamstweaks/items/lava_path.png"
+      ]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:music_disc_pigstep",
+      "components": {
+        "minecraft:item_model": "kamstweaks:ice_mountain"
+      },
+      "count": 1
+    },
+    "title": "Hot and Cold Collide",
+    "description": "Make a Ghast or Blaze kill a Stray",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "ltsmp:silly/ltsmpmode",
+  "criteria": {
+    "plugin_handles_this_i_guess____why_are_you_still_reading____this_has_no_info_for_you____seriously_stop_reading____what_are_you_doing____youre_scaring_me____fine_ill_tell_you_why____datapacks_are_limited_because_mojang__insert_sad_face____fun_fact__this_advancements_name_is_a_mission_name_from_super_mario_galaxy____ok_im_out_of_ideas____bye": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "plugin_handles_this_i_guess____why_are_you_still_reading____this_has_no_info_for_you____seriously_stop_reading____what_are_you_doing____youre_scaring_me____fine_ill_tell_you_why____datapacks_are_limited_because_mojang__insert_sad_face____fun_fact__this_advancements_name_is_a_mission_name_from_super_mario_galaxy____ok_im_out_of_ideas____bye"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "kamstweaks:wax_lava_path",
+      "kamstweaks:axe_lava_path",
+      "kamstweaks:wax_ice_mountain",
+      "kamstweaks:axe_ice_mountain"
+    ]
+  }
+}

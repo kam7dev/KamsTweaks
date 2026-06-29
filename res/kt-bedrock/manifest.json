@@ -1,0 +1,27 @@
+{
+    "format_version": 3,
+    "header": {
+        "name": "KamsTweaks",
+        "description": "Kamstweaks idk",
+        "uuid": "675052b9-53a9-4353-bfe1-d7c9cb94c4b5",
+        "version": "2.7.0",
+        "min_engine_version": "1.21.130"
+    },
+    "modules": [
+        {
+            "type": "resources",
+            "uuid": "2e5be9c1-da79-4da9-a2a6-cfe7a8d2b89d",
+            "description": "Pack",
+            "version": "2.7.0"
+        }
+    ],
+    "metadata": {
+        "authors": [
+            "kam"
+        ],
+        "product_type": "addon"
+    },
+    "capabilities": [
+        "pbr"
+    ]
+}

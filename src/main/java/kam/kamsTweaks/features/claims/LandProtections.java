@@ -1,11 +1,11 @@
 package kam.kamsTweaks.features.claims;
 
 import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
-import kam.kamsTweaks.ItemManager;
-import kam.kamsTweaks.KTStrings;
+import kam.kamsTweaks.gameplay.ItemManager;
+import kam.kamsTweaks.utils.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.Logger;
-import kam.kamsTweaks.features.SeedDispenser;
+import kam.kamsTweaks.utils.Logger;
+import kam.kamsTweaks.features.gameplay.SeedDispenser;
 import kam.kamsTweaks.utils.LocationUtils;
 import kam.kamsTweaks.features.claims.LandClaims.*;
 

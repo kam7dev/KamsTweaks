@@ -3,10 +3,10 @@ package kam.kamsTweaks.features.claims;
 import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import io.papermc.paper.event.entity.FishHookStateChangeEvent;
-import kam.kamsTweaks.ItemManager;
-import kam.kamsTweaks.KTStrings;
+import kam.kamsTweaks.gameplay.ItemManager;
+import kam.kamsTweaks.utils.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.features.Names;
+import kam.kamsTweaks.features.fun.Names;
 import kam.kamsTweaks.features.claims.gui.EntityClaimPage;
 import kam.kamsTweaks.features.claims.gui.FLAlertLayer;
 import net.kyori.adventure.text.Component;
@@ -147,11 +147,11 @@ public class EntityProtections implements Listener {
                 }
                 if (event.getDamageSource().getCausingEntity() instanceof Player player) {
                     if (ItemManager.ItemType.CLAIM_TOOL.equals(ItemManager.getType(player.getInventory().getItemInMainHand())) && claims.isClaimable(event.getEntity())) {
-                        if (claim == null) player.sendMessage(Component.text("This entity isn't claimed."));
-                        else if (claim.owner == null)
-                            player.sendMessage(Component.text("This entity is owned by the server."));
-                        else
-                            player.sendMessage(Component.text("This entity is owned by ").append(Names.instance.getRenderedName(claim.owner)));
+                        if (claim == null) {
+                            player.sendMessage(KTStrings.getFor(KTStrings.EC_UNCLAIMED));
+                        } else {
+                            player.sendMessage(KTStrings.getFor(KTStrings.EC_UNCLAIMED, claim.getOwnerName()));
+                        }
                         event.setCancelled(true);
                         return;
                     }
@@ -163,15 +163,6 @@ public class EntityProtections implements Listener {
             }
             case PROJECTILE -> {
                 if (event.getDamageSource().getCausingEntity() instanceof Player player) {
-                    if (ItemManager.ItemType.CLAIM_TOOL.equals(ItemManager.getType(player.getInventory().getItemInMainHand())) && claims.isClaimable(event.getEntity())) {
-                        if (claim == null) player.sendMessage(Component.text("This entity isn't claimed."));
-                        else if (claim.owner == null)
-                            player.sendMessage(Component.text("This entity is owned by the server."));
-                        else
-                            player.sendMessage(Component.text("This entity is owned by ").append(Names.instance.getRenderedName(claim.owner)));
-                        event.setCancelled(true);
-                        return;
-                    }
                     if (claim == null) return;
                     if (claim.hasPermission(player, perm)) return;
                     message(player, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));

@@ -4,6 +4,7 @@ import io.papermc.paper.datapack.DatapackRegistrar;
 import io.papermc.paper.plugin.bootstrap.*;
 import io.papermc.paper.plugin.lifecycle.event.*;
 import io.papermc.paper.plugin.lifecycle.event.types.*;
+import kam.kamsTweaks.utils.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;

@@ -1,0 +1,6 @@
+death.attack.pike=%1$s был пробит %2$s
+death.attack.pike.item=%1$s был пробит %2$s используя %3$s
+death.attack.pike.player=%1$s был пробит пытаясь избежать %2$s
+death.attack.invig=%1$s был взорван
+death.attack.invig.player=%1$s был взорван с помощью %2$s
+death.attack.invig.player.item=%1$s был взорван с помощью %2$s благодаря %3$s
