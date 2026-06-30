@@ -150,6 +150,9 @@ public enum KTStrings {
     EC_UNCLAIMED,
     EC_OWNED_BY,
 
+    // Dragon Toggle
+    DRAGON_TOGGLE, // TODO: put in rp lang
+
     // Graves
     GRAVE_INFO,
     GRAVE_EXPIRED,
@@ -696,6 +699,10 @@ public enum KTStrings {
             }
             case EC_OWNED_BY -> {
                 return Component.translatable("kamstweaks.claims.entity.owned_by", "This entity is owned by %s.", args);
+            }
+
+            case DRAGON_TOGGLE -> {
+                return Component.translatable("kamstweaks.dragon.blocked", "The dragon fight is currently disabled. If this is unintended, ask an admin to run %s.", args);
             }
 
             case GRAVE_INFO -> {

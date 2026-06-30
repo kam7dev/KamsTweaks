@@ -13,6 +13,7 @@ import kam.kamsTweaks.features.moderation.NoBoom;
 import kam.kamsTweaks.features.moderation.Vanish;
 import kam.kamsTweaks.features.teleportation.TeleportFeatures;
 import kam.kamsTweaks.ext.KamsTweaksPlaceholder;
+import kam.kamsTweaks.gameplay.DragonFightLock;
 import kam.kamsTweaks.gameplay.ItemManager;
 import kam.kamsTweaks.utils.ConfigCommand;
 import kam.kamsTweaks.utils.Logger;
@@ -55,6 +56,7 @@ public final class KamsTweaks extends JavaPlugin {
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
         features.add(new ItemDataFilter());
+        features.add(new DragonFightLock());
         features.add(new TeleportFeatures());
     }
 

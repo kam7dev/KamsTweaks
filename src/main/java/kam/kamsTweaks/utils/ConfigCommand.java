@@ -12,6 +12,7 @@ import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.PrintWriter;
@@ -31,6 +32,7 @@ public class ConfigCommand {
         public String name;
         public String configId;
         public String permission;
+        public FileConfiguration config = KamsTweaks.get().getConfig();
 
         public abstract LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command);
     }
@@ -59,7 +61,7 @@ public class ConfigCommand {
         @Override
         public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
             return command.then(Commands.literal(name).executes(ctx -> {
-                String val = KamsTweaks.get().getConfig().getString(configId, default_);
+                String val = config.getString(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", StringArgumentType.word()).suggests((ctx, builder) -> {
@@ -73,7 +75,7 @@ public class ConfigCommand {
                     ctx.getSource().getSender().sendMessage("Invalid value. Valid options are " + String.join(", ", List.of(options)) + ".");
                     return Command.SINGLE_SUCCESS;
                 }
-                KamsTweaks.get().getConfig().set(configId, val);
+                config.set(configId, val);
                 KamsTweaks.get().saveConfig();
                 if (callback != null) callback.accept(val);
                 ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
@@ -102,12 +104,12 @@ public class ConfigCommand {
         @Override
         public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
             return command.then(Commands.literal(name).executes(ctx -> {
-                boolean val = KamsTweaks.get().getConfig().getBoolean(configId, default_);
+                boolean val = config.getBoolean(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", BoolArgumentType.bool()).executes(ctx -> {
                 Boolean val = ctx.getArgument("value", Boolean.class);
-                KamsTweaks.get().getConfig().set(configId, val);
+                config.set(configId, val);
                 KamsTweaks.get().saveConfig();
                 if (callback != null) callback.accept(val);
                 ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
@@ -136,13 +138,13 @@ public class ConfigCommand {
         @Override
         public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
             return command.then(Commands.literal(name).executes(ctx -> {
-                int val = KamsTweaks.get().getConfig().getInt(configId, default_);
+                int val = config.getInt(configId, default_);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", IntegerArgumentType.integer()).executes(ctx -> {
                 Integer val = ctx.getArgument("value", Integer.class);
-                KamsTweaks.get().getConfig().set(configId, val);
-                KamsTweaks.get().saveConfig();
+                config.set(configId, val);
+                KamsTweaks.get().save();
                 ctx.getSource().getSender().sendMessage("Set value of " + name + " to " + val + ".");
                 if (callback != null) callback.accept(val);
                 ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
