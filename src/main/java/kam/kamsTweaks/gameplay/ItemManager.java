@@ -12,10 +12,12 @@ import io.papermc.paper.registry.RegistryKey;
 import kam.kamsTweaks.utils.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.utils.Logger;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
@@ -267,11 +269,23 @@ public class ItemManager implements Listener {
         })).build());
     }
 
+    List<UUID> hasMessaged = new ArrayList<>();
+
     @EventHandler
     public void onAnvil(PrepareAnvilEvent event) {
         var view = event.getView();
         view.setMaximumRepairCost(Integer.MAX_VALUE);
-        if (view.getRepairCost() > 30) view.setRepairCost((int) (30 + (Math.log(view.getRepairCost()) * Math.log(view.getRepairCost()) * 2)));
+        if (view.getRepairCost() > 39) {
+            var old = view.getRepairCost();
+            view.setRepairCost((int) (33 + (Math.log(view.getRepairCost()) * 2)));
+            event.getViewers().forEach(v -> {
+                if (v instanceof Player player) {
+                    if (hasMessaged.contains(player.getUniqueId())) return;
+                    hasMessaged.add(player.getUniqueId());
+                    player.sendMessage(KTStrings.getFor(KTStrings.TOO_EXPENSIVE_FIX, Component.text("Anvil Too Expensive Fix").decorate(TextDecoration.UNDERLINED).color(NamedTextColor.AQUA).clickEvent(ClickEvent.openUrl("https://modrinth.com/mod/anvil-too-expensive-fix"))).color(NamedTextColor.YELLOW));
+                }
+            });
+        }
     }
 
     private static final String PACK_ID = "1V21rNSU933OJpMYJrVIbovwbocVGlmq1";

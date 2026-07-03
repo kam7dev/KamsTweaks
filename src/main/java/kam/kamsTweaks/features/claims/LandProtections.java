@@ -511,6 +511,8 @@ public class LandProtections implements Listener {
         if (!KamsTweaks.get().getConfig().getBoolean("land-claims.enabled", true))
             return;
         var entity = e.getEntity();
+        if (!(entity instanceof Hangable || entity instanceof Hanging || entity instanceof ArmorStand
+                || entity instanceof Boat || entity instanceof Minecart)) return;
         LandClaim claim = claims.getClaim(entity.getLocation());
         var attacker = getTrueHitter(e.getHitBy());
         if (claim != null && !claim.hasPermission(attacker, LandPermission.BLOCK_BREAK)) {

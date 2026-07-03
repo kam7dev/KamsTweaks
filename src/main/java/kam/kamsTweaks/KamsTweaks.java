@@ -66,6 +66,7 @@ public final class KamsTweaks extends JavaPlugin {
         Logger.init();
         this.saveDefaultConfig();
         loadConfigs();
+        Logger.loadData();
 
         for (var feature : features) {
             try {
@@ -129,6 +130,7 @@ public final class KamsTweaks extends JavaPlugin {
                 Logger.handleException(e);
             }
         }
+        Logger.saveData();
         saveConfigs();
         Logger.info("Saved KamsTweaks.");
     }

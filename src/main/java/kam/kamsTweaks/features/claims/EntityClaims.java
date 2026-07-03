@@ -145,7 +145,6 @@ public class EntityClaims {
     }
 
     void savePerms(FileConfiguration config, String path, Permissions perms) {
-        if (perms.who != null) config.set(path + ".who", perms.who.toString());
         perms.bools.forEach((perm, val) -> config.set(path + ".bools." + perm.name(), val.name()));
         perms.advancedBools.forEach((perm, val) -> config.set(path + ".advbools." + perm.name(), val.name()));
     }
@@ -171,8 +170,6 @@ public class EntityClaims {
 
     void loadPerms(FileConfiguration config, String path, Permissions perms) {
         try {
-            var who = config.getString(path + ".who");
-            if (who != null) perms.who = UUID.fromString(who);
             if (config.contains(path + ".bools")) {
                 for (var ps : nonNull(config.getConfigurationSection(path  + ".bools")).getKeys(false)) {
                     var perm = EntityPermission.valueOf(ps);
@@ -301,9 +298,9 @@ public class EntityClaims {
                     if (cfg.contains(path + ".perms")) {
                         for (var perm : nonNull(cfg.getConfigurationSection(path + ".perms")).getKeys(false)) {
                             try {
-                                loadPerms(cfg, path + ".perms." + uuid, claim.getPerms(UUID.fromString(perm)));
+                                loadPerms(cfg, path + ".perms." + perm, claim.getPerms(UUID.fromString(perm)));
                             } catch (Exception e) {
-                                Logger.error("Failed to load permissions for " + uuid + " in entity claim " + id);
+                                Logger.error("Failed to load permissions for " + perm + " in entity claim " + id);
                                 Logger.handleException(e);
                             }
                         }
@@ -552,17 +549,14 @@ public class EntityClaims {
 
             orig.perms.forEach((uuid, perm) -> {
                 var clone = perm.clone();
-                clone.who = entity;
                 clone.claim = this;
                 perms.put(uuid, clone);
             });
 
             defaultPerms = orig.defaultPerms.clone();
-            defaultPerms.who = entity;
             defaultPerms.claim = this;
 
             defaultEntityPerms = orig.defaultEntityPerms.clone();
-            defaultEntityPerms.who = entity;
             defaultEntityPerms.claim = this;
         }
 
@@ -577,17 +571,14 @@ public class EntityClaims {
 
             orig.perms.forEach((uuid, perm) -> {
                 var clone = perm.clone();
-                clone.who = entity;
                 clone.claim = this;
                 perms.put(uuid, clone);
             });
 
             defaultPerms = orig.defaultPerms.clone();
-            defaultPerms.who = entity;
             defaultPerms.claim = this;
 
             defaultEntityPerms = orig.defaultEntityPerms.clone();
-            defaultEntityPerms.who = entity;
             defaultEntityPerms.claim = this;
         }
 

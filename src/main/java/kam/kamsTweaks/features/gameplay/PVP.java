@@ -43,7 +43,25 @@ public class PVP extends Feature {
     public static PVP instance;
 
     public static final Integer COMBAT_TIMER = 15;
-    public Map<UUID, Integer> inCombat = new HashMap<>();
+    public Map<UUID, CombatHelper> inCombat = new HashMap<>();
+
+    public class CombatHelper implements Listener {
+        public int timerId;
+        public Mannequin fake;
+        public Inventory copy;
+        public UUID uuid;
+        public int level;
+        public int selectedSlot;
+        public int timeLeft = COMBAT_TIMER;
+
+        void cancel() {
+            Bukkit.getScheduler().cancelTask(timerId);
+            HandlerList.unregisterAll(this);
+            inCombat.remove(uuid);
+            if (fake != null) fake.remove();
+            fake = null;
+        }
+    }
 
     @Override
     public void setup() {
@@ -73,66 +91,37 @@ public class PVP extends Feature {
 
     void putInCombat(Player who, Component otherName) {
         if (inCombat.containsKey(who.getUniqueId())) {
-            inCombat.put(who.getUniqueId(), COMBAT_TIMER);
+            inCombat.get(who.getUniqueId()).timeLeft = COMBAT_TIMER;
             return;
         }
 
         who.sendMessage(KTStrings.getFor(KTStrings.PVP_IN_COMBAT, otherName).color(NamedTextColor.YELLOW));
 
-        inCombat.put(who.getUniqueId(), COMBAT_TIMER);
-        var ref = new Object() {
-            Listener listener;
-            int timer;
-            Mannequin fake;
-            Inventory copy;
-            final UUID uuid = who.getUniqueId();
-            int level;
-            int selectedSlot;
-
-            void cancel() {
-                Bukkit.getScheduler().cancelTask(timer);
-                HandlerList.unregisterAll(listener);
-                inCombat.remove(uuid);
-                if (fake != null) fake.remove();
-                fake = null;
-            }
-        };
-
-        ref.timer = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), () -> {
-            int val = inCombat.get(who.getUniqueId()) - 1;
-            if (val <= 0) {
-                ref.cancel();
-                var current = Bukkit.getPlayer(ref.uuid);
-                if (current != null) current.sendMessage(KTStrings.getFor(KTStrings.PVP_OUT_OF_COMBAT).color(NamedTextColor.GREEN));
-                return;
-            }
-            inCombat.put(who.getUniqueId(), val);
-        }, 20, 20);
-        ref.listener = new Listener() {
+        var ref = new CombatHelper() {
             @EventHandler(ignoreCancelled = true)
             public void onLeave(PlayerQuitEvent event) {
-                if (event.getPlayer().getUniqueId().equals(ref.uuid)) {
-                    ref.fake = spawnFakePlayer(event.getPlayer());
-                    ref.copy = Inventories.copyPlayerInventory(event.getPlayer().getInventory());
-                    ref.selectedSlot = event.getPlayer().getInventory().getHeldItemSlot();
-                    ref.level = event.getPlayer().getLevel();
+                if (event.getPlayer().getUniqueId().equals(this.uuid)) {
+                    this.fake = spawnFakePlayer(event.getPlayer());
+                    this.copy = Inventories.copyPlayerInventory(event.getPlayer().getInventory());
+                    this.selectedSlot = event.getPlayer().getInventory().getHeldItemSlot();
+                    this.level = event.getPlayer().getLevel();
                 }
             }
             @EventHandler(ignoreCancelled = true)
             public void onJoin(PlayerJoinEvent event) {
-                if (event.getPlayer().getUniqueId().equals(ref.uuid)) {
-                    if (ref.fake != null) {
-                        event.getPlayer().setHealth(ref.fake.getHealth());
-                        event.getPlayer().getInventory().setHelmet(ref.fake.getEquipment().getHelmet());
-                        event.getPlayer().getInventory().setChestplate(ref.fake.getEquipment().getChestplate());
-                        event.getPlayer().getInventory().setLeggings(ref.fake.getEquipment().getLeggings());
-                        event.getPlayer().getInventory().setBoots(ref.fake.getEquipment().getBoots());
-                        event.getPlayer().getInventory().setItemInMainHand(ref.fake.getEquipment().getItemInMainHand());
-                        event.getPlayer().getInventory().setItemInOffHand(ref.fake.getEquipment().getItemInOffHand());
+                if (event.getPlayer().getUniqueId().equals(this.uuid)) {
+                    if (this.fake != null) {
+                        event.getPlayer().setHealth(this.fake.getHealth());
+                        event.getPlayer().getInventory().setHelmet(this.fake.getEquipment().getHelmet());
+                        event.getPlayer().getInventory().setChestplate(this.fake.getEquipment().getChestplate());
+                        event.getPlayer().getInventory().setLeggings(this.fake.getEquipment().getLeggings());
+                        event.getPlayer().getInventory().setBoots(this.fake.getEquipment().getBoots());
+                        event.getPlayer().getInventory().setItemInMainHand(this.fake.getEquipment().getItemInMainHand());
+                        event.getPlayer().getInventory().setItemInOffHand(this.fake.getEquipment().getItemInOffHand());
                         event.getPlayer().clearActivePotionEffects();
-                        event.getPlayer().addPotionEffects(ref.fake.getActivePotionEffects());
-                        ref.fake.remove();
-                        ref.fake = null;
+                        event.getPlayer().addPotionEffects(this.fake.getActivePotionEffects());
+                        this.fake.remove();
+                        this.fake = null;
                     }
 
                     Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> event.getPlayer().sendMessage(KTStrings.getFor(KTStrings.PVP_CURRENT_COMBAT).color(NamedTextColor.YELLOW)));
@@ -142,42 +131,47 @@ public class PVP extends Feature {
             @EventHandler(ignoreCancelled = true)
             public void onEntityDeath(EntityDeathEvent event) {
                 var entity = event.getEntity();
-                if (event.getEntity().getUniqueId().equals(ref.uuid)) {
-                    ref.cancel();
+                if (event.getEntity().getUniqueId().equals(this.uuid)) {
+                    this.cancel();
                     event.getEntity().sendMessage(KTStrings.getFor(KTStrings.PVP_OUT_OF_COMBAT).color(NamedTextColor.GREEN));
-                } else if (entity == ref.fake) {
-                    UserDataManager.put(ref.uuid, "pvp.cl.dead", true);
-                    ref.cancel();
-                    entity.getWorld().spawn(entity.getLocation(), ExperienceOrb.class).setExperience(Math.min(ref.level * 7, 100));
-                    if (!UserDataManager.get(ref.uuid, "keepinv.enabled", true)) {
-                        UserDataManager.put(ref.uuid, "pvp.cl.clear", true);
-                        ref.copy.setItem(36, entity.getEquipment().getBoots());
-                        ref.copy.setItem(37, entity.getEquipment().getLeggings());
-                        ref.copy.setItem(38, entity.getEquipment().getChestplate());
-                        ref.copy.setItem(39, entity.getEquipment().getHelmet());
-                        ref.copy.setItem(40, entity.getEquipment().getItemInOffHand());
-                        ref.copy.setItem(ref.selectedSlot, entity.getEquipment().getItemInMainHand());
-                        for (var item : ref.copy.getContents()) {
+                    if (event.getDamageSource().getCausingEntity() instanceof Player who) {
+                        if (inCombat.containsKey(who.getUniqueId())) {
+                            inCombat.get(who.getUniqueId()).cancel();
+                            who.sendMessage(KTStrings.getFor(KTStrings.PVP_OUT_OF_COMBAT).color(NamedTextColor.GREEN));
+                        }
+                    }
+                } else if (entity == this.fake) {
+                    UserDataManager.put(this.uuid, "pvp.cl.dead", true);
+                    this.cancel();
+                    entity.getWorld().spawn(entity.getLocation(), ExperienceOrb.class).setExperience(Math.min(this.level * 7, 100));
+                    if (!UserDataManager.get(this.uuid, "keepinv.enabled", true)) {
+                        UserDataManager.put(this.uuid, "pvp.cl.clear", true);
+                        this.copy.setItem(36, entity.getEquipment().getBoots());
+                        this.copy.setItem(37, entity.getEquipment().getLeggings());
+                        this.copy.setItem(38, entity.getEquipment().getChestplate());
+                        this.copy.setItem(39, entity.getEquipment().getHelmet());
+                        this.copy.setItem(40, entity.getEquipment().getItemInOffHand());
+                        this.copy.setItem(this.selectedSlot, entity.getEquipment().getItemInMainHand());
+                        for (var item : this.copy.getContents()) {
                             if (item == null) continue;
                             if (item.getItemMeta().hasEnchant(Enchantment.VANISHING_CURSE)) continue;
                             entity.getWorld().dropItemNaturally(entity.getLocation(), item);
                         }
-                        Logger.info("Dropping");
                     } else {
-                        UserDataManager.put(ref.uuid, "pvp.cl.clear", false);
-                        UserDataManager.putItemStack(ref.uuid, "pvp.cl.mainhand", entity.getEquipment().getItemInMainHand());
-                        UserDataManager.putItemStack(ref.uuid, "pvp.cl.offhand", entity.getEquipment().getItemInOffHand());
-                        UserDataManager.putItemStack(ref.uuid, "pvp.cl.helmet", entity.getEquipment().getHelmet());
-                        UserDataManager.putItemStack(ref.uuid, "pvp.cl.chestplate", entity.getEquipment().getChestplate());
-                        UserDataManager.putItemStack(ref.uuid, "pvp.cl.leggings", entity.getEquipment().getLeggings());
-                        UserDataManager.putItemStack(ref.uuid, "pvp.cl.boots", entity.getEquipment().getBoots());
+                        UserDataManager.put(this.uuid, "pvp.cl.clear", false);
+                        UserDataManager.putItemStack(this.uuid, "pvp.cl.mainhand", entity.getEquipment().getItemInMainHand());
+                        UserDataManager.putItemStack(this.uuid, "pvp.cl.offhand", entity.getEquipment().getItemInOffHand());
+                        UserDataManager.putItemStack(this.uuid, "pvp.cl.helmet", entity.getEquipment().getHelmet());
+                        UserDataManager.putItemStack(this.uuid, "pvp.cl.chestplate", entity.getEquipment().getChestplate());
+                        UserDataManager.putItemStack(this.uuid, "pvp.cl.leggings", entity.getEquipment().getLeggings());
+                        UserDataManager.putItemStack(this.uuid, "pvp.cl.boots", entity.getEquipment().getBoots());
                     }
                 }
             }
 
             @EventHandler(ignoreCancelled = true)
             public void onEntityDamage(EntityDamageByEntityEvent event) {
-                if (event.getEntity() != ref.fake) return;
+                if (event.getEntity() != this.fake) return;
                 var hitter = getTrueHitter(event.getDamageSource().getCausingEntity());
                 if (!(hitter instanceof Player other)) return;
                 if (!pvp.getOrDefault(other.getUniqueId(), true)) {
@@ -185,12 +179,24 @@ public class PVP extends Feature {
                     other.sendMessage(KTStrings.getFor(KTStrings.PVP_YOU_DISABLED).color(NamedTextColor.RED));
                     return;
                 }
-                inCombat.put(ref.uuid, COMBAT_TIMER);
-                putInCombat(other, ref.fake.customName());
+                this.timeLeft = COMBAT_TIMER;
+                putInCombat(other, this.fake.customName());
             }
         };
+        ref.uuid = who.getUniqueId();
+        ref.timerId = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), () -> {
+            int val = ref.timeLeft - 1;
+            if (val <= 0) {
+                ref.cancel();
+                var current = Bukkit.getPlayer(ref.uuid);
+                if (current != null) current.sendMessage(KTStrings.getFor(KTStrings.PVP_OUT_OF_COMBAT).color(NamedTextColor.GREEN));
+                return;
+            }
+            ref.timeLeft = val;
+        }, 20, 20);
+        Bukkit.getPluginManager().registerEvents(ref, KamsTweaks.get());
 
-        Bukkit.getPluginManager().registerEvents(ref.listener, KamsTweaks.get());
+        inCombat.put(who.getUniqueId(), ref);
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -319,7 +325,8 @@ public class PVP extends Feature {
     public void onAttack(EntityDamageByEntityEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true))
             return;
-        if (e.getEntity() instanceof Player target && getTrueHitter(e.getDamageSource().getCausingEntity()) instanceof Player causer) {
+        if (e.getEntity() instanceof Player target && e.getDamageSource().getCausingEntity() instanceof Player causer) {
+            if (target == causer) return;
             if (!pvp.getOrDefault(target.getUniqueId(), true)) {
                 e.setCancelled(true);
                 causer.sendMessage(KTStrings.getFor(KTStrings.PVP_TARGET_DISABLED, Names.instance.getRenderedName(target)).color(NamedTextColor.RED));

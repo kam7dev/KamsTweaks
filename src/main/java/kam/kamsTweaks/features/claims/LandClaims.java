@@ -71,9 +71,12 @@ public class LandClaims implements Listener {
     }
 
     void savePerms(FileConfiguration config, String path, Permissions perms) {
-        if (perms.who != null) config.set(path + ".who", perms.who.toString());
-        perms.bools.forEach((perm, val) -> config.set(path + ".bools." + perm.name(), val.name()));
-        perms.advancedBools.forEach((perm, val) -> config.set(path + ".advbools." + perm.name(), val.name()));
+        try {
+            perms.bools.forEach((perm, val) -> config.set(path + ".bools." + perm.name(), val.name()));
+            perms.advancedBools.forEach((perm, val) -> config.set(path + ".advbools." + perm.name(), val.name()));
+        } catch (Exception e) {
+            Logger.handleException("Failed to save perms:", e);
+        }
     }
 
     public void save() {
@@ -113,8 +116,6 @@ public class LandClaims implements Listener {
 
     void loadPerms(FileConfiguration config, String path, Permissions perms) {
         try {
-            var who = config.getString(path + ".who");
-            if (who != null) perms.who = UUID.fromString(who);
             if (config.contains(path + ".bools")) {
                 for (var ps : nonNull(config.getConfigurationSection(path + ".bools")).getKeys(false)) {
                     var perm = LandPermission.valueOf(ps);
@@ -163,9 +164,9 @@ public class LandClaims implements Listener {
                     if (cfg.contains(path + ".perms")) {
                         for (var perm : nonNull(cfg.getConfigurationSection(path + ".perms")).getKeys(false)) {
                             try {
-                                loadPerms(cfg, path + ".perms." + uuid, claim.getPerms(UUID.fromString(perm)));
+                                loadPerms(cfg, path + ".perms." + perm, claim.getPerms(UUID.fromString(perm)));
                             } catch (Exception e) {
-                                Logger.error("Failed to load permissions for " + uuid + " in land claim " + id);
+                                Logger.error("Failed to load permissions for " + perm + " in land claim " + id);
                                 Logger.handleException(e);
                             }
                         }
@@ -628,14 +629,12 @@ public class LandClaims implements Listener {
 
     public static class Permissions implements Cloneable {
         public LandClaim claim;
-        public UUID who;
         boolean isClaimDefault = false;
         Map<LandPermission, OptBool> bools = new HashMap<>();
         Map<AdvancedLandPermission, OptBool> advancedBools = new HashMap<>();
 
         public Permissions(LandClaim claim, UUID who) {
             this.claim = claim;
-            this.who = who;
         }
 
         public Permissions(LandClaim claim, boolean isClaimDefault) {
@@ -848,16 +847,100 @@ public class LandClaims implements Listener {
             return defaultPerms.getBoolPermission(perm);
         }
 
+        public OptBool hasPermissionNoFallback(Object who, LandPermission perm) {
+            // no player
+            if (who == null) return defaultPerms.getBoolPermission(perm);
+
+            UUID uuid;
+            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            else if (who instanceof Entity e) uuid = e.getUniqueId();
+            else {
+                return defaultPerms.getBoolPermission(perm);
+            }
+
+            // owner
+            if (owner != null && owner.getUniqueId().equals(uuid)) {
+                if (config.testMode) Claims.get().messageTest((Entity) who);
+                else return OptBool.True;
+            }
+            if (!config.testMode && owner != null && owner.getUniqueId().equals(uuid)) return OptBool.True;
+
+            // explicit perms
+            if (perms.containsKey(uuid)) {
+                var info = perms.get(uuid);
+                var has = info.getBoolPermission(perm);
+                if (has != OptBool.Default) {
+                    return has;
+                }
+            }
+
+            return OptBool.Default;
+        }
+
+        public OptBool hasPermissionNoFallback(Object who, AdvancedLandPermission perm) {
+            // no player
+            if (who == null) return defaultPerms.getBoolPermission(perm);
+
+            UUID uuid;
+            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            else if (who instanceof Entity e) uuid = e.getUniqueId();
+            else {
+                return defaultPerms.getBoolPermission(perm);
+            }
+
+            // owner
+            if (owner != null && owner.getUniqueId().equals(uuid)) {
+                if (config.testMode) Claims.get().messageTest((Entity) who);
+                else return OptBool.True;
+            }
+
+            // explicit perms
+            if (perms.containsKey(uuid)) {
+                var info = perms.get(uuid);
+                var has = info.getBoolPermission(perm);
+                if (has != OptBool.Default) {
+                    return has;
+                }
+            }
+
+            return OptBool.Default;
+        }
+
         public record MPRes(boolean result, Component message) {
         }
 
         @SuppressWarnings("BooleanMethodIsAlwaysInverted") // what is it talking about
         public MPRes hasPermissions(Object who, LandPermission gen, AdvancedLandPermission... perms) {
-            for (var perm : perms) {
-                var has = hasPermission(who, perm);
-                if (has != OptBool.Default) return new MPRes(has == OptBool.True, perm.label);
+            // Regular
+            {
+                for (var perm : perms) {
+                    var has = hasPermissionNoFallback(who, perm);
+                    if (has != OptBool.Default) return new MPRes(has == OptBool.True, perm.label);
+                }
+                var has = hasPermissionNoFallback(who, gen);
+                if (has != OptBool.Default) return new MPRes(has == OptBool.True, gen.label);
             }
-            return new MPRes(hasPermission(who, gen), gen.label);
+            // Default Entity
+            if (!(who instanceof OfflinePlayer)) {
+                for (var perm : perms) {
+                    var has = defaultEntityPerms.getBoolPermission(perm);
+                    if (has != OptBool.Default) {
+                        return new MPRes(has == OptBool.True, perm.label);
+                    }
+                }
+                var has = hasPermissionNoFallback(who, gen);
+                if (has != OptBool.Default) return new MPRes(has == OptBool.True, gen.label);
+            }
+            // Default Player
+
+            for (var perm : perms) {
+                var has = defaultPerms.getBoolPermission(perm);
+                if (has != OptBool.Default) {
+                    return new MPRes(has == OptBool.True, perm.label);
+                }
+            }
+
+            return new MPRes(defaultPerms.getBoolPermission(gen) == OptBool.True, gen.label);
         }
 
         @SuppressWarnings("BooleanMethodIsAlwaysInverted") // what is it talking about

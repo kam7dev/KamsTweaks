@@ -169,18 +169,23 @@ public class ConfigCommand {
                             ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.SAVED).color(NamedTextColor.GREEN));
                             return Command.SINGLE_SUCCESS;
                         }).requires(source -> source.getSender().hasPermission("kamstweaks.save")))
-                        .then(Commands.literal("printException").requires(source -> source.getSender().hasPermission("kamstweaks.logger")).executes(ctx -> {
+                        .then(Commands.literal("exceptions").requires(source -> source.getSender().hasPermission("kamstweaks.logger")).executes(ctx -> {
                             ctx.getSource().getSender().sendMessage("There are " + Logger.exceptions.size() + " exceptions.");
                             return Command.SINGLE_SUCCESS;
-                        }).then(Commands.argument("id", IntegerArgumentType.integer(0, Logger.exceptions.size() - 1)).executes(ctx -> {
-                            var e = Logger.exceptions.get(ctx.getArgument("id", Integer.class));
+                        }).then(Commands.literal("print").then(Commands.argument("id", IntegerArgumentType.integer()).executes(ctx -> {
+                            var id = ctx.getArgument("id", Integer.class);
+                            if (Logger.exceptions.size() <= id) {
+                                ctx.getSource().getSender().sendMessage("Exception " + id + " not found.");
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            var e = Logger.exceptions.get(id);
                             StringWriter sw = new StringWriter();
                             e.printStackTrace(new PrintWriter(sw));
                             if (!(ctx.getSource().getSender() instanceof ConsoleCommandSender))
                                 Logger.error("Stack trace print requested by " + ctx.getSource().getSender().getName() + ":\n" + sw);
                             ctx.getSource().getSender().sendMessage(sw.toString());
                             return Command.SINGLE_SUCCESS;
-                        }).requires(source -> source.getSender().hasPermission("kamstweaks.logger")))
+                        })).requires(source -> source.getSender().hasPermission("kamstweaks.logger")))
                         .then(Commands.literal("clear").executes(ctx -> {
                             Logger.exceptions.clear();
                             ctx.getSource().getSender().sendMessage("Exceptions cleared.");

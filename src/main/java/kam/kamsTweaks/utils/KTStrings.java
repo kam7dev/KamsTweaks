@@ -14,6 +14,8 @@ public enum KTStrings {
 
     ITEM_TAG_WAXED,
 
+    TOO_EXPENSIVE_FIX,
+
     // Generic
     PLAYERS_ONLY,
     DISABLED_SINGULAR,
@@ -302,6 +304,9 @@ public enum KTStrings {
             }
             case ITEM_TAG_WAXED -> {
                 return Component.translatable("kamstweaks.item.tag.waxed", "Waxed", args);
+            }
+            case TOO_EXPENSIVE_FIX -> {
+                return Component.translatable("kamstweaks.item.hint.too_expensive_fix", "If the anvil says too expensive, try installing %s and try again. If you already have the mod installed you can ignore this.", args);
             }
 
             case PLAYERS_ONLY -> {

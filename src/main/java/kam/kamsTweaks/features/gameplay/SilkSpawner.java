@@ -19,7 +19,10 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+
+import java.util.Collections;
 
 public class SilkSpawner extends Feature {
     @Override
@@ -39,13 +42,17 @@ public class SilkSpawner extends Feature {
                 e.setDropItems(false);
                 e.setExpToDrop(0);
                 ItemStack spawner = new ItemStack(Material.SPAWNER, 1);
-                var spawns = ((CreatureSpawner) e.getBlock().getState()).getSpawnedType();
+                EntityType spawns = ((CreatureSpawner) e.getBlock().getState()).getSpawnedType();
                 if (spawns != null) {
-                    BlockStateMeta meta = (BlockStateMeta) spawner.getItemMeta();
-                    meta.displayName(KTStrings.getFor(KTStrings.SPAWNER, Component.translatable(spawns.translationKey()).color(NamedTextColor.GOLD)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.WHITE));
-                    var state = meta.getBlockState();
-                    ((CreatureSpawner) state).setSpawnedType(spawns);
-                    meta.setBlockState(state);
+                    ItemMeta meta = spawner.getItemMeta();
+                    meta.displayName(Component.translatable(spawns.translationKey()).color(NamedTextColor.GOLD)
+                            .decoration(TextDecoration.ITALIC, false)
+                            .append(Component.text(" Spawner").decoration(TextDecoration.ITALIC, false).color(NamedTextColor.WHITE)));
+                    meta.lore(Collections.singletonList(Component.text("Spawns ").decoration(TextDecoration.ITALIC, false)
+                            .color(NamedTextColor.WHITE).append(Component.translatable(spawns.translationKey())
+                                    .color(NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false))));
+                    meta.getPersistentDataContainer().set(new NamespacedKey("kamstweaks", "spawner-mob"),
+                            PersistentDataType.STRING, spawns.toString());
                     spawner.setItemMeta(meta);
                 }
                 e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), spawner);

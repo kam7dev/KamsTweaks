@@ -6,6 +6,7 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.features.Feature;
 import kam.kamsTweaks.utils.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.utils.Logger;
 import kam.kamsTweaks.utils.UserDataManager;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
@@ -55,7 +56,10 @@ public class UserKeepInv extends Feature {
         if (!KamsTweaks.get().getConfig().getBoolean("keepinv.enabled", true)) return;
         if (UserDataManager.get(e.getPlayer().getUniqueId(), "keepinv.enabled", true)) {
             e.setKeepInventory(true);
-            e.getDrops().clear();
+            for (var item : e.getPlayer().getInventory().getContents()) {
+                if (item == null || item.isEmpty()) continue;
+                e.getDrops().removeFirst();
+            }
             for (int i = 0; i <= 40; i++) {
                 var item = e.getPlayer().getInventory().getItem(i);
                 if (item != null && !item.isEmpty() && item.getItemMeta().hasEnchant(Enchantment.VANISHING_CURSE)) e.getPlayer().getInventory().setItem(i, ItemStack.empty());

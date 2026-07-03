@@ -10,7 +10,6 @@ import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ext.SRVHelper;
 import kam.kamsTweaks.features.Feature;
 import kam.kamsTweaks.utils.KTStrings;
-import kam.kamsTweaks.utils.Logger;
 import kam.kamsTweaks.utils.UserDataManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -114,7 +113,7 @@ public class Vanish extends Feature {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         if (UserDataManager.get(event.getPlayer().getUniqueId(), "vanished", false)) {
             event.setCancelled(true);
@@ -175,7 +174,6 @@ public class Vanish extends Feature {
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
         var split = event.getMessage().split(" ");
-        Logger.info(split[0]);
         switch (split[0]) {
             case "/tell", "/w", "/msg": {
                 if (split.length < 3) return;

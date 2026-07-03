@@ -27,6 +27,19 @@ public class Logger {
         initialized = true;
     }
 
+    public static void saveData() {
+        KamsTweaks.get().getDataConfig().set("logger.exceptions", exceptions);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void loadData() {
+        try {
+            exceptions.addAll((List<Exception>) KamsTweaks.get().getDataConfig().getList("logger.exceptions", new ArrayList<Exception>()));
+        } catch (Exception e) {
+            handleException("Failed to load saved exceptions:", e);
+        }
+    }
+
     public static void debug(String message) {
         if (logLevel.ordinal() >= LogLevel.DEBUG.ordinal())
             KamsTweaks.get().getLogger().info(message);
@@ -63,11 +76,15 @@ public class Logger {
         }
     }
 
-    public static void handleException(Exception e) {
+    public static void handleException(String message, Exception e) {
         exceptions.add(e);
         StringWriter sw = new StringWriter();
         e.printStackTrace(new PrintWriter(sw));
-        Logger.error(sw.toString());
+        Logger.error(message.isEmpty() ? "" : "\n" + sw);
+    }
+
+    public static void handleException(Exception e) {
+        handleException("", e);
     }
 
     public enum LogLevel {
