@@ -34,7 +34,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.text.BreakIterator;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Names extends Feature {
@@ -129,6 +128,16 @@ public class Names extends Feature {
         player.playerListName(comp);
     }
 
+    public OfflinePlayer whois(String name) {
+        AtomicReference<OfflinePlayer> who = new AtomicReference<>();
+        data.forEach((uuid, pair) -> {
+            if (Objects.equals(pt.serialize(pair), name)) {
+                who.set(Bukkit.getServer().getOfflinePlayer(uuid));
+            }
+        });
+        return who.get();
+    }
+
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> nickCmd = Commands.literal("nick")
@@ -158,14 +167,7 @@ public class Names extends Feature {
                             sender.sendMessage(Component.text(res.second.message).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
-                        AtomicBoolean ret = new AtomicBoolean(false);
-                        data.forEach((uuid, other) -> {
-                            if (!uuid.equals(player.getUniqueId()) && Objects.equals(plain, pt.serialize(other))) {
-                                sender.sendMessage(KTStrings.getFor(KTStrings.NAME_IN_USE));
-                                ret.set(true);
-                            }
-                        });
-                        if (ret.get()) return Command.SINGLE_SUCCESS;
+                        if (whois(plain) != null) return Command.SINGLE_SUCCESS;
                         setName(player, comp);
                         sender.sendMessage(KTStrings.getFor(KTStrings.NAME_SET, comp));
                         return Command.SINGLE_SUCCESS;
@@ -180,7 +182,7 @@ public class Names extends Feature {
                 .then(Commands.argument("who", StringArgumentType.greedyString()).suggests((ctx, builder) -> {
                     data.forEach((uuid, comp) -> {
                             var ds = pt.serialize(comp);
-                            if (ds.contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
+                            if (ds.toLowerCase().contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
                                 builder.suggest(ds);
                     });
                     return builder.buildFuture();
@@ -191,16 +193,11 @@ public class Names extends Feature {
                         return Command.SINGLE_SUCCESS;
                     }
                     String name = ctx.getArgument("who", String.class);
-                    AtomicReference<OfflinePlayer> who = new AtomicReference<>();
-                    data.forEach((uuid, pair) -> {
-                        if (Objects.equals(pt.serialize(pair), name)) {
-                            who.set(Bukkit.getServer().getOfflinePlayer(uuid));
-                        }
-                    });
-                    if (who.get() == null) {
+                    var who = whois(name);
+                    if (who == null) {
                         sender.sendMessage(KTStrings.getFor(KTStrings.NAME_WHOIS_NONE, Component.text(name)));
                     } else {
-                        sender.sendMessage(KTStrings.getFor(KTStrings.NAME_WHOIS, getRenderedName(who.get()), Component.text(Objects.requireNonNullElse(who.get().getName(), "Unknown"))));
+                        sender.sendMessage(KTStrings.getFor(KTStrings.NAME_WHOIS, getRenderedName(who), Component.text(Objects.requireNonNullElse(who.getName(), "Unknown"))));
                     }
                     return Command.SINGLE_SUCCESS;
                 }));

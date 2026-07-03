@@ -2,6 +2,7 @@ package kam.kamsTweaks;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.ext.GeyserItemData;
+import kam.kamsTweaks.ext.SRVHelper;
 import kam.kamsTweaks.features.*;
 import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.fun.Names;
@@ -106,6 +107,7 @@ public final class KamsTweaks extends JavaPlugin {
         }
 
         ItemManager.init();
+        SRVHelper.init();
 
         if (getServer().getPluginManager().isPluginEnabled("Geyser-Spigot")) bits = new GeyserItemData();
     }
