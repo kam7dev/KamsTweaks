@@ -1,11 +1,9 @@
 package kam.kamsTweaks.features.gameplay;
 
-import com.mojang.brigadier.Command;
-import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
-import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.fun.Names;
 import kam.kamsTweaks.utils.*;
 import net.kyori.adventure.text.Component;
@@ -13,9 +11,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
@@ -29,7 +25,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -37,9 +32,6 @@ import static kam.kamsTweaks.features.claims.EntityProtections.getTrueHitter;
 import static kam.kamsTweaks.features.claims.LandClaims.nonNull;
 
 public class PVP extends Feature {
-    private final Map<UUID, Boolean> pvp = new HashMap<>();
-    public Map<Player, Integer> onCooldown = new HashMap<>();
-
     public static PVP instance;
 
     public static final Integer COMBAT_TIMER = 15;
@@ -69,24 +61,12 @@ public class PVP extends Feature {
         ConfigCommand.addConfig(new ConfigCommand.BoolConfig("player-pvp-toggle.enabled", "player-pvp-toggle.enabled", false, "kamstweaks.configure"));
     }
 
-    void cooldown(Player player) {
-        onCooldown.put(player, 15);
-        var r = new Runnable() {
-            int id = 0;
-
-            @Override
-            public void run() {
-                int val = onCooldown.get(player) - 1;
-                if (val <= 0) {
-                    Bukkit.getScheduler().cancelTask(id);
-                    onCooldown.remove(player);
-                    return;
-                }
-                onCooldown.put(player, val);
-            }
-        };
-
-        r.id = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), r, 20, 20);
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    boolean canCombat(Player who) {
+        if (inCombat.containsKey(who.getUniqueId())) return true;
+        var claim = Claims.get().landClaims.getClaim(who.getLocation());
+        if (claim == null) return true;
+        return claim.config.pvp;
     }
 
     void putInCombat(Player who, Component otherName) {
@@ -174,9 +154,9 @@ public class PVP extends Feature {
                 if (event.getEntity() != this.fake) return;
                 var hitter = getTrueHitter(event.getDamageSource().getCausingEntity());
                 if (!(hitter instanceof Player other)) return;
-                if (!pvp.getOrDefault(other.getUniqueId(), true)) {
+                if (!canCombat(other)) {
                     event.setCancelled(true);
-                    other.sendMessage(KTStrings.getFor(KTStrings.PVP_YOU_DISABLED).color(NamedTextColor.RED));
+                    other.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_CLAIM_DISABLED).color(NamedTextColor.RED));
                     return;
                 }
                 this.timeLeft = COMBAT_TIMER;
@@ -224,115 +204,18 @@ public class PVP extends Feature {
         return dummy;
     }
 
-    @Override
-    public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        commands.registrar().register(Commands.literal("pvp")
-                .then(Commands.literal("on")
-                        .executes(ctx -> {
-                            if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true)) {
-                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/pvp")));
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            Entity exec = ctx.getSource().getExecutor();
-                            if (exec instanceof Player p) {
-                                if (onCooldown.containsKey(p)) {
-                                    p.sendMessage(KTStrings.getFor(KTStrings.COOLDOWN, Component.text("/pvp"), Component.text(onCooldown.get(p))).color(NamedTextColor.RED));
-                                    return Command.SINGLE_SUCCESS;
-                                }
-                                if (inCombat.containsKey(p.getUniqueId())) {
-                                    p.sendMessage(KTStrings.getFor(KTStrings.PVP_BLOCK_COMMAND).color(NamedTextColor.RED));
-                                    return Command.SINGLE_SUCCESS;
-                                }
-                                UUID playerUUID = p.getUniqueId();
-                                pvp.put(playerUUID, true);
-                                p.sendMessage(KTStrings.getFor(KTStrings.PVP_ENABLE).color(NamedTextColor.GREEN));
-                                cooldown(p);
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
-                            return Command.SINGLE_SUCCESS;
-                        }))
-                .then(Commands.literal("off")
-                        .executes(ctx -> {
-                            if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true)) {
-                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/pvp")));
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            Entity exec = ctx.getSource().getExecutor();
-                            if (exec instanceof Player p) {
-                                if (onCooldown.containsKey(p)) {
-                                    p.sendMessage(KTStrings.getFor(KTStrings.COOLDOWN, Component.text("/pvp"), Component.text(onCooldown.get(p))).color(NamedTextColor.RED));
-                                    return Command.SINGLE_SUCCESS;
-                                }
-                                if (inCombat.containsKey(p.getUniqueId())) {
-                                    p.sendMessage(KTStrings.getFor(KTStrings.PVP_BLOCK_COMMAND).color(NamedTextColor.RED));
-                                    return Command.SINGLE_SUCCESS;
-                                }
-                                UUID playerUUID = p.getUniqueId();
-                                pvp.put(playerUUID, false);
-                                p.sendMessage(KTStrings.getFor(KTStrings.PVP_DISABLE).color(NamedTextColor.RED));
-                                cooldown(p);
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
-                            return Command.SINGLE_SUCCESS;
-                        }))
-                .executes(ctx -> {
-                    if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true)) {
-                        ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/pvp")));
-                        return Command.SINGLE_SUCCESS;
-                    }
-                    Entity exec = ctx.getSource().getExecutor();
-                    if (exec instanceof Player p) {
-                        UUID playerUUID = p.getUniqueId();
-                        if (pvp.getOrDefault(playerUUID, true)) {
-                            p.sendMessage(KTStrings.getFor(KTStrings.PVP_STATUS_ENABLED).color(NamedTextColor.GOLD));
-                        } else {
-                            p.sendMessage(KTStrings.getFor(KTStrings.PVP_STATUS_DISABLED).color(NamedTextColor.GOLD));
-                        }
-                        return Command.SINGLE_SUCCESS;
-                    }
-                    ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY));
-                    return Command.SINGLE_SUCCESS;
-                }).build());
-    }
-
-    @Override
-    public void loadData() {
-        pvp.clear();
-        FileConfiguration config = KamsTweaks.get().getDataConfig();
-        if (config.contains("player-pvp.enabled")) {
-            for (String key : Objects.requireNonNull(config.getConfigurationSection("player-pvp.enabled")).getKeys(false)) {
-                try {
-                    pvp.put(UUID.fromString(key), config.getBoolean("player-pvp.enabled." + key));
-                } catch (Exception e) {
-                    Logger.handleException(e);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void saveData() {
-        FileConfiguration config = KamsTweaks.get().getDataConfig();
-        config.set("player-pvp", null);
-        pvp.forEach((uuid, en) -> {
-            if (en != null) config.set("player-pvp.enabled." + uuid, en);
-        });
-    }
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onAttack(EntityDamageByEntityEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true))
             return;
         if (e.getEntity() instanceof Player target && e.getDamageSource().getCausingEntity() instanceof Player causer) {
             if (target == causer) return;
-            if (!pvp.getOrDefault(target.getUniqueId(), true)) {
+            if (!canCombat(target)) {
                 e.setCancelled(true);
-                causer.sendMessage(KTStrings.getFor(KTStrings.PVP_TARGET_DISABLED, Names.instance.getRenderedName(target)).color(NamedTextColor.RED));
-            } else if (!pvp.getOrDefault(causer.getUniqueId(), true)) {
+                causer.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_CLAIM_DISABLED, Names.instance.getRenderedName(target)).color(NamedTextColor.RED));
+            } else if (!canCombat(causer)) {
                 e.setCancelled(true);
-                causer.sendMessage(KTStrings.getFor(KTStrings.PVP_YOU_DISABLED).color(NamedTextColor.RED));
+                causer.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_CLAIM_DISABLED).color(NamedTextColor.RED));
             } else {
                 putInCombat(target, causer.displayName());
                 putInCombat(causer, target.displayName());

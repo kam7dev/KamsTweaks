@@ -40,11 +40,37 @@ dependencies {
     compileOnly("com.discordsrv:discordsrv:${project.discordsrv_version}")
     compileOnly("me.clip:placeholderapi:${project.placeholderapi_version}")
     compileOnly("org.geysermc.geyser:api:${project.geyser_version}")
+
+    runtimeOnly("io.papermc.paper:paper-api:${project.paper_version}") // this is for genLang because im a bit stubborn and lazy
 }
 
 tasks {
     runServer {
         minecraftVersion("26.1.2")
+    }
+}
+
+tasks.register("genLang") {
+    dependsOn tasks.classes
+    doLast {
+        def javaDir = file(layout.getBuildDirectory().dir("classes/java/main"))
+
+        def runtimeCp = configurations.runtimeClasspath
+        def urls = [javaDir.toURI().toURL()] + runtimeCp.collect { it.toURI().toURL() }
+
+        URLClassLoader cl = new URLClassLoader(urls as URL[], null)
+        try {
+            def clazz = cl.loadClass('kam.kamsTweaks.utils.KTStrings')
+            def jsonMethod = clazz.getMethod('genJson')
+            def jsonFile = file("res/kt-java/assets/kamstweaks/lang/en_us.json")
+            jsonFile.text = jsonMethod.invoke(null)
+
+            def txtMethod = clazz.getMethod('genTxt')
+            def txtFile = file("res/kt-bedrock/texts/en_US.lang")
+            txtFile.text = txtMethod.invoke(null)
+        } finally {
+            cl.close()
+        }
     }
 }
 
@@ -54,8 +80,8 @@ import groovy.json.JsonBuilder
 tasks.register("updateVersions") {
     def jsonFile = file("res/kt-bedrock/manifest.json")
     def parsedJson = new JsonSlurper().parse(jsonFile)
-    parsedJson["header"]["version"] = project.version;
-    (parsedJson["modules"] as List).get(0)["version"] = project.version;
+    parsedJson["header"]["version"] = project.version
+    (parsedJson["modules"] as List).get(0)["version"] = project.version
     jsonFile.text = new JsonBuilder(parsedJson).toPrettyString()
 }
 
@@ -76,17 +102,15 @@ tasks.register("packKTJavaResources", Zip) {
     destinationDirectory = layout.getBuildDirectory().dir("libs/packs")
 }
 
-tasks.named("compileJava") {
-    dependsOn tasks.packABBedrockResources
-    dependsOn tasks.packKTBedrockResources
-    dependsOn tasks.packKTJavaResources
-}
-
 tasks.named('jar') {
     enabled = false
 }
 
 tasks.named("shadowJar") {
+    dependsOn tasks.genLang
+    dependsOn tasks.packABBedrockResources
+    dependsOn tasks.packKTBedrockResources
+    dependsOn tasks.packKTJavaResources
     archiveFileName.set("KamsTweaks.jar")
 }
 

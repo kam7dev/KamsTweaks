@@ -18,6 +18,7 @@ import net.kyori.adventure.text.*;
 import net.kyori.adventure.text.event.*;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -162,7 +163,8 @@ public class LandClaimPage extends GuiLayer {
                 var nameInp = DialogInput.text("name", KTStrings.getFor(KTStrings.NAME)).initial(claim.config.name).build();
                 var prioDrag = DialogInput.numberRange("prio", KTStrings.getFor(KTStrings.PRIORITY), -100, 100).step(1f).initial(claim.config.priority.floatValue()).build();
                 var testBox = DialogInput.bool("test", KTStrings.getFor(KTStrings.PERMS_TEST_MODE)).initial(claim.config.testMode).build();
-                base.inputs(List.of(nameInp, prioDrag, testBox));
+                var pvpBox = DialogInput.bool("pvp", KTStrings.getFor(KTStrings.PVP)).initial(claim.config.pvp).build();
+                base.inputs(List.of(nameInp, prioDrag, testBox, pvpBox));
 
                 var dia = builder.empty().base(base.build());
 
@@ -181,6 +183,22 @@ public class LandClaimPage extends GuiLayer {
                             }
                             claim.config.priority = Objects.requireNonNullElse(view.getFloat("prio"), 0).intValue();
                             claim.config.testMode = Objects.requireNonNullElse(view.getBoolean("test"), false);
+                            if (Objects.requireNonNullElse(view.getBoolean("pvp"), false)) {
+                                for (Player player : claim.getPlayers()) {
+                                    player.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_ENABLE_WARN, Component.text(5).color(NamedTextColor.RED)).color(NamedTextColor.YELLOW));
+                                }
+                                Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> {
+                                    claim.config.pvp = true;
+                                    for (Player player : claim.getPlayers()) {
+                                        player.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_ENABLE).color(NamedTextColor.GREEN));
+                                    }
+                                }, 20 * 5);
+                            } else {
+                                claim.config.pvp = false;
+                                for (Player player : claim.getPlayers()) {
+                                    player.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_DISABLE).color(NamedTextColor.GREEN));
+                                }
+                            }
 
                             var name = Objects.requireNonNullElse(view.getText("name"), "Unnamed Claim");
                             var res = ChatFilter.instance.isFiltered(name);

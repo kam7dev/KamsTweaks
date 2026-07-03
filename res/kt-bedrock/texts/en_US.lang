@@ -1,22 +1,13 @@
-kamstweaks.langcomment00=Hey there! Welcome to my translation file. Any comments like 'kamstweaks.langcomment<number>' does not need to be translated, it's just for editor reference.
-
-kamstweaks.langcomment0=Items
-
 kamstweaks.item.claim_tool=Claim Tool
 kamstweaks.item.stone_brickstep=Stone Brickstep
 kamstweaks.item.ice_mountain=Music Disc
 kamstweaks.item.lava_path=Music Disc
 kamstweaks.item.name_tag_pro_max=Name Tag Pro Max
 kamstweaks.item.tag.waxed=Waxed
-
-kamstweaks.langcomment1=Commands
-
+kamstweaks.item.hint.too_expensive_fix=If the anvil says too expensive, try installing %s and try again. If you already have the mod installed you can ignore this.
 kamstweaks.commands.players_only=Only players can use %s.
 kamstweaks.commands.disabled_singular=%s is disabled.
 kamstweaks.commands.disabled_plural=%s are disabled.
-
-kamstweaks.langcomment2=Generic
-
 kamstweaks.generic.close=Close
 kamstweaks.generic.yes=Yes
 kamstweaks.generic.no=No
@@ -36,17 +27,12 @@ kamstweaks.generic.the_server=The Server
 kamstweaks.generic.saved=Saved KamsTweaks.
 kamstweaks.generic.version=KamsTweaks is on version %s.
 kamstweaks.generic.cooldown=%s is on cooldown for %s seconds.
-
-kamstweaks.langcomment3=Automod
-
+kamstweaks.generic.cooldown_ms=%s is on cooldown for %s minutes %s seconds.
 kamstweaks.automod.name=Nickname by %s was caught by the %s automod: %s
 kamstweaks.automod.anvil=Anvil rename by %s was caught by the %s automod: %s
 kamstweaks.automod.sign=Sign by %s was caught by the %s automod: %s
 kamstweaks.automod.chat=Message by %s was caught by the %s automod: %s
 kamstweaks.automod.claim=Claim rename by %s was caught by the %s automod: %s
-
-kamstweaks.langcomment4=Claims
-
 kamstweaks.claims=Claims
 kamstweaks.claims.tool_info=Claim Tool Info
 kamstweaks.claims.tool_hint=Right click to use the claim tool.
@@ -81,6 +67,7 @@ kamstweaks.claims.op_delete=[%s: Deleted %s's %s]
 kamstweaks.claims.deleted=Deleted claim successfully.
 kamstweaks.claims.claims_have=You have %s %s.
 kamstweaks.claims.claims_other_has=%s has %s %s.
+kamstweaks.claims.land.not_claiming=You aren't currently claiming land. (run %s or use the claim tool to start)
 kamstweaks.claims.cant_for_others=You can't claim for other people.
 kamstweaks.claims.perms.default_player=Default Player Permissions
 kamstweaks.claims.perms.default_entity=Default Entity Permissions
@@ -91,9 +78,6 @@ kamstweaks.claims.perms.edit_default_player=Edit Default Player Permissions
 kamstweaks.claims.perms.edit_default_entity=Edit Default Entity Permissions
 kamstweaks.claims.perms.test_mode=Test Mode
 kamstweaks.claims.perms.test_mode_hint=You're currently in test mode. Disable this in your claim's settings.
-
-kamstweaks.langcomment5=Land Claims
-
 kamstweaks.claims.land=Land Claims
 kamstweaks.claims.land.singular=Land Claim
 kamstweaks.claims.land.door_interact=Interact with Doors
@@ -111,8 +95,8 @@ kamstweaks.claims.land.item_frame_take=Take Items from Frames
 kamstweaks.claims.land.item_frame_place=Place Items into Frames
 kamstweaks.claims.land.armor_stand_take=Take from Armor Stands
 kamstweaks.claims.land.armor_stand_place=Place onto Armor Stands
-kamstweaks.claims.land.vehicle_destroy=Destroy Vehicles
 kamstweaks.claims.land.vehicle_place=Place Vehicles
+kamstweaks.claims.land.vehicle_destroy=Destroy Vehicles
 kamstweaks.claims.land.end_disable=Claims are currently disabled at the end island due to an ongoing dragon fight. They will be re-enabled 5 minutes after the fight.
 kamstweaks.claims.land.end_enabling=Claims are currently disabled at the end island due to a recent dragon fight. They will be re-enabled in %s seconds.
 kamstweaks.claims.land.end_reenabled=Claims are now re-enabled in this dimension.
@@ -120,7 +104,6 @@ kamstweaks.claims.land.already=You're already claiming land. (run %s to cancel)
 kamstweaks.claims.land.maxed-slots=You have used all of your claim slots. Delete some to free up slots.
 kamstweaks.claims.land.start=Right click the first corner of where you want to claim with your claim tool. (If you lost it, run %s)
 kamstweaks.claims.land.stop=Stopped claiming land.
-kamstweaks.claims.land.not_claiming=You aren't currently claiming land. (run %s or use the claim tool to start)
 kamstweaks.claims.land.already_claimed=This land is already claimed by %s.
 kamstweaks.claims.land.corner2=Now click the other corner with your claim tool. (If you lost it, run %s)
 kamstweaks.claims.land.too_large=You can't claim more than %s blocks in an unextended claim, while you are trying to claim %s. You need %s more claim slot(s) for an extension (costs %s).
@@ -135,9 +118,10 @@ kamstweaks.claims.land.info=(%s) %s (priority %s): %s to %s in %s %s
 kamstweaks.claims.land.no_perms=You don't have permission to %s here! (Claim owned by %s)
 kamstweaks.claims.land.unclaimed=This land isn't claimed.
 kamstweaks.claims.land.owned_by=This land is owned by %s.
-
-kamstweaks.langcomment6=Entity Claims
-
+kamstweaks.claims.land.pvp.enable_warn=PVP in this claim will be enabled in %s seconds.
+kamstweaks.claims.land.pvp.enable=PVP in this claim is now enabled.
+kamstweaks.claims.land.pvp.disable=PVP in this claim is now disabled. Ongoing fights may continue.
+kamstweaks.claims.land.pvp.disabled=This claim has PVP disabled.
 kamstweaks.claims.entity=Entity Claims
 kamstweaks.claims.entity.singular=Entity Claim
 kamstweaks.claims.entity.interact=Interact with this entity
@@ -153,9 +137,7 @@ kamstweaks.claims.entity.confirm=Claim %s?
 kamstweaks.claims.entity.no_perms=You don't have permission to %s! (Entity claimed by %s)
 kamstweaks.claims.entity.unclaimed=This entity isn't claimed.
 kamstweaks.claims.entity.owned_by=This entity is owned by %s.
-
-kamstweaks.langcomment7=Graves
-
+kamstweaks.dragon.blocked=The dragon fight is currently disabled. If this is unintended, ask an admin to run %s.
 kamstweaks.graves.info=Grave %s:  %s in %s (%s)
 kamstweaks.graves.expired=expired
 kamstweaks.graves.time_left=%s seconds left
@@ -170,22 +152,16 @@ kamstweaks.graves.inv_title_block=Grave (Stations)
 kamstweaks.graves.name=%s's Grave
 kamstweaks.graves.to_block=To Station Inventory
 kamstweaks.graves.from_block=To Main Inventory
-kamstweaks.graves.just_expired=Your grave (%s) just expired.
 kamstweaks.graves.5_mins=Your grave (%s) expires in 5 minutes!
 kamstweaks.graves.1_min=Your grave (%s) expires in 1 minute!
 kamstweaks.graves.30_sec=Your grave (%s) expires in 30 seconds!
+kamstweaks.graves.just_expired=Your grave (%s) just expired.
 kamstweaks.graves.welcome=You have %s active grave(s) and %s expired grave(s).
 kamstweaks.graves.toggled=Graves are now %s.
 kamstweaks.graves.status=Graves are currently %s.
-
-kamstweaks.langcomment8=Keep Inventory
-
 kamstweaks.keepinv=Keep Inventory
 kamstweaks.keepinv.toggled=Keep inventory is now %s.
 kamstweaks.keepinv.status=Keep inventory is currently %s.
-
-kamstweaks.langcomment9=Nicknames
-
 kamstweaks.names=Nicknames
 kamstweaks.names.length=Nicknames cannot be longer than %s characters.
 kamstweaks.names.empty=Nicknames cannot be empty.
@@ -193,29 +169,15 @@ kamstweaks.names.in_use=Someone already has that nickname.
 kamstweaks.names.set=Your nickname is now %s.
 kamstweaks.names.whois=%s is %s.
 kamstweaks.names.whois_none=No one is using the nickname %s.
-
-kamstweaks.langcomment10=PVP
-
-kamstweaks.pvp.enable=PVP is now enabled.
-kamstweaks.pvp.disable=PVP is now disabled.
-kamstweaks.pvp.status_enabled=PVP is currently enabled.
-kamstweaks.pvp.status_disabled=PVP is currently disabled.
-kamstweaks.pvp.you_disabled=You have PVP disabled.
-kamstweaks.pvp.target_disabled=%s has PVP disabled.
+kamstweaks.pvp=PVP
 kamstweaks.pvp.in_combat=You are now in combat with %s, do not leave.
 kamstweaks.pvp.out_of_combat=You are no longer in combat.
 kamstweaks.pvp.combat_logged=(Combat Logged)
 kamstweaks.pvp.current_combat=You are currently in combat, do not leave.
 kamstweaks.pvp.blocked_command=You cannot run this since you are currently in combat.
-
-kamstweaks.langcomment11=Silk Spawner and /hat
-
 kamstweaks.silkspawners.item_name=%s Spawner
 kamstweaks.slashhat.cursed=%s can't be taken off.
 kamstweaks.slashhat.equip=Now wearing %s.
-
-kamstweaks.langcomment12=TP Features
-
 kamstweaks.tp.immunity_lost=Teleport immunity lost since you attacked someone/something.
 kamstweaks.tp.cancel=Teleport cancelled because %s.
 kamstweaks.tp.cancel_damage=you took damage
@@ -223,18 +185,15 @@ kamstweaks.tp.cancel_death=you died
 kamstweaks.tp.cancel_tp=you teleported
 kamstweaks.tp.cancel_move=you moved
 kamstweaks.tp.cancel_other_damage=%s took damage
+kamstweaks.tp.cancel_other_left=%s left
 kamstweaks.tp.cancel_other_death=%s died
 kamstweaks.tp.cancel_other_tp=%s teleported
 kamstweaks.tp.cancel_other_move=%s moved
-kamstweaks.tp.cancel_other_left=%s left
 kamstweaks.tp.cancel_passenger=you don't have permission to damage an entity in this vehicle
 kamstweaks.tp.cancel_passenger_info=It requires the damage permission because teleporting the mob would allow a method of killing a claimed entity.
 kamstweaks.tp.already_teleporting=You are already teleporting somewhere.
 kamstweaks.tp.cooldown=You're on teleportation cooldown for %s seconds.
 kamstweaks.tp.other_cooldown=%s is teleportation cooldown for %s seconds.
-
-kamstweaks.langcomment13=Warps
-
 kamstweaks.tp.warps=Warps
 kamstweaks.tp.warp.not_exist=Warp %s does not exist.
 kamstweaks.tp.warp.created=Created warp "%s" successfully.
@@ -242,22 +201,13 @@ kamstweaks.tp.warp.deleted=Deleted warp "%s" successfully.
 kamstweaks.tp.warp.count=The server has %s warp(s):
 kamstweaks.tp.warp.info=%s: %s in %s
 kamstweaks.tp.warp.to=Teleporting to the %s warp in %s seconds, please do not move.
-
-kamstweaks.langcomment14=/back and /spawn
-
 kamstweaks.tp.back.no_recent=You have not teleported anywhere recently.
 kamstweaks.tp.back.to=Returning to previous location in %s seconds, please do not move.
 kamstweaks.tp.spawn.to=Teleporting to spawn in %s seconds, please do not move.
-
-kamstweaks.langcomment15=Homes
-
 kamstweaks.tp.homes=Homes
 kamstweaks.tp.homes.none=You don't have a home.
 kamstweaks.tp.homes.set=Your home has been set.
 kamstweaks.tp.homes.to=Teleporting to your home in %s seconds, please do not move.
-
-kamstweaks.langcomment16=TPA
-
 kamstweaks.tp.tpa.outgoing=You already have an outgoing TPA request.
 kamstweaks.tp.tpa.self=You can't teleport to yourself, silly!
 kamstweaks.tp.tpa.dead=You can't teleport while dead.
@@ -284,9 +234,6 @@ kamstweaks.tp.tpa.auto_disable=TPAuto disabled. Incoming TPA requests will not b
 kamstweaks.tp.tpa.cancelled=TPA request to %s cancelled.
 kamstweaks.tp.tpa.other_cancelled=%s cancelled their TPA request.
 kamstweaks.tp.tpa.cancel=TPA request cancelled because %s.
-
-kamstweaks.langcomment17=Vanish
-
 kamstweaks.vanish.op_vanished=[%s: Enabled vanish for %s]
 kamstweaks.vanish.op_unvanished=[%s: Disabled vanish for %s]
 kamstweaks.vanish.vanished=You are now vanished.

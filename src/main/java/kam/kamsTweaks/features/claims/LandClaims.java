@@ -96,6 +96,7 @@ public class LandClaims implements Listener {
             cfg.set(path + ".config.name", claim.config.name);
             cfg.set(path + ".config.prio", claim.config.priority);
             cfg.set(path + ".config.test", claim.config.testMode);
+            cfg.set(path + ".config.pvp", claim.config.pvp);
 //            cfg.set(path + ".config.grass-spread", claim.config.grassSpread.name());
 //            cfg.set(path + ".config.fire-spread", claim.config.fireSpread.name());
 //            cfg.set(path + ".config.water-flow", claim.config.waterFlow.name());
@@ -149,9 +150,10 @@ public class LandClaims implements Listener {
                     var claim = new LandClaim(uuid != null ? Bukkit.getOfflinePlayer(uuid) : null, id, start, end);
                     claim.slots = cfg.getInt(path + ".slots");
 
-                    claim.config.name = nonNull(cfg.getString(path + ".config.name"));
-                    claim.config.priority = cfg.getInt(path + ".config.priority");
-                    claim.config.testMode = cfg.getBoolean(path + ".config.test");
+                    claim.config.name = nonNull(cfg.getString(path + ".config.name", "Unnamed Claim"));
+                    claim.config.priority = cfg.getInt(path + ".config.priority", 0);
+                    claim.config.testMode = cfg.getBoolean(path + ".config.test", false);
+                    claim.config.pvp = cfg.getBoolean(path + ".config.pvp", true);
 //                    claim.config.grassSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.grass-spread")));
 //                    claim.config.fireSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.fire-spread")));
 //                    claim.config.waterFlow = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.water-flow")));
@@ -700,6 +702,7 @@ public class LandClaims implements Listener {
         public String name = "Unnamed Claim";
         public Integer priority = 0;
         public Boolean testMode = false;
+        public Boolean pvp = true;
 
 //        // TODO: these
 //        public ConfigEnum1 grassSpread = ConfigEnum1.FromInside;
@@ -748,6 +751,12 @@ public class LandClaims implements Listener {
             this.owner = owner;
             this.start = start;
             this.end = end;
+        }
+
+        public List<Player> getPlayers() {
+            var list = start.getWorld().getPlayers();
+            list.removeIf(plr -> !inBounds(plr.getLocation()));
+            return list;
         }
 
         public Location getMin() {
@@ -847,6 +856,7 @@ public class LandClaims implements Listener {
             return defaultPerms.getBoolPermission(perm);
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         public OptBool hasPermissionNoFallback(Object who, LandPermission perm) {
             // no player
             if (who == null) return defaultPerms.getBoolPermission(perm);
@@ -877,6 +887,7 @@ public class LandClaims implements Listener {
             return OptBool.Default;
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         public OptBool hasPermissionNoFallback(Object who, AdvancedLandPermission perm) {
             // no player
             if (who == null) return defaultPerms.getBoolPermission(perm);

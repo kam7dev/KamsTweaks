@@ -1,8 +1,14 @@
 package kam.kamsTweaks.utils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.TranslatableComponent;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public enum KTStrings {
     // Items
@@ -39,6 +45,7 @@ public enum KTStrings {
     SAVED,
     VERSION,
     COOLDOWN,
+    COOLDOWN_MS,
 
     // Automod
     AUTOMOD_NAME,
@@ -135,6 +142,10 @@ public enum KTStrings {
     LC_NO_PERM,
     LC_UNCLAIMED,
     LC_OWNED_BY,
+    LC_PVP_ENABLE_WARN,
+    LC_PVP_ENABLE,
+    LC_PVP_DISABLE,
+    LC_PVP_CLAIM_DISABLED,
 
     EC,
     ENTITY,
@@ -153,7 +164,7 @@ public enum KTStrings {
     EC_OWNED_BY,
 
     // Dragon Toggle
-    DRAGON_TOGGLE, // TODO: put in rp lang
+    DRAGON_TOGGLE,
 
     // Graves
     GRAVE_INFO,
@@ -193,12 +204,7 @@ public enum KTStrings {
     NAME_WHOIS_NONE,
 
     // PVP Toggle
-    PVP_ENABLE,
-    PVP_DISABLE,
-    PVP_STATUS_ENABLED,
-    PVP_STATUS_DISABLED,
-    PVP_YOU_DISABLED,
-    PVP_TARGET_DISABLED,
+    PVP,
     PVP_IN_COMBAT,
     PVP_OUT_OF_COMBAT,
     PVP_COMBAT_LOGGED,
@@ -374,6 +380,9 @@ public enum KTStrings {
             }
             case COOLDOWN -> {
                 return Component.translatable("kamstweaks.generic.cooldown", "%s is on cooldown for %s seconds.", args);
+            }
+            case COOLDOWN_MS -> {
+                return Component.translatable("kamstweaks.generic.cooldown_ms", "%s is on cooldown for %s minutes %s seconds.", args);
             }
 
             case AUTOMOD_NAME -> {
@@ -659,6 +668,18 @@ public enum KTStrings {
             case LC_OWNED_BY -> {
                 return Component.translatable("kamstweaks.claims.land.owned_by", "This land is owned by %s.", args);
             }
+            case LC_PVP_ENABLE_WARN -> {
+                return Component.translatable("kamstweaks.claims.land.pvp.enable_warn", "PVP in this claim will be enabled in %s seconds.", args);
+            }
+            case LC_PVP_ENABLE -> {
+                return Component.translatable("kamstweaks.claims.land.pvp.enable", "PVP in this claim is now enabled.", args);
+            }
+            case LC_PVP_DISABLE -> {
+                return Component.translatable("kamstweaks.claims.land.pvp.disable", "PVP in this claim is now disabled. Ongoing fights may continue.", args);
+            }
+            case LC_PVP_CLAIM_DISABLED -> {
+                return Component.translatable("kamstweaks.claims.land.pvp.disabled", "This claim has PVP disabled.", args);
+            }
 
             case EC -> {
                 return Component.translatable("kamstweaks.claims.entity", "Entity Claims", args);
@@ -806,23 +827,8 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.names.whois_none", "No one is using the nickname %s.", args);
             }
 
-            case PVP_ENABLE -> {
-                return Component.translatable("kamstweaks.pvp.enable", "PVP is now enabled.", args);
-            }
-            case PVP_DISABLE -> {
-                return Component.translatable("kamstweaks.pvp.disable", "PVP is now disabled.", args);
-            }
-            case PVP_STATUS_ENABLED -> {
-                return Component.translatable("kamstweaks.pvp.status_enabled", "PVP is currently enabled.", args);
-            }
-            case PVP_STATUS_DISABLED -> {
-                return Component.translatable("kamstweaks.pvp.status_disabled", "PVP is currently disabled.", args);
-            }
-            case PVP_YOU_DISABLED -> {
-                return Component.translatable("kamstweaks.pvp.you_disabled", "You have PVP disabled.", args);
-            }
-            case PVP_TARGET_DISABLED -> {
-                return Component.translatable("kamstweaks.pvp.target_disabled", "%s has PVP disabled.", args);
+            case PVP -> {
+                return Component.translatable("kamstweaks.pvp", "PVP", args);
             }
             case PVP_IN_COMBAT -> {
                 return Component.translatable("kamstweaks.pvp.in_combat", "You are now in combat with %s, do not leave.", args);
@@ -1056,5 +1062,26 @@ public enum KTStrings {
             Logger.handleException(e);
         }
         return Component.text("Unknown translation string, report this to kam ig: " + key.name());
+    }
+
+    private static Map<String, String> genLangMap() {
+        Map<String, String> lang = new LinkedHashMap<>();
+        for (var enumVal : KTStrings.values()) {
+            var comp = (TranslatableComponent) getFor(enumVal);
+            lang.put(comp.key(), comp.fallback());
+        }
+        return lang;
+    }
+
+    public static String genJson() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().disableHtmlEscaping().create();
+        return gson.toJson(genLangMap());
+    }
+
+    public static String genTxt() {
+        var map = genLangMap();
+        var ret = new StringBuilder();
+        map.forEach((key, val) -> ret.append(key).append("=").append(val.replace("\n", "\\n")).append("\n"));
+        return ret.toString();
     }
 }

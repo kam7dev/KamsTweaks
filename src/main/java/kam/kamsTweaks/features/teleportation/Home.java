@@ -13,6 +13,7 @@ import kam.kamsTweaks.features.gameplay.PVP;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -27,6 +28,27 @@ import java.util.UUID;
 
 public class Home extends Feature {
     Map<UUID, Location> homes = new HashMap<>();
+    Map<UUID, Integer> onCooldown = new HashMap<>();
+
+    void cooldown(Player player) {
+        onCooldown.put(player.getUniqueId(), 15 * 60);
+        var r = new Runnable() {
+            int id = 0;
+
+            @Override
+            public void run() {
+                int val = onCooldown.get(player.getUniqueId()) - 1;
+                if (val <= 0) {
+                    Bukkit.getScheduler().cancelTask(id);
+                    onCooldown.remove(player.getUniqueId());
+                    return;
+                }
+                onCooldown.put(player.getUniqueId(), val);
+            }
+        };
+
+        r.id = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), r, 20, 20);
+    }
 
     @Override
     public void saveData() {
@@ -108,8 +130,20 @@ public class Home extends Feature {
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
+                        if (onCooldown.containsKey(player.getUniqueId())) {
+                            var timeLeft = onCooldown.get(player.getUniqueId());
+                            if (timeLeft >= 60) {
+                                int min = timeLeft / 60;
+                                int sec = timeLeft - min * 60;
+                                player.sendMessage(KTStrings.getFor(KTStrings.COOLDOWN_MS, Component.text("/sethome"), Component.text(min), Component.text(sec)).color(NamedTextColor.RED));
+                            } else {
+                                player.sendMessage(KTStrings.getFor(KTStrings.COOLDOWN, Component.text("/sethome"), Component.text(timeLeft)).color(NamedTextColor.RED));
+                            }
+                            return Command.SINGLE_SUCCESS;
+                        }
                         homes.put(player.getUniqueId(), player.getLocation());
                         sender.sendMessage(KTStrings.getFor(KTStrings.HOMES_SET).color(NamedTextColor.GOLD));
+                        cooldown(player);
                         return Command.SINGLE_SUCCESS;
                     }
                     sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, KTStrings.getFor(KTStrings.HOMES)));
