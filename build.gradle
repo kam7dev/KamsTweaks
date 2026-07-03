@@ -58,7 +58,7 @@ tasks.register("genLang") {
         def runtimeCp = configurations.runtimeClasspath
         def urls = [javaDir.toURI().toURL()] + runtimeCp.collect { it.toURI().toURL() }
 
-        URLClassLoader cl = new URLClassLoader(urls as URL[], null)
+        URLClassLoader cl = new URLClassLoader(urls as URL[], (ClassLoader) null)
         try {
             def clazz = cl.loadClass('kam.kamsTweaks.utils.KTStrings')
             def jsonMethod = clazz.getMethod('genJson')
