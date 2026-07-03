@@ -150,7 +150,7 @@ public class EntityProtections implements Listener {
                         if (claim == null) {
                             player.sendMessage(KTStrings.getFor(KTStrings.EC_UNCLAIMED));
                         } else {
-                            player.sendMessage(KTStrings.getFor(KTStrings.EC_UNCLAIMED, claim.getOwnerName()));
+                            player.sendMessage(KTStrings.getFor(KTStrings.EC_OWNED_BY, claim.getOwnerName()));
                         }
                         event.setCancelled(true);
                         return;
