@@ -151,7 +151,7 @@ public class LandClaims implements Listener {
                     claim.slots = cfg.getInt(path + ".slots");
 
                     claim.config.name = nonNull(cfg.getString(path + ".config.name", "Unnamed Claim"));
-                    claim.config.priority = cfg.getInt(path + ".config.priority", 0);
+                    claim.config.priority = cfg.getInt(path + ".config.prio", 0);
                     claim.config.testMode = cfg.getBoolean(path + ".config.test", false);
                     claim.config.pvp = cfg.getBoolean(path + ".config.pvp", true);
 //                    claim.config.grassSpread = ConfigEnum1.valueOf(nonNull(cfg.getString(path + ".config.grass-spread")));
