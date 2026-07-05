@@ -7,16 +7,9 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.KamsTweaks;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.jetbrains.annotations.NotNull;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -153,45 +146,11 @@ public class ConfigCommand {
         }
     }
 
-    public static void registerCommand(ReloadableRegistrarEvent<@NotNull Commands> commands) {
+    public static void registerKTSub(LiteralArgumentBuilder<CommandSourceStack> base) {
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("config");
         for (var sub : configs) {
             command = sub.registerSubcommand(command);
         }
-        commands.registrar().register(
-                Commands.literal("kamstweaks").then(command)
-                        .then(Commands.literal("version").executes(ctx -> {
-                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.VERSION, Component.text(KamsTweaks.get().getPluginMeta().getVersion())));
-                            return Command.SINGLE_SUCCESS;
-                        }))
-                        .then(Commands.literal("save").executes(ctx -> {
-                            KamsTweaks.get().save();
-                            ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.SAVED).color(NamedTextColor.GREEN));
-                            return Command.SINGLE_SUCCESS;
-                        }).requires(source -> source.getSender().hasPermission("kamstweaks.save")))
-                        .then(Commands.literal("exceptions").requires(source -> source.getSender().hasPermission("kamstweaks.logger")).executes(ctx -> {
-                            ctx.getSource().getSender().sendMessage("There are " + Logger.exceptions.size() + " exceptions.");
-                            return Command.SINGLE_SUCCESS;
-                        }).then(Commands.literal("print").then(Commands.argument("id", IntegerArgumentType.integer()).executes(ctx -> {
-                            var id = ctx.getArgument("id", Integer.class);
-                            if (Logger.exceptions.size() <= id) {
-                                ctx.getSource().getSender().sendMessage("Exception " + id + " not found.");
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            var e = Logger.exceptions.get(id);
-                            StringWriter sw = new StringWriter();
-                            e.printStackTrace(new PrintWriter(sw));
-                            if (!(ctx.getSource().getSender() instanceof ConsoleCommandSender))
-                                Logger.error("Stack trace print requested by " + ctx.getSource().getSender().getName() + ":\n" + sw);
-                            ctx.getSource().getSender().sendMessage(sw.toString());
-                            return Command.SINGLE_SUCCESS;
-                        })).requires(source -> source.getSender().hasPermission("kamstweaks.logger")))
-                        .then(Commands.literal("clear").executes(ctx -> {
-                            Logger.exceptions.clear();
-                            ctx.getSource().getSender().sendMessage("Exceptions cleared.");
-                            return Command.SINGLE_SUCCESS;
-                        }).requires(source -> source.getSender().hasPermission("kamstweaks.logger"))))
-                        .build(), List.of("kt")
-        );
+        base.then(command);
     }
 }

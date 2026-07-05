@@ -12,7 +12,6 @@ import io.papermc.paper.registry.RegistryKey;
 import kam.kamsTweaks.utils.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.fun.Names;
-import kam.kamsTweaks.utils.Logger;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
@@ -95,8 +94,8 @@ public class ItemManager implements Listener {
         }
     }
 
-    private static Map<ItemType, ItemStack> items;
-    private static final NamespacedKey key = new NamespacedKey("kamstweaks", "item");
+    public static Map<ItemType, ItemStack> items;
+    public static final NamespacedKey key = new NamespacedKey("kamstweaks", "item");
 
     private static ItemStack makeBaseItem(ItemType type, Material material) {
         ItemStack item = new ItemStack(material);
@@ -347,9 +346,7 @@ public class ItemManager implements Listener {
                             if (plr.getOpenInventory() == view) {
                                 inv.setItem(loc, item);
                             } else {
-                                plr.getInventory().addItem(item).forEach((i, s) -> {
-                                    plr.getWorld().dropItemNaturally(plr.getLocation(), s);
-                                });
+                                plr.getInventory().addItem(item).forEach((i, s) -> plr.getWorld().dropItemNaturally(plr.getLocation(), s));
                             }
                         });
                         break;

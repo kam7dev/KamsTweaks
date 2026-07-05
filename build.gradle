@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id("xyz.jpenilla.run-paper") version "3.0.2"
     id("com.gradleup.shadow") version "9.4.2"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
 }
 
 group = 'kam'
@@ -36,7 +37,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:${project.paper_version}")
+    paperweight.paperDevBundle(project.paper_version)
     compileOnly("com.discordsrv:discordsrv:${project.discordsrv_version}")
     compileOnly("me.clip:placeholderapi:${project.placeholderapi_version}")
     compileOnly("org.geysermc.geyser:api:${project.geyser_version}")

@@ -1,5 +1,7 @@
 package kam.kamsTweaks;
 
+import com.mojang.brigadier.Command;
+import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import kam.kamsTweaks.ext.GeyserItemData;
 import kam.kamsTweaks.ext.SRVHelper;
@@ -17,9 +19,11 @@ import kam.kamsTweaks.ext.KamsTweaksPlaceholder;
 import kam.kamsTweaks.gameplay.DragonFightLock;
 import kam.kamsTweaks.gameplay.ItemManager;
 import kam.kamsTweaks.utils.ConfigCommand;
+import kam.kamsTweaks.utils.KTStrings;
 import kam.kamsTweaks.utils.Logger;
 import kam.kamsTweaks.utils.UserDataManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -96,7 +100,23 @@ public final class KamsTweaks extends JavaPlugin {
                     Logger.handleException(e);
                 }
             }
-            ConfigCommand.registerCommand(commands);
+            var base = Commands.literal("kamstweaks").then(Commands.literal("version").executes(ctx -> {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.VERSION, Component.text(KamsTweaks.get().getPluginMeta().getVersion())));
+                return Command.SINGLE_SUCCESS;
+            })).then(Commands.literal("save").executes(ctx -> {
+                KamsTweaks.get().save();
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.SAVED).color(NamedTextColor.GREEN));
+                return Command.SINGLE_SUCCESS;
+            }).requires(source -> source.getSender().hasPermission("kamstweaks.save")));
+            for (var feature : features) {
+                try {
+                    feature.registerKTSub(base);
+                }  catch(Exception e) {
+                    Logger.handleException(e);
+                }
+            }
+            ConfigCommand.registerKTSub(base);
+            commands.registrar().register(base.build(), List.of("kt"));
             ItemManager.registerCommand(commands);
         });
 
@@ -181,7 +201,11 @@ public final class KamsTweaks extends JavaPlugin {
             boolean ignored = generalFile.getParentFile().mkdirs();
             KamsTweaks.get().saveResource("data.yml", false);
         }
-        generalConfig = YamlConfiguration.loadConfiguration(generalFile);
+        try {
+            generalConfig = YamlConfiguration.loadConfiguration(generalFile);
+        } catch (Exception e) {
+            Logger.handleException(e);
+        }
         saveDefaultConfig();
     }
 
