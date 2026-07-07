@@ -11,9 +11,12 @@ import kam.kamsTweaks.features.claims.LandClaims.*;
 
 import net.kyori.adventure.text.Component;
 
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.block.data.*;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.*;
 import org.bukkit.inventory.*;
@@ -190,13 +193,14 @@ public class LandProtections implements Listener {
                 assert e.getClickedBlock() != null;
                 LandClaim claim = claims.getClaim(e.getClickedBlock().getLocation());
                 if (claim == null) return;
+                var nmsLevel = ((CraftWorld) e.getClickedBlock().getWorld()).getHandle();
                 if (e.getClickedBlock().getType().toString().contains("DOOR")) {
                     var res = claim.hasPermissions(player, LandPermission.DOOR_INTERACT, LandPermission.BLOCK_INTERACT);
                     if (!res.result()) {
                         message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
                         e.setCancelled(true);
                     }
-                } else if ((e.getClickedBlock().getType().equals(Material.RESPAWN_ANCHOR) && !e.getClickedBlock().getWorld().isRespawnAnchorWorks()) || (e.getClickedBlock().getType().name().contains("BED") && !e.getClickedBlock().getWorld().isBedWorks())){
+                } else if ((e.getClickedBlock().getType().equals(Material.RESPAWN_ANCHOR) && !e.getClickedBlock().getWorld().isRespawnAnchorWorks()) || (e.getClickedBlock().getType().name().contains("BED") && nmsLevel.environmentAttributes().getValue(EnvironmentAttributes.BED_RULE, CraftLocation.toBlockPos(e.getClickedBlock().getLocation())).explodes())){
                     var perm = LandPermission.BLOCK_BREAK;
                     if (!claim.hasPermission(player, perm)) {
                         message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
