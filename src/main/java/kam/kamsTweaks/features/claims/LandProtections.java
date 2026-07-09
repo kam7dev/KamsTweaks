@@ -200,7 +200,10 @@ public class LandProtections implements Listener {
                         message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
                         e.setCancelled(true);
                     }
-                } else if ((e.getClickedBlock().getType().equals(Material.RESPAWN_ANCHOR) && !e.getClickedBlock().getWorld().isRespawnAnchorWorks()) || (e.getClickedBlock().getType().name().contains("BED") && nmsLevel.environmentAttributes().getValue(EnvironmentAttributes.BED_RULE, CraftLocation.toBlockPos(e.getClickedBlock().getLocation())).explodes())){
+                } else if ((e.getClickedBlock().getType().equals(Material.RESPAWN_ANCHOR)
+                        && !e.getClickedBlock().getWorld().isRespawnAnchorWorks())
+                        || (e.getClickedBlock().getType().name().contains("BED")
+                        && nmsLevel.environmentAttributes().getValue(EnvironmentAttributes.BED_RULE, CraftLocation.toBlockPos(e.getClickedBlock().getLocation())).explodes())){
                     var perm = LandPermission.BLOCK_BREAK;
                     if (!claim.hasPermission(player, perm)) {
                         message(player, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
