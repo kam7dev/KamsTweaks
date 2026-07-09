@@ -180,6 +180,7 @@ public class Claims extends Feature {
 
     public enum ManagementType {
         Owner,
+        Trusted,
         Op,
         None
     }

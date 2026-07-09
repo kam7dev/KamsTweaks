@@ -145,8 +145,13 @@ public class EntityClaims {
     }
 
     void savePerms(FileConfiguration config, String path, Permissions perms) {
-        perms.bools.forEach((perm, val) -> config.set(path + ".bools." + perm.name(), val.name()));
-        perms.advancedBools.forEach((perm, val) -> config.set(path + ".advbools." + perm.name(), val.name()));
+        try {
+            perms.bools.forEach((perm, val) -> config.set(path + ".bools." + perm.name(), val.name()));
+            perms.advancedBools.forEach((perm, val) -> config.set(path + ".advbools." + perm.name(), val.name()));
+            config.set(path + ".trusted", perms.trusted);
+        } catch (Exception e) {
+            Logger.handleException("Failed to save perms:", e);
+        }
     }
 
     public void save() {
@@ -182,6 +187,7 @@ public class EntityClaims {
                     perms.advancedBools.put(perm, OptBool.valueOf(config.getString(path + ".advbools." + ps)));
                 }
             }
+            perms.trusted = config.getBoolean(path + ".trusted", false);
         } catch (Exception e) {
             Logger.error("Failed loading perms from " + path + ".");
             Logger.handleException(e);
@@ -439,14 +445,13 @@ public class EntityClaims {
 
     public static class Permissions implements Cloneable {
         public EntityClaim claim;
-        public UUID who;
         boolean isClaimDefault = false;
+        public boolean trusted = false;
         Map<EntityPermission, OptBool> bools = new HashMap<>();
         Map<AdvancedEntityPermission, OptBool> advancedBools = new HashMap<>();
 
         public Permissions(EntityClaim claim, UUID who) {
             this.claim = claim;
-            this.who = who;
         }
 
         public Permissions(EntityClaim claim, boolean isClaimDefault) {
@@ -587,16 +592,18 @@ public class EntityClaims {
             if (who == null) return defaultPerms.getBoolPermission(perm) == OptBool.True;
 
             UUID uuid;
-            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            if (who instanceof OfflinePlayer plr) {
+                uuid = plr.getUniqueId();
+
+                // owner
+                if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
+                    if (config.testMode) Claims.get().messageTest((Entity) who);
+                    else return true;
+                }
+            }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
             else {
                 return defaultPerms.getBoolPermission(perm) == OptBool.True;
-            }
-
-            // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) {
-                if (config.testMode) Claims.get().messageTest((Entity) who);
-                else return true;
             }
 
             // explicit perms
@@ -625,16 +632,18 @@ public class EntityClaims {
             if (who == null) return defaultPerms.getBoolPermission(perm);
 
             UUID uuid;
-            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            if (who instanceof OfflinePlayer plr) {
+                uuid = plr.getUniqueId();
+
+                // owner
+                if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
+                    if (config.testMode) Claims.get().messageTest((Entity) who);
+                    else return OptBool.Default;
+                }
+            }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
             else {
                 return defaultPerms.getBoolPermission(perm);
-            }
-
-            // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) {
-                if (config.testMode) Claims.get().messageTest((Entity) who);
-                else return OptBool.Default;
             }
 
             // explicit perms
@@ -658,9 +667,11 @@ public class EntityClaims {
             return defaultPerms.getBoolPermission(perm);
         }
 
-        public Claims.ManagementType getManagementType(Player who) {
+        @SuppressWarnings("DataFlowIssue")
+        public Claims.ManagementType getManagementType(OfflinePlayer who) {
             if (owner != null && who.getUniqueId().equals(owner.getUniqueId())) return Claims.ManagementType.Owner;
-            if (who.hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
+            if (getPerms(who.getUniqueId()).trusted) return Claims.ManagementType.Trusted;
+            if (who.isOnline() && who.getPlayer().hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
             return Claims.ManagementType.None;
         }
 

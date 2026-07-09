@@ -28,6 +28,7 @@ kamstweaks.generic.saved=Saved KamsTweaks.
 kamstweaks.generic.version=KamsTweaks is on version %s.
 kamstweaks.generic.cooldown=%s is on cooldown for %s seconds.
 kamstweaks.generic.cooldown_ms=%s is on cooldown for %s minutes %s seconds.
+kamstweaks.generic.trusted=Trusted
 kamstweaks.automod.name=Nickname by %s was caught by the %s automod: %s
 kamstweaks.automod.anvil=Anvil rename by %s was caught by the %s automod: %s
 kamstweaks.automod.sign=Sign by %s was caught by the %s automod: %s

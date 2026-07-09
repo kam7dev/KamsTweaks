@@ -46,6 +46,7 @@ public enum KTStrings {
     VERSION,
     COOLDOWN,
     COOLDOWN_MS,
+    TRUSTED,
 
     // Automod
     AUTOMOD_NAME,
@@ -383,6 +384,9 @@ public enum KTStrings {
             }
             case COOLDOWN_MS -> {
                 return Component.translatable("kamstweaks.generic.cooldown_ms", "%s is on cooldown for %s minutes %s seconds.", args);
+            }
+            case TRUSTED -> {
+                return Component.translatable("kamstweaks.generic.trusted", "Trusted", args);
             }
 
             case AUTOMOD_NAME -> {

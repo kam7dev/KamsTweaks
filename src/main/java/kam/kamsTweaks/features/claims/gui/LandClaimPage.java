@@ -258,6 +258,7 @@ public class LandClaimPage extends GuiLayer {
                     perms.setBoolPermission(opt, Claims.OptBool.valueOf(Objects.requireNonNullElse(view.getText(opt.name()), "Default")));
                 }
             }
+            perms.trusted = Objects.requireNonNullElse(view.getBoolean("trusted"), true);
         }
 
         void init() {
@@ -335,6 +336,9 @@ public class LandClaimPage extends GuiLayer {
                         }
                         break;
                     }
+                }
+                if (mode == PermMode.OFFLINE_PLAYER && (claim.owner == null || !player.getUniqueId().equals(claim.owner.getUniqueId()))) {
+                    opts.add(DialogInput.bool("trusted", KTStrings.getFor(KTStrings.TRUSTED)).initial(perms.trusted).build());
                 }
                 base.inputs(opts);
 

@@ -74,6 +74,7 @@ public class LandClaims implements Listener {
         try {
             perms.bools.forEach((perm, val) -> config.set(path + ".bools." + perm.name(), val.name()));
             perms.advancedBools.forEach((perm, val) -> config.set(path + ".advbools." + perm.name(), val.name()));
+            config.set(path + ".trusted", perms.trusted);
         } catch (Exception e) {
             Logger.handleException("Failed to save perms:", e);
         }
@@ -129,6 +130,7 @@ public class LandClaims implements Listener {
                     perms.advancedBools.put(perm, OptBool.valueOf(config.getString(path + ".advbools." + ps)));
                 }
             }
+            perms.trusted = config.getBoolean(path + ".trusted", false);
         } catch (Exception e) {
             Logger.error("Failed loading perms from " + path + ".");
             Logger.handleException(e);
@@ -632,6 +634,7 @@ public class LandClaims implements Listener {
     public static class Permissions implements Cloneable {
         public LandClaim claim;
         boolean isClaimDefault = false;
+        public boolean trusted = false;
         Map<LandPermission, OptBool> bools = new HashMap<>();
         Map<AdvancedLandPermission, OptBool> advancedBools = new HashMap<>();
 
@@ -773,9 +776,11 @@ public class LandClaims implements Listener {
             return new Vector3f((float) Math.abs(max.getBlockX() - min.getBlockX()), (float) Math.abs(max.getBlockY() - min.getBlockY()), (float) Math.abs(max.getBlockZ() - min.getBlockZ()));
         }
 
-        public Claims.ManagementType getManagementType(Player who) {
+        @SuppressWarnings("DataFlowIssue")
+        public Claims.ManagementType getManagementType(OfflinePlayer who) {
             if (owner != null && who.getUniqueId().equals(owner.getUniqueId())) return Claims.ManagementType.Owner;
-            if (who.hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
+            if (getPerms(who.getUniqueId()).trusted) return Claims.ManagementType.Trusted;
+            if (who.isOnline() && who.getPlayer().hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
             return Claims.ManagementType.None;
         }
 
@@ -784,17 +789,20 @@ public class LandClaims implements Listener {
             if (who == null) return defaultPerms.getBoolPermission(perm) == OptBool.True;
 
             UUID uuid;
-            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            if (who instanceof OfflinePlayer plr) {
+                uuid = plr.getUniqueId();
+
+                // owner
+                if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
+                    if (config.testMode) Claims.get().messageTest((Entity) who);
+                    else return true;
+                }
+            }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
             else {
                 return defaultPerms.getBoolPermission(perm) == OptBool.True;
             }
 
-            // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) {
-                if (config.testMode) Claims.get().messageTest((Entity) who);
-                else return true;
-            }
             if (!config.testMode && owner != null && owner.getUniqueId().equals(uuid)) return true;
 
             // explicit perms
@@ -823,16 +831,18 @@ public class LandClaims implements Listener {
             if (who == null) return defaultPerms.getBoolPermission(perm);
 
             UUID uuid;
-            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            if (who instanceof OfflinePlayer plr) {
+                uuid = plr.getUniqueId();
+
+                // owner
+                if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
+                    if (config.testMode) Claims.get().messageTest((Entity) who);
+                    else return OptBool.Default;
+                }
+            }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
             else {
                 return defaultPerms.getBoolPermission(perm);
-            }
-
-            // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) {
-                if (config.testMode) Claims.get().messageTest((Entity) who);
-                else return OptBool.True;
             }
 
             // explicit perms
@@ -862,16 +872,18 @@ public class LandClaims implements Listener {
             if (who == null) return defaultPerms.getBoolPermission(perm);
 
             UUID uuid;
-            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            if (who instanceof OfflinePlayer plr) {
+                uuid = plr.getUniqueId();
+
+                // owner
+                if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
+                    if (config.testMode) Claims.get().messageTest((Entity) who);
+                    else return OptBool.Default;
+                }
+            }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
             else {
                 return defaultPerms.getBoolPermission(perm);
-            }
-
-            // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) {
-                if (config.testMode) Claims.get().messageTest((Entity) who);
-                else return OptBool.True;
             }
             if (!config.testMode && owner != null && owner.getUniqueId().equals(uuid)) return OptBool.True;
 
@@ -893,16 +905,18 @@ public class LandClaims implements Listener {
             if (who == null) return defaultPerms.getBoolPermission(perm);
 
             UUID uuid;
-            if (who instanceof OfflinePlayer plr) uuid = plr.getUniqueId();
+            if (who instanceof OfflinePlayer plr) {
+                uuid = plr.getUniqueId();
+
+                // owner
+                if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
+                    if (config.testMode) Claims.get().messageTest((Entity) who);
+                    else return OptBool.Default;
+                }
+            }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
             else {
                 return defaultPerms.getBoolPermission(perm);
-            }
-
-            // owner
-            if (owner != null && owner.getUniqueId().equals(uuid)) {
-                if (config.testMode) Claims.get().messageTest((Entity) who);
-                else return OptBool.True;
             }
 
             // explicit perms
