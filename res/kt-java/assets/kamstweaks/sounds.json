@@ -8,5 +8,10 @@
         "sounds": [
             "kamstweaks:records/lava_path"
         ]
+    },
+    "ooooooooo": {
+        "sounds": [
+            "kamstweaks:fun/ooooooooo"
+        ]
     }
 }

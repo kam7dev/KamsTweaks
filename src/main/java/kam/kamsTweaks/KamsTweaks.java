@@ -9,6 +9,7 @@ import kam.kamsTweaks.features.*;
 import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.fun.Names;
 import kam.kamsTweaks.features.fun.SlashHat;
+import kam.kamsTweaks.features.fun.VirtualInsanity;
 import kam.kamsTweaks.features.gameplay.*;
 import kam.kamsTweaks.features.moderation.ChatFilter;
 import kam.kamsTweaks.features.moderation.ItemDataFilter;
@@ -61,6 +62,7 @@ public final class KamsTweaks extends JavaPlugin {
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
         features.add(new ItemDataFilter());
+        features.add(new VirtualInsanity());
         features.add(new DragonFightLock());
         features.add(new TeleportFeatures());
     }
