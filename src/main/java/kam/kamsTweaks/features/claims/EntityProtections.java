@@ -3,6 +3,7 @@ package kam.kamsTweaks.features.claims;
 import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import io.papermc.paper.event.entity.FishHookStateChangeEvent;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import kam.kamsTweaks.gameplay.ItemManager;
 import kam.kamsTweaks.utils.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
@@ -12,6 +13,7 @@ import kam.kamsTweaks.features.claims.gui.FLAlertLayer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Directional;
@@ -26,6 +28,7 @@ import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.vehicle.*;
 import kam.kamsTweaks.features.claims.EntityClaims.*;
+import org.bukkit.inventory.EquipmentSlot;
 
 public class EntityProtections implements Listener {
     private EntityClaims claims;
@@ -98,6 +101,12 @@ public class EntityProtections implements Listener {
             if (!claim.hasPermission(who, perm)) {
                 message(who, KTStrings.getFor(KTStrings.EC_NO_PERM, perm.label, claim.getOwnerName()));
                 e.setCancelled(true);
+
+                // sulfur cube temp fix until they fix the bug ig
+                if (who.getTargetEntity(5) instanceof SulfurCube cube && who.getInventory().getItem(e.getHand()).getType().equals(Material.BUCKET)) {
+                    who.hideEntity(KamsTweaks.get(), cube);
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> who.showEntity(KamsTweaks.get(), cube));
+                }
             }
         }
     }
@@ -255,6 +264,26 @@ public class EntityProtections implements Listener {
         var entity = e.getEntity();
         var attacker = getTrueHitter(e.getHitBy());
         var claim = claims.getClaim(entity);
+        if (claim != null && !claim.hasPermission(attacker, EntityPermission.DAMAGE)) {
+            e.setCancelled(true);
+            message(attacker, KTStrings.getFor(KTStrings.EC_NO_PERM, KTStrings.getFor(KTStrings.EC_DAMAGE), claim.getOwnerName()));
+        }
+    }
+
+    @EventHandler
+    public void onAttack(PrePlayerAttackEntityEvent e) {
+        var entity = e.getAttacked();
+        var attacker = e.getPlayer();
+        var claim = claims.getClaim(entity);
+        if (entity instanceof SulfurCube sc) {
+            if (!sc.getEquipment().getItem(EquipmentSlot.BODY).isEmpty()) {
+                if (claim != null && !claim.hasPermission(attacker, EntityPermission.INTERACT)) {
+                    e.setCancelled(true);
+                    message(attacker, KTStrings.getFor(KTStrings.EC_NO_PERM, KTStrings.getFor(KTStrings.EC_INTERACT), claim.getOwnerName()));
+                }
+                return;
+            }
+        }
         if (claim != null && !claim.hasPermission(attacker, EntityPermission.DAMAGE)) {
             e.setCancelled(true);
             message(attacker, KTStrings.getFor(KTStrings.EC_NO_PERM, KTStrings.getFor(KTStrings.EC_DAMAGE), claim.getOwnerName()));

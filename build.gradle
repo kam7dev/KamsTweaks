@@ -37,17 +37,17 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle(project.paper_version)
+    paperweight.paperDevBundle("${project.minecraft_version}.build.+")
     compileOnly("com.discordsrv:discordsrv:${project.discordsrv_version}")
     compileOnly("me.clip:placeholderapi:${project.placeholderapi_version}")
     compileOnly("org.geysermc.geyser:api:${project.geyser_version}")
 
-    runtimeOnly("io.papermc.paper:paper-api:${project.paper_version}") // this is for genLang because im a bit stubborn and lazy
+    runtimeOnly("io.papermc.paper:paper-api:${project.minecraft_version}.build.+") // this is for genLang because im a bit stubborn and lazy
 }
 
 tasks {
     runServer {
-        minecraftVersion("26.1.2")
+        minecraftVersion(project.minecraft_version)
     }
 }
 
