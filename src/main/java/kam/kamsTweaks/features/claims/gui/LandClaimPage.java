@@ -265,9 +265,9 @@ public class LandClaimPage extends GuiLayer {
             dialog = Dialog.create(builder -> {
                 var base = DialogBase.builder(switch (mode) {
                     case ENTITY ->
-                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getEName(entity), Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.getEName(entity), Component.text(claim.config.name).color(NamedTextColor.GOLD));
                     case OFFLINE_PLAYER ->
-                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getName(player, true), Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.getName(player, true), Component.text(claim.config.name).color(NamedTextColor.GOLD));
                     case DEFAULT ->
                             KTStrings.getFor(KTStrings.PERMS_EDIT_DEFAULT, Component.text(claim.config.name).color(NamedTextColor.GOLD));
                     case ENTITY_DEFAULT ->

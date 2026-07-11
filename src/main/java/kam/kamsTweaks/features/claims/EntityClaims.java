@@ -57,7 +57,7 @@ public class EntityClaims {
             if (executor instanceof Player player) {
                 new EntityClaimPage(player).show();
                 if (player != sender) {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getName(player)).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.getName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
@@ -358,7 +358,7 @@ public class EntityClaims {
                     ref.i++;
                     ref.msg = ref.msg.appendNewline().append(KTStrings.getFor(KTStrings.EC_INFO,
                             Component.text(claim.id).color(NamedTextColor.GOLD),
-                        Names.instance.getEName(entity).color(NamedTextColor.AQUA),
+                        Names.getEName(entity).color(NamedTextColor.AQUA),
                             Component.text(entity.getLocation().getBlockX() + ", " + entity.getLocation().getBlockY() + ", " + entity.getLocation().getBlockZ()).color(NamedTextColor.GREEN),
                             Component.text(entity.getLocation().getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE)));
                 }
@@ -367,7 +367,7 @@ public class EntityClaims {
         if (receiver == who) {
             receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_YOU_HAVE, Component.text(ref.i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.EC)).append(ref.msg));
         } else {
-            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.instance.getName(who), Component.text(ref.i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.EC)).append(ref.msg));
+            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.getName(who), Component.text(ref.i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.EC)).append(ref.msg));
         }
     }
 
@@ -406,7 +406,7 @@ public class EntityClaims {
                 mob.setRemoveWhenFarAway(false);
             }
             entity.setPersistent(true);
-            who.sendMessage(KTStrings.getFor(KTStrings.EC_CLAIMED, Names.instance.getEName(entity), Component.text(claim.id).color(NamedTextColor.GOLD)));
+            who.sendMessage(KTStrings.getFor(KTStrings.EC_CLAIMED, Names.getEName(entity), Component.text(claim.id).color(NamedTextColor.GOLD)));
         }
     }
 
@@ -717,7 +717,7 @@ public class EntityClaims {
 
         public Component getOwnerName() {
             if (owner == null) return KTStrings.getFor(KTStrings.THE_SERVER).color(NamedTextColor.GOLD);
-            return Names.instance.getName(owner);
+            return Names.getName(owner);
         }
 
         public String getOwnerUsername() {

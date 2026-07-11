@@ -199,6 +199,8 @@ public enum KTStrings {
 
     // Names
     NAMES,
+    NAME_COLORS,
+    NAME_MINIMESSAGE,
     NAME_LENGTH,
     NAME_EMPTY,
     NAME_IN_USE,
@@ -817,6 +819,12 @@ public enum KTStrings {
 
             case NAMES -> {
                 return Component.translatable("kamstweaks.names", "Nicknames", args);
+            }
+            case NAME_COLORS -> {
+                return Component.translatable("kamstweaks.names.colors", "Name Colors", args);
+            }
+            case NAME_MINIMESSAGE -> {
+                return Component.translatable("kamstweaks.names.minimessage", "Minimessage support for names", args);
             }
             case NAME_LENGTH -> {
                 return Component.translatable("kamstweaks.names.length", "Nicknames cannot be longer than %s characters.", args);

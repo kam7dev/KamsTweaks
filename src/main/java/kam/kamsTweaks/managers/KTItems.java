@@ -253,7 +253,7 @@ public class KTItems implements Listener {
         var item = event.getPlayer().getInventory().getItemInMainHand();
         if (getType(item) != ItemType.NAME_TAG_PRO_MAX) return;
         event.setCancelled(true);
-        Names.instance.setName(target, item.effectiveName());
+        Names.setName(target, new Names.NameData("minimessage", item.effectiveName()));
         if (event.getPlayer().getGameMode() != GameMode.CREATIVE) item.setAmount(item.getAmount() - 1);
     }
 }

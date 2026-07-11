@@ -305,7 +305,7 @@ public class LandClaims implements Listener {
                 new LandClaimPage(player).show();
 
                 if (player != sender) {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getName(player)).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.getName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
@@ -441,7 +441,7 @@ public class LandClaims implements Listener {
                 if (sender == player) {
                     sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_HIGHLIGHTED));
                 } else {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_HIGHLIGHTED_FOR, Names.instance.getName(player)));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_HIGHLIGHTED_FOR, Names.getName(player)));
                 }
                 return Command.SINGLE_SUCCESS;
             }
@@ -1099,7 +1099,7 @@ public class LandClaims implements Listener {
 
         public Component getOwnerName() {
             if (owner == null) return KTStrings.getFor(KTStrings.THE_SERVER).color(NamedTextColor.GOLD);
-            return Names.instance.getName(owner);
+            return Names.getName(owner);
         }
 
         public String getOwnerUsername() {
@@ -1179,7 +1179,7 @@ public class LandClaims implements Listener {
         if (receiver == who) {
             receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_YOU_HAVE, Component.text(i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.LC)).append(msg));
         } else {
-            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.instance.getName(who), Component.text(i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.LC)).append(msg));
+            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.getName(who), Component.text(i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.LC)).append(msg));
         }
 
     }

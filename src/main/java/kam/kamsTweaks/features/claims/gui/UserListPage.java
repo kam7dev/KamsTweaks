@@ -29,7 +29,7 @@ public class UserListPage extends GuiLayer {
             Arrays.sort(plrs, Comparator.comparing(OfflinePlayer::getName, Comparator.nullsLast(String::compareTo)));
             List<ActionButton> btns = new ArrayList<>();
             for (var plr : plrs) {
-                var name = Names.instance.getName(plr, true);
+                var name = Names.getName(plr, true);
                 var btn = ActionButton.builder(name);
                 btn.action(DialogAction.customClick((view, audience) -> callback.accept(plr), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build()));
                 btns.add(btn.build());

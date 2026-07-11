@@ -118,7 +118,7 @@ public class ChatFilter extends Feature {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onChat(AsyncChatEvent e) {
-        var str = Names.instance.pt.serialize(e.message());
+        var str = Names.pt.serialize(e.message());
         var res = isFiltered(str);
         if (res.first) {
             warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_CHAT, Component.text(e.getPlayer().getName()), Component.text(res.second.name), Component.text(str)));
@@ -132,13 +132,13 @@ public class ChatFilter extends Feature {
         var comps = Component.text("");
         var f = true;
         for (var line : e.lines()) {
-            var s = Names.instance.pt.serialize(line);
+            var s = Names.pt.serialize(line);
             if (s.isBlank()) continue;
             if (!f) comps = comps.appendNewline();
             comps = comps.append(line);
             f = false;
         }
-        var str = Names.instance.pt.serialize(comps);
+        var str = Names.pt.serialize(comps);
         var res = isFiltered(str);
         if (res.first) {
             warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_SIGN, Component.text(e.getPlayer().getName()), Component.text(res.second.name), Component.text(str)));
@@ -153,7 +153,7 @@ public class ChatFilter extends Feature {
             if (e.getSlot() == 2) {
                 var item = inv.getResult();
                 if (item == null) return;
-                var str = Names.instance.pt.serialize(item.displayName());
+                var str = Names.pt.serialize(item.displayName());
                 var res = isFiltered(str);
                 if (res.first) {
                     warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_NAME, Component.text(e.getWhoClicked().getName()), Component.text(res.second.name), Component.text(str)));
@@ -165,7 +165,7 @@ public class ChatFilter extends Feature {
     }
 
     public static void warnStaff(Component message) {
-        Logger.warn(Names.instance.pt.serialize(message));
+        Logger.warn(Names.pt.serialize(message));
         KamsTweaks.get().sendToOps(message.color(NamedTextColor.RED));
         SRVHelper.messageAutomodChannel(PlainTextComponentSerializer.plainText().serialize(message));
     }

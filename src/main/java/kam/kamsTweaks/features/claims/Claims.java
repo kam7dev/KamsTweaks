@@ -68,7 +68,7 @@ public class Claims extends Feature {
                 new Homepage(player).show();
 
                 if (player != sender) {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getName(player)).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.getName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
@@ -88,7 +88,7 @@ public class Claims extends Feature {
                 if (player == sender) {
                     sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_TOOL_HINT).color(NamedTextColor.GOLD));
                 } else {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_GAVE_TOOL_TO, Names.instance.getName(player)).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_GAVE_TOOL_TO, Names.getName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }

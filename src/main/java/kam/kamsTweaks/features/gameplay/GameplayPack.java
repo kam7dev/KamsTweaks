@@ -124,7 +124,7 @@ public class GameplayPack extends Feature {
             case LAVA_PATH, ICE_MOUNTAIN: break;
             case null, default: return;
         }
-        if (!event.getView().getRenameText().equals(Names.instance.pt.serialize(event.getInventory().getFirstItem().displayName()))) {
+        if (!event.getView().getRenameText().equals(Names.pt.serialize(event.getInventory().getFirstItem().displayName()))) {
             event.setResult(null);
         }
     }

@@ -212,7 +212,7 @@ public class PVP extends Feature {
             if (target == causer) return;
             if (!canCombat(target)) {
                 e.setCancelled(true);
-                causer.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_CLAIM_DISABLED, Names.instance.getName(target)).color(NamedTextColor.RED));
+                causer.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_CLAIM_DISABLED, Names.getName(target)).color(NamedTextColor.RED));
             } else if (!canCombat(causer)) {
                 e.setCancelled(true);
                 causer.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_CLAIM_DISABLED).color(NamedTextColor.RED));

@@ -22,8 +22,21 @@ nicknames:
   # How long a name can be.
   max-length: 30
 
-  # If players can color their name (using /color)
-  color: true
+  # Changing a player's name to a color or gradient
+  colors:
+    enabled: true
+
+    # Named combos that can be used in /color.
+    # They are combinable with other colors and combos.
+    combos:
+      # Colors used by Geode SDK (https://geode-sdk.org/) as seen in its mod layer.
+      geode:
+        - "#F4D48E"
+        - "#F5AE7D"
+        - "#EC897C"
+        - "#D56985"
+        - "#AD5492"
+        - "#714A9A"
 
   # If minimessage should be allowed in names (via /mmname)
   # https://docs.papermc.io/adventure/minimessage/format/

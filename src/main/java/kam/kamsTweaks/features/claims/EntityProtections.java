@@ -82,7 +82,7 @@ public class EntityProtections implements Listener {
                     return;
                 }
                 new FLAlertLayer(who,
-                        KTStrings.getFor(KTStrings.EC_CONFIRM, Names.instance.getEName(entity)),
+                        KTStrings.getFor(KTStrings.EC_CONFIRM, Names.getEName(entity)),
                         Component.empty(),
                         KTStrings.getFor(KTStrings.YES),
                         KTStrings.getFor(KTStrings.NO),
