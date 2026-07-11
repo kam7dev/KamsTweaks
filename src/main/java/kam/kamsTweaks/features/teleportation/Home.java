@@ -6,8 +6,9 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.utils.Logger;
 import kam.kamsTweaks.features.gameplay.PVP;
 import kam.kamsTweaks.utils.LocationUtils;
@@ -28,22 +29,22 @@ import java.util.UUID;
 
 public class Home extends Feature {
     Map<UUID, Location> homes = new HashMap<>();
-    Map<UUID, Integer> onCooldown = new HashMap<>();
+    Map<UUID, Integer> onSetHomeCooldown = new HashMap<>();
 
     void cooldown(Player player) {
-        onCooldown.put(player.getUniqueId(), 15 * 60);
+        onSetHomeCooldown.put(player.getUniqueId(), Config.getInt("teleportation.homes.sethome-cooldown", 900));
         var r = new Runnable() {
             int id = 0;
 
             @Override
             public void run() {
-                int val = onCooldown.get(player.getUniqueId()) - 1;
+                int val = onSetHomeCooldown.get(player.getUniqueId()) - 1;
                 if (val <= 0) {
                     Bukkit.getScheduler().cancelTask(id);
-                    onCooldown.remove(player.getUniqueId());
+                    onSetHomeCooldown.remove(player.getUniqueId());
                     return;
                 }
-                onCooldown.put(player.getUniqueId(), val);
+                onSetHomeCooldown.put(player.getUniqueId(), val);
             }
         };
 
@@ -130,8 +131,8 @@ public class Home extends Feature {
                     }
                     Entity executor = ctx.getSource().getExecutor();
                     if (executor instanceof Player player) {
-                        if (onCooldown.containsKey(player.getUniqueId())) {
-                            var timeLeft = onCooldown.get(player.getUniqueId());
+                        if (onSetHomeCooldown.containsKey(player.getUniqueId())) {
+                            var timeLeft = onSetHomeCooldown.get(player.getUniqueId());
                             if (timeLeft >= 60) {
                                 int min = timeLeft / 60;
                                 int sec = timeLeft - min * 60;

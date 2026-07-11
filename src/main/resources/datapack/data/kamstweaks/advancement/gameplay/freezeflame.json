@@ -14,7 +14,7 @@
     "announce_to_chat": true,
     "hidden": false
   },
-  "parent": "ltsmp:silly/ltsmpmode",
+  "parent": "minecraft:nether/obtain_blaze_rod",
   "criteria": {
     "plugin_handles_this_i_guess____why_are_you_still_reading____this_has_no_info_for_you____seriously_stop_reading____what_are_you_doing____youre_scaring_me____fine_ill_tell_you_why____datapacks_are_limited_because_mojang__insert_sad_face____fun_fact__this_advancements_name_is_a_mission_name_from_super_mario_galaxy____ok_im_out_of_ideas____bye": {
       "trigger": "minecraft:impossible"

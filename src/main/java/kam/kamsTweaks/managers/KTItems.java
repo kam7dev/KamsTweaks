@@ -1,7 +1,9 @@
-package kam.kamsTweaks.gameplay;
+package kam.kamsTweaks.managers;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Equippable;
@@ -9,32 +11,20 @@ import io.papermc.paper.datacomponent.item.JukeboxPlayable;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
-import kam.kamsTweaks.utils.KTStrings;
-import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.utils.Config;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
-import org.bukkit.advancement.AdvancementProgress;
-import org.bukkit.block.Jukebox;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Fireball;
-import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -45,7 +35,7 @@ import java.net.URI;
 import java.util.*;
 
 @SuppressWarnings("UnstableApiUsage")
-public class ItemManager implements Listener {
+public class KTItems implements Listener {
     public enum ItemType {
         CLAIM_TOOL("claimer", KTStrings.ITEM_CLAIM_TOOL),
         NAME_TAG_PRO_MAX("name_tag_pro_max", KTStrings.ITEM_NAME_TAG_PRO_MAX),
@@ -158,48 +148,6 @@ public class ItemManager implements Listener {
             item.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
             items.put(ItemType.NAME_TAG_PRO_MAX, item);
         }
-
-        Bukkit.addRecipe(new SmithingTransformRecipe(
-                new NamespacedKey("kamstweaks", "stone_brickstep"),
-                createItem(ItemType.STONE_BRICKSTEP),
-                RecipeChoice.empty(), // template
-                new RecipeChoice.ExactChoice(ItemStack.of(Material.MUSIC_DISC_PIGSTEP)), // base
-                new RecipeChoice.ExactChoice(ItemStack.of(Material.STONE_BRICK_WALL)))); // addition
-
-        {
-            var item = createItem(ItemType.LAVA_PATH);
-            var meta = item.getItemMeta();
-            meta.getPersistentDataContainer().set(ItemTag.WAXED.key, PersistentDataType.BOOLEAN, true);
-            meta.lore(List.of(KTStrings.getFor(KTStrings.ITEM_TAG_WAXED).decoration(TextDecoration.ITALIC, false)));
-            item.setItemMeta(meta);
-
-            var wax = new ShapelessRecipe(new NamespacedKey("kamstweaks", "wax_lava_path"), item);
-            wax.addIngredient(createItem(ItemType.LAVA_PATH));
-            wax.addIngredient(Material.HONEYCOMB);
-            Bukkit.addRecipe(wax);
-
-            var axe = new ShapelessRecipe(new NamespacedKey("kamstweaks", "axe_lava_path"), createItem(ItemType.LAVA_PATH));
-            axe.addIngredient(item);
-            axe.addIngredient(new RecipeChoice.MaterialChoice(Material.WOODEN_AXE, Material.STONE_AXE, Material.IRON_AXE, Material.GOLDEN_AXE, Material.DIAMOND_AXE, Material.NETHERITE_AXE));
-            Bukkit.addRecipe(axe);
-        }
-        {
-            var item = createItem(ItemType.ICE_MOUNTAIN);
-            var meta = item.getItemMeta();
-            meta.getPersistentDataContainer().set(ItemTag.WAXED.key, PersistentDataType.BOOLEAN, true);
-            meta.lore(List.of(KTStrings.getFor(KTStrings.ITEM_TAG_WAXED).decoration(TextDecoration.ITALIC, false)));
-            item.setItemMeta(meta);
-
-            var wax = new ShapelessRecipe(new NamespacedKey("kamstweaks", "wax_ice_mountain"), item);
-            wax.addIngredient(createItem(ItemType.ICE_MOUNTAIN));
-            wax.addIngredient(Material.HONEYCOMB);
-            Bukkit.addRecipe(wax);
-
-            var axe = new ShapelessRecipe(new NamespacedKey("kamstweaks", "axe_ice_mountain"), createItem(ItemType.ICE_MOUNTAIN));
-            axe.addIngredient(item);
-            axe.addIngredient(new RecipeChoice.MaterialChoice(Material.WOODEN_AXE, Material.STONE_AXE, Material.IRON_AXE, Material.GOLDEN_AXE, Material.DIAMOND_AXE, Material.NETHERITE_AXE));
-            Bukkit.addRecipe(axe);
-        }
     }
 
     public static ItemStack createItem(ItemType type) {
@@ -237,12 +185,10 @@ public class ItemManager implements Listener {
     }
 
     public static void registerCommand(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        commands.registrar().register(Commands.literal("itemmuseum").requires(source -> {
-            if (source.getSender() instanceof Player plr) {
-                return plr.getUniqueId().toString().equals("b638c3bb-1c3b-4928-97f7-1c8f75d7a59b");
-            }
-            return false;
-        }).then(Commands.argument("item", StringArgumentType.word()).requires(source -> {
+    }
+
+    public static void registerKTSub(LiteralArgumentBuilder<CommandSourceStack> base) {
+        base.then(Commands.literal("give").requires(source -> source.getSender().hasPermission("kamstweaks.items.give")).then(Commands.argument("item", StringArgumentType.word()).requires(source -> {
             if (source.getSender() instanceof Player plr) {
                 return plr.getUniqueId().toString().equals("b638c3bb-1c3b-4928-97f7-1c8f75d7a59b");
             }
@@ -262,29 +208,10 @@ public class ItemManager implements Listener {
                 sender.sendMessage(Component.text("Item '" + pre + "' doesn't exist."));
                 return Command.SINGLE_SUCCESS;
             }
-            ((Player) sender).getInventory().addItem(ItemManager.createItem(type));
+            ((Player) sender).getInventory().addItem(KTItems.createItem(type));
             sender.sendMessage(Component.text("Gave '" + pre + "'."));
             return Command.SINGLE_SUCCESS;
-        })).build());
-    }
-
-    List<UUID> hasMessaged = new ArrayList<>();
-
-    @EventHandler
-    public void onAnvil(PrepareAnvilEvent event) {
-        var view = event.getView();
-        view.setMaximumRepairCost(Integer.MAX_VALUE);
-        if (view.getRepairCost() > 39) {
-            var old = view.getRepairCost();
-            view.setRepairCost((int) (33 + (Math.log(view.getRepairCost()) * 2)));
-            event.getViewers().forEach(v -> {
-                if (v instanceof Player player) {
-                    if (hasMessaged.contains(player.getUniqueId())) return;
-                    hasMessaged.add(player.getUniqueId());
-                    player.sendMessage(KTStrings.getFor(KTStrings.TOO_EXPENSIVE_FIX, Component.text("Anvil Too Expensive Fix").decorate(TextDecoration.UNDERLINED).color(NamedTextColor.AQUA).clickEvent(ClickEvent.openUrl("https://modrinth.com/mod/anvil-too-expensive-fix"))).color(NamedTextColor.YELLOW));
-                }
-            });
-        }
+        })));
     }
 
     private static final String PACK_ID = "1V21rNSU933OJpMYJrVIbovwbocVGlmq1";
@@ -296,6 +223,7 @@ public class ItemManager implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        if (!Config.getBool("suggest-resource-pack", true)) return;
         final ResourcePackRequest request = ResourcePackRequest.resourcePackRequest()
                 .packs(PACK_INFO)
                 .prompt(Component.text("This resource pack is for KamsTweaks."))
@@ -306,7 +234,7 @@ public class ItemManager implements Listener {
         event.getPlayer().sendResourcePacks(request);
     }
 
-    void convertTo(ItemStack item, ItemType type, Key songKey) {
+    public static void convertTo(ItemStack item, ItemType type, Key songKey) {
         item.setData(DataComponentTypes.ITEM_MODEL, songKey);
         var reg = RegistryAccess.registryAccess().getRegistry(RegistryKey.JUKEBOX_SONG).get(songKey);
         if (reg != null) item.setData(DataComponentTypes.JUKEBOX_PLAYABLE, JukeboxPlayable.jukeboxPlayable(reg));
@@ -327,99 +255,5 @@ public class ItemManager implements Listener {
         event.setCancelled(true);
         Names.instance.setName(target, item.effectiveName());
         if (event.getPlayer().getGameMode() != GameMode.CREATIVE) item.setAmount(item.getAmount() - 1);
-    }
-
-    @EventHandler
-    public void onCraft(CraftItemEvent event) {
-        if (event.getRecipe() instanceof ShapelessRecipe recipe) {
-            if (recipe.key().asString().equals("kamstweaks:axe_lava_path") || recipe.key().asString().equals("kamstweaks:axe_ice_mountain")) {
-                int where = 1;
-                for (var slot : event.getInventory().getMatrix()) {
-                    if (slot != null && slot.getType().name().toLowerCase().contains("axe")) {
-                        slot.setData(DataComponentTypes.DAMAGE, Objects.requireNonNullElse(slot.getData(DataComponentTypes.DAMAGE), 0) + 1);
-                        var item = slot.clone();
-                        var view = event.getView();
-                        var inv = event.getInventory();
-                        var plr = event.getWhoClicked();
-                        int loc = where;
-                        Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> {
-                            if (plr.getOpenInventory() == view) {
-                                inv.setItem(loc, item);
-                            } else {
-                                plr.getInventory().addItem(item).forEach((i, s) -> plr.getWorld().dropItemNaturally(plr.getLocation(), s));
-                            }
-                        });
-                        break;
-                    }
-                    where++;
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onItemRename(PrepareAnvilEvent event) {
-        if (event.getInventory().getFirstItem() == null || event.getView().getRenameText() == null) return;
-        switch (getType(event.getInventory().getFirstItem())) {
-            case LAVA_PATH, ICE_MOUNTAIN: break;
-            case null, default: return;
-        }
-        if (!event.getView().getRenameText().equals(Names.instance.pt.serialize(event.getInventory().getFirstItem().displayName()))) {
-            event.setResult(null);
-        }
-    }
-
-    @EventHandler
-    public void onJukebox(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        if (event.getPlayer().isSneaking()) return;
-        var block = event.getClickedBlock();
-        assert(block != null);
-        if (!(block.getState() instanceof Jukebox)) return;
-        var item = event.getItem();
-        if (block.getLocation().getWorld().getEnvironment() == World.Environment.NETHER) {
-            if (event.getHand() == null) return;
-            if (getType(item) == ItemType.ICE_MOUNTAIN && !item.getPersistentDataContainer().has(ItemTag.WAXED.key)) {
-                convertTo(item, ItemType.LAVA_PATH, ItemType.LAVA_PATH.key);
-                event.getPlayer().getInventory().setItem(event.getHand(), item);
-            }
-        } else if (block.getLocation().getWorld().getEnvironment() == World.Environment.THE_END) {
-            if (event.getHand() == null) return;
-            if (getType(item) == ItemType.LAVA_PATH && !item.getPersistentDataContainer().has(ItemTag.WAXED.key)) {
-                convertTo(item, ItemType.ICE_MOUNTAIN, ItemType.ICE_MOUNTAIN.key);
-                event.getPlayer().getInventory().setItem(event.getHand(), item);
-            }
-        }
-    }
-
-    @EventHandler
-    public void onDeath(EntityDeathEvent event) {
-        if (event.getEntity().getType() == EntityType.STRAY) {
-            if (event.getDamageSource().getCausingEntity() == null) return;
-            var hitter = event.getDamageSource().getCausingEntity();
-            Player causingPlayer = null;
-            switch (hitter.getType()) {
-                case BLAZE, GHAST:
-                    if (((Mob) hitter).getTarget() instanceof Player player) {
-                        causingPlayer = player;
-                    }
-                    break;
-                case PLAYER:
-                    if (event.getDamageSource().getDirectEntity() instanceof Fireball) {
-                        causingPlayer = (Player) hitter;
-                        break;
-                    }
-                    return;
-                default: return;
-            }
-
-            event.getDrops().add(ItemManager.createItem(ItemType.ICE_MOUNTAIN));
-            if (causingPlayer == null) return;
-            var adv = Bukkit.getAdvancement(new NamespacedKey("kamstweaks", "gameplay/freezeflame"));
-            if (adv == null) return;
-            AdvancementProgress progress = causingPlayer.getAdvancementProgress(adv);
-            for(String criteria : progress.getRemainingCriteria())
-                progress.awardCriteria(criteria);
-        }
     }
 }

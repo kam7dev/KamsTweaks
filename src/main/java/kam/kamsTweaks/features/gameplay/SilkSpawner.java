@@ -1,8 +1,7 @@
 package kam.kamsTweaks.features.gameplay;
 
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.ConfigCommand;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -18,7 +17,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -27,8 +25,8 @@ import java.util.Collections;
 public class SilkSpawner extends Feature {
     @Override
     public void setup() {
-        ConfigCommand.addConfig(
-                new ConfigCommand.BoolConfig("silk-spawners.enabled", "silk-spawners.enabled", true, "kamstweaks.configure"));
+        Config.addConfig(
+                new Config.BoolConfigOption("silk-spawners.enabled", "silk-spawners.enabled", true, "kamstweaks.configure"));
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -60,7 +58,6 @@ public class SilkSpawner extends Feature {
         }
     }
 
-    // For older spawners to still work
     @EventHandler
     public void onPlace(BlockPlaceEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))

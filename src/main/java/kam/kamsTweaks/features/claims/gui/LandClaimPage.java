@@ -7,11 +7,11 @@ import io.papermc.paper.registry.data.dialog.body.*;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.*;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Logger;
 import kam.kamsTweaks.features.moderation.ChatFilter;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.claims.LandClaims.*;
 import net.kyori.adventure.text.*;
@@ -265,9 +265,9 @@ public class LandClaimPage extends GuiLayer {
             dialog = Dialog.create(builder -> {
                 var base = DialogBase.builder(switch (mode) {
                     case ENTITY ->
-                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getEntityRenderedName(entity), Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getEName(entity), Component.text(claim.config.name).color(NamedTextColor.GOLD));
                     case OFFLINE_PLAYER ->
-                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getRenderedName(player, true), Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getName(player, true), Component.text(claim.config.name).color(NamedTextColor.GOLD));
                     case DEFAULT ->
                             KTStrings.getFor(KTStrings.PERMS_EDIT_DEFAULT, Component.text(claim.config.name).color(NamedTextColor.GOLD));
                     case ENTITY_DEFAULT ->

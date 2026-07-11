@@ -1,7 +1,8 @@
-package kam.kamsTweaks.utils;
+package kam.kamsTweaks.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import kam.kamsTweaks.utils.Logger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -174,6 +175,7 @@ public enum KTStrings {
     GRAVE_COUNT,
     GRAVE_RECOVERY_MAX,
     GRAVE_RECOVERY,
+    GRAVE_RECOVERY_LIMITED,
     GRAVE_NO_ID,
     GRAVE_DELETED,
     GRAVE_NEW,
@@ -245,6 +247,7 @@ public enum KTStrings {
     WARP_INFO,
     TP_TO_WARP,
 
+    BACK_INFO,
     BACK_NO_RECENT,
     TP_TO_BACK,
 
@@ -751,7 +754,10 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.graves.recovery_max", "You are already recovering %s graves.", args);
             }
             case GRAVE_RECOVERY -> {
-                return Component.translatable("kamstweaks.graves.recovery", "You have 10 minutes to recover your grave. You can recover a grave repeatedly, but only %s can be recovered at a time.", args);
+                return Component.translatable("kamstweaks.graves.recovery", "You have 10 minutes to recover your grave. You can recover this grave repeatedly.", args);
+            }
+            case GRAVE_RECOVERY_LIMITED -> {
+                return Component.translatable("kamstweaks.graves.recovery_limited", "You have 10 minutes to recover your grave. This grave has %s more recoveries.", args);
             }
             case GRAVE_NO_ID -> {
                 return Component.translatable("kamstweaks.graves.no_id", "You don't have a grave with id %s.", args);
@@ -932,6 +938,9 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.tp.warp.to", "Teleporting to the %s warp in %s seconds, please do not move.", args);
             }
 
+            case BACK_INFO -> {
+                return Component.translatable("kamstweaks.tp.back.info", "Return to your death location with %s.", args);
+            }
             case BACK_NO_RECENT -> {
                 return Component.translatable("kamstweaks.tp.back.no_recent", "You have not teleported anywhere recently.", args);
             }

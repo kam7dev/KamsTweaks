@@ -6,10 +6,10 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Logger;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.gameplay.PVP;
 import kam.kamsTweaks.utils.UserDataManager;
 import net.kyori.adventure.text.Component;
@@ -315,10 +315,10 @@ public class TPA extends Feature {
                                 }
                                 if (list.contains(target.getUniqueId())) {
                                     list.remove(target.getUniqueId());
-                                    p.sendMessage(KTStrings.getFor(KTStrings.TPA_REMOVE_BLOCK, Names.instance.getRenderedName(target).color(NamedTextColor.RED)));
+                                    p.sendMessage(KTStrings.getFor(KTStrings.TPA_REMOVE_BLOCK, Names.instance.getName(target).color(NamedTextColor.RED)));
                                 } else {
                                     list.add(target.getUniqueId());
-                                    p.sendMessage(KTStrings.getFor(KTStrings.TPA_ADD_BLOCK, Names.instance.getRenderedName(target).color(NamedTextColor.RED)));
+                                    p.sendMessage(KTStrings.getFor(KTStrings.TPA_ADD_BLOCK, Names.instance.getName(target).color(NamedTextColor.RED)));
                                 }
                             }
                             return Command.SINGLE_SUCCESS;

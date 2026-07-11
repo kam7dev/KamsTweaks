@@ -4,70 +4,9 @@ main: kam.kamsTweaks.KamsTweaks
 api-version: '26.1.2'
 bootstrapper: kam.kamsTweaks.Bootstrapper
 
-# i was lied to about plugin's permissions.yml
-permissions:
-  kamstweaks.claims.claim:
-    default: true
-    description: "Claim land or entities"
-  kamstweaks.claims.manage:
-    default: op
-    description: "Manage claims"
-
-  kamstweaks.hat:
-    default: true
-    description: "Use /hat"
-
-  kamstweaks.names.nick:
-    default: true
-    description: "Set own nickname"
-
-  kamstweaks.teleports.back:
-    default: true
-    description: "Teleport back to previous location"
-  kamstweaks.teleports.homes:
-    default: true
-    description: "Set or teleport to homes"
-  kamstweaks.teleports.tpa:
-    default: true
-    description: "Request to teleport to someone"
-  kamstweaks.teleports.warp:
-    default: true
-    description: "Teleport to a warp"
-  kamstweaks.teleports.warps:
-    default: true
-    description: "List all warps"
-  kamstweaks.teleports.addwarp:
-    default: op
-    description: "Create a new warp"
-  kamstweaks.teleports.delwarp:
-    default: op
-    description: "Delete a warp"
-  kamstweaks.teleports.spawn:
-    default: true
-    description: "Teleport to spawn"
-
-  kamstweaks.silkspawner:
-    default: true
-    description: "Use silk touch on spawners"
-
-  kamstweaks.configure:
-    default: op
-    description: "Change settings for KamsTweaks"
-
-  kamstweaks.logger:
-    default: op
-    description: "Interact with the logger (basic)"
-
-  kamstweaks.save:
-    default: op
-    description: "Save data for KamsTweaks"
-
 dependencies:
   server:
     DiscordSRV:
-      load: BEFORE
-      required: false
-    PlaceholderAPI:
       load: BEFORE
       required: false
     Geyser-Spigot:

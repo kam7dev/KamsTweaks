@@ -3,7 +3,7 @@ package kam.kamsTweaks.features.gameplay;
 import kam.kamsTweaks.features.Feature;
 import org.bukkit.Bukkit;
 
-import kam.kamsTweaks.utils.ConfigCommand;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -19,7 +19,7 @@ import org.bukkit.inventory.ItemStack;
 public class SeedDispenser extends Feature {
     @Override
     public void setup() {
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("seed-dispenser.enabled", "seed-dispenser.enabled", true, "kamstweaks.configure"));
+        Config.addConfig(new Config.BoolConfigOption("seed-dispenser.enabled", "seed-dispenser.enabled", true, "kamstweaks.configure"));
     }
 
     public static Material matForSeed(ItemStack item) {

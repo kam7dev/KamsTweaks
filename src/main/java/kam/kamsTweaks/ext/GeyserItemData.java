@@ -2,6 +2,7 @@ package kam.kamsTweaks.ext;
 
 
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.utils.Logger;
 
 import org.geysermc.geyser.api.GeyserApi;
@@ -19,17 +20,26 @@ import org.geysermc.geyser.api.util.Identifier;
 
 @SuppressWarnings({"CommentedOutCode", "SpellCheckingInspection"})
 public class GeyserItemData implements EventRegistrar {
+    boolean kt;
+    boolean ab;
+    
     public GeyserItemData() {
         Logger.info("Setting up geyser listener");
+        kt = Config.getBool("ext.geyser.kamstweaks-items", true);
+        ab = Config.getBool("ext.geyser.anvixos-bits-items", true);
         GeyserApi.api().eventBus().subscribe(this, GeyserDefineCustomItemsEvent.class, this::onGeyserDefineCustomItems);
         GeyserApi.api().eventBus().subscribe(this, GeyserDefineResourcePacksEvent.class, this::onGeyserDefineResourcePacks);
     }
 
     public void onGeyserDefineResourcePacks(GeyserDefineResourcePacksEvent event) {
-        KamsTweaks.get().saveResource("abrp-bedrock.zip", true);
-        KamsTweaks.get().saveResource("ktrp-bedrock.zip", true);
-        event.register(ResourcePack.builder(PackCodec.path(KamsTweaks.get().getDataPath().resolve("abrp-bedrock.zip"))).build());
-        event.register(ResourcePack.builder(PackCodec.path(KamsTweaks.get().getDataPath().resolve("ktrp-bedrock.zip"))).build());
+        if (kt) {
+            KamsTweaks.get().saveResource("ktrp-bedrock.zip", true);
+            event.register(ResourcePack.builder(PackCodec.path(KamsTweaks.get().getDataPath().resolve("ktrp-bedrock.zip"))).build());
+        }
+        if (ab) {
+            KamsTweaks.get().saveResource("abrp-bedrock.zip", true);
+            event.register(ResourcePack.builder(PackCodec.path(KamsTweaks.get().getDataPath().resolve("abrp-bedrock.zip"))).build());
+        }
     }
 
     void registerForKT(GeyserDefineCustomItemsEvent event) {
@@ -608,7 +618,7 @@ public class GeyserItemData implements EventRegistrar {
 
     public void onGeyserDefineCustomItems(GeyserDefineCustomItemsEvent event) {
         Logger.info("Setting up geyser items");
-        registerForKT(event);
-        registerForAB(event);
+        if (kt) registerForKT(event);
+        if (ab) registerForAB(event);
     }
 }

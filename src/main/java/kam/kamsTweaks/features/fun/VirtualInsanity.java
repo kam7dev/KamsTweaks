@@ -6,8 +6,11 @@ import io.papermc.paper.math.Rotations;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.managers.KTStrings;
+import kam.kamsTweaks.utils.Config;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.ArmorStand;
@@ -16,12 +19,47 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class VirtualInsanity extends Feature {
+    Map<UUID, Integer> onCooldown = new HashMap<>();
+
+    void cooldown(Player player) {
+        onCooldown.put(player.getUniqueId(), Config.getInt("virtual-insanity.cooldown", 60));
+        var r = new Runnable() {
+            int id = 0;
+
+            @Override
+            public void run() {
+                int val = onCooldown.get(player.getUniqueId()) - 1;
+                if (val <= 0) {
+                    Bukkit.getScheduler().cancelTask(id);
+                    onCooldown.remove(player.getUniqueId());
+                    return;
+                }
+                onCooldown.put(player.getUniqueId(), val);
+            }
+        };
+
+        r.id = Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), r, 20, 20);
+    }
+
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         commands.registrar().register(Commands.literal("jamiroquai").executes(ctx -> {
+            if (!KamsTweaks.get().getConfig().getBoolean("virtual-insanity.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/jamiroquai")));
+                return Command.SINGLE_SUCCESS;
+            }
             var exec = ctx.getSource().getExecutor();
             if (!(exec instanceof Player plr)) return Command.SINGLE_SUCCESS;
+            if (onCooldown.containsKey(plr.getUniqueId())) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.COOLDOWN, Component.text(onCooldown.get(plr.getUniqueId()))));
+                return Command.SINGLE_SUCCESS;
+            }
+            cooldown(plr);
             float yaw = (plr.getLocation().getYaw() % 360 + 360) % 360;
             var rad = -Math.toRadians(yaw);
             var loc = plr.getLocation().add(Math.sin(rad) * 10, 0, Math.cos(rad) * 10).addRotation(246, 0);
@@ -58,12 +96,6 @@ public class VirtualInsanity extends Feature {
                     stand.remove();
                 }
             }, 1, 1);
-
-            // Head:[0f,305f,0f]
-            // LeftLeg:[352f,0f,354f]
-            // LeftArm:[16f,50f,0f]
-            // RightArm:[275f,300f,344f]
-
             return Command.SINGLE_SUCCESS;
         }).build());
     }

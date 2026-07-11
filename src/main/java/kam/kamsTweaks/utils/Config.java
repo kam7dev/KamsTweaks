@@ -14,41 +14,60 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ConfigCommand {
-    private static final List<Config> configs = new ArrayList<>();
-
-    public static void addConfig(Config config) {
+public class Config {
+    private static final List<ConfigOption> configs = new ArrayList<>();
+    public static void addConfig(ConfigOption config) {
         configs.add(config);
     }
 
-    public abstract static class Config {
+    public static boolean getBool(String id, boolean defaultValue) {
+        return KamsTweaks.get().getConfig().getBoolean(id, defaultValue);
+    }
+
+    public static int getInt(String id, int defaultValue) {
+        return KamsTweaks.get().getConfig().getInt(id, defaultValue);
+    }
+
+    public static long getLong(String id, long defaultValue) {
+        return KamsTweaks.get().getConfig().getLong(id, defaultValue);
+    }
+
+    public static String getString(String id, String defaultValue) {
+        return KamsTweaks.get().getConfig().getString(id, defaultValue);
+    }
+
+    public abstract static class ConfigOption {
         public String name;
         public String configId;
         public String permission;
+        public boolean requiresRestart;
         public FileConfiguration config = KamsTweaks.get().getConfig();
 
         public abstract LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command);
     }
 
-    public static class StringConfig extends Config {
+    public static class StringConfigOption extends ConfigOption {
         public String[] options;
         public boolean freeType = false;
         public Consumer<String> callback;
         public String default_;
 
-        public StringConfig(String name, String configId, String default_, String[] options) {
+        public StringConfigOption(String name, String configId, String default_, String[] options, boolean requiresRestart, String permission) {
             this.name = name;
             this.configId = configId;
             this.default_ = default_;
             this.options = options;
-        }
-
-        public StringConfig(String name, String configId, String default_, String[] options, String permission) {
-            this.name = name;
-            this.configId = configId;
-            this.default_ = default_;
-            this.options = options;
+            this.requiresRestart = requiresRestart;
             this.permission = permission;
+        }
+        public StringConfigOption(String name, String configId, String default_, String[] options, boolean requiresRestart) {
+            this(name, configId, default_, options, requiresRestart, null);
+        }
+        public StringConfigOption(String name, String configId, String default_, String[] options, String permission) {
+            this(name, configId, default_, options, false, permission);
+        }
+        public StringConfigOption(String name, String configId, String default_, String[] options) {
+            this(name, configId, default_, options, false, null);
         }
 
         @Override
@@ -77,21 +96,25 @@ public class ConfigCommand {
         }
     }
 
-    public static class BoolConfig extends Config {
+    public static class BoolConfigOption extends ConfigOption {
         Consumer<Boolean> callback;
         boolean default_;
 
-        public BoolConfig(String name, String configId, boolean default_) {
+        public BoolConfigOption(String name, String configId, boolean default_, boolean requiresRestart, String permission) {
             this.name = name;
             this.configId = configId;
             this.default_ = default_;
-        }
-
-        public BoolConfig(String name, String configId, boolean default_, String permission) {
-            this.name = name;
-            this.configId = configId;
-            this.default_ = default_;
+            this.requiresRestart = requiresRestart;
             this.permission = permission;
+        }
+        public BoolConfigOption(String name, String configId, boolean default_, boolean requiresRestart) {
+            this(name, configId, default_, requiresRestart, null);
+        }
+        public BoolConfigOption(String name, String configId, boolean default_, String permission) {
+            this(name, configId, default_, false, permission);
+        }
+        public BoolConfigOption(String name, String configId, boolean default_) {
+            this(name, configId, default_, false, null);
         }
 
         @Override
@@ -111,21 +134,25 @@ public class ConfigCommand {
         }
     }
 
-    public static class IntegerConfig extends Config {
+    public static class IntConfigOption extends ConfigOption {
         Consumer<Integer> callback;
         Integer default_;
 
-        public IntegerConfig(String name, String configId, int default_) {
+        public IntConfigOption(String name, String configId, int default_, boolean requiresRestart, String permission) {
             this.name = name;
             this.configId = configId;
             this.default_ = default_;
-        }
-
-        public IntegerConfig(String name, String configId, int default_, String permission) {
-            this.name = name;
-            this.configId = configId;
-            this.default_ = default_;
+            this.requiresRestart = requiresRestart;
             this.permission = permission;
+        }
+        public IntConfigOption(String name, String configId, int default_, boolean requiresRestart) {
+            this(name, configId, default_, requiresRestart, null);
+        }
+        public IntConfigOption(String name, String configId, int default_, String permission) {
+            this(name, configId, default_, false, permission);
+        }
+        public IntConfigOption(String name, String configId, int default_) {
+            this(name, configId, default_, false, null);
         }
 
         @Override

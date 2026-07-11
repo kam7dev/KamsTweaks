@@ -2,9 +2,9 @@ package kam.kamsTweaks.features.teleportation;
 
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
-import kam.kamsTweaks.utils.ConfigCommand;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.claims.EntityClaims;
@@ -56,13 +56,13 @@ public class TeleportFeatures extends Feature {
         for (var feature : features) {
             Bukkit.getServer().getPluginManager().registerEvents(feature, KamsTweaks.get());
         }
-        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.timer", "teleportation.timer", 5, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.cooldown", "teleportation.cooldown", 10, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.homes.enabled", "teleportation.homes.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.spawn.enabled", "teleportation.spawn.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.tpa.enabled", "teleportation.tpa.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.warp.enabled", "teleportation.warp.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.back.enabled", "teleportation.back.enabled", true, "kamstweaks.configure"));
+        Config.addConfig(new Config.IntConfigOption("teleportation.timer", "teleportation.timer", 5, "kamstweaks.configure"));
+        Config.addConfig(new Config.IntConfigOption("teleportation.cooldown", "teleportation.cooldown", 10, "kamstweaks.configure"));
+        Config.addConfig(new Config.BoolConfigOption("teleportation.homes.enabled", "teleportation.homes.enabled", true, "kamstweaks.configure"));
+        Config.addConfig(new Config.BoolConfigOption("teleportation.spawn.enabled", "teleportation.spawn.enabled", true, "kamstweaks.configure"));
+        Config.addConfig(new Config.BoolConfigOption("teleportation.tpa.enabled", "teleportation.tpa.enabled", true, "kamstweaks.configure"));
+        Config.addConfig(new Config.BoolConfigOption("teleportation.warp.enabled", "teleportation.warp.enabled", true, "kamstweaks.configure"));
+        Config.addConfig(new Config.BoolConfigOption("teleportation.back.enabled", "teleportation.back.enabled", true, "kamstweaks.configure"));
     }
 
     @Override

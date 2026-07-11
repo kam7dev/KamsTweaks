@@ -1,7 +1,7 @@
 package kam.kamsTweaks.features.moderation;
 
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.ConfigCommand;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.KamsTweaks;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
@@ -13,7 +13,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 public class NoBoom extends Feature {
     @Override
     public void setup() {
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("no-explosions.enabled", "no-explosions.enabled", false, "kamstweaks.configure"));
+        Config.addConfig(new Config.BoolConfigOption("no-explosions.enabled", "no-explosions.enabled", false, "kamstweaks.configure"));
     }
 
     @EventHandler

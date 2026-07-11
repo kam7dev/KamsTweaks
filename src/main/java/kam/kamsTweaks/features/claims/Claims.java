@@ -5,11 +5,11 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.claims.gui.Homepage;
-import kam.kamsTweaks.gameplay.ItemManager;
-import kam.kamsTweaks.utils.ConfigCommand;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTItems;
+import kam.kamsTweaks.utils.Config;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.Logger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -42,9 +42,9 @@ public class Claims extends Feature {
     @Override
     public void setup() {
 
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("land-claims.enabled", "land-claims.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("land-claims.max-claims", "land-claims.max-claims", 30, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("land-claims.max-claim-size", "land-claims.max-claim-size", 50000, "kamstweaks.configure"));
+        Config.addConfig(new Config.BoolConfigOption("land-claims.enabled", "land-claims.enabled", true, "kamstweaks.configure"));
+        Config.addConfig(new Config.IntConfigOption("land-claims.max-claims", "land-claims.max-claims", 30, "kamstweaks.configure"));
+        Config.addConfig(new Config.IntConfigOption("land-claims.max-claim-size", "land-claims.max-claim-size", 50000, "kamstweaks.configure"));
 
         landClaims.setup(this);
         entityClaims.setup(this);
@@ -58,13 +58,17 @@ public class Claims extends Feature {
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         var claimCmd = Commands.literal("claims").executes(ctx -> {
+            if (!Config.getBool("land-claims.enabled", true) && !Config.getBool("entity-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.CLAIMS)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
                 new Homepage(player).show();
 
                 if (player != sender) {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getRenderedName(player)).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
@@ -73,14 +77,18 @@ public class Claims extends Feature {
         });
 
         var getTool = Commands.literal("get-tool").executes(ctx -> {
+            if (!Config.getBool("land-claims.enabled", true) && !Config.getBool("entity-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.CLAIMS)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
-                player.getInventory().addItem(ItemManager.createItem(ItemManager.ItemType.CLAIM_TOOL));
+                player.getInventory().addItem(KTItems.createItem(KTItems.ItemType.CLAIM_TOOL));
                 if (player == sender) {
                     sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_TOOL_HINT).color(NamedTextColor.GOLD));
                 } else {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_GAVE_TOOL_TO, Names.instance.getRenderedName(player)).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_GAVE_TOOL_TO, Names.instance.getName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }

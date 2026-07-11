@@ -1,9 +1,9 @@
-package kam.kamsTweaks.gameplay;
+package kam.kamsTweaks.features.gameplay;
 
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.ConfigCommand;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.utils.Config;
+import kam.kamsTweaks.managers.KTStrings;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -17,15 +17,15 @@ import org.bukkit.event.entity.EntityDamageEvent;
 public class DragonFightLock extends Feature {
     @Override
     public void setup() {
-        var cmd = new ConfigCommand.BoolConfig("dragon-fight.enabled", "dragon-fight." + Bukkit.getWorlds().get(2).getUID(), false, "kamstweaks.configure");
+        var cmd = new Config.BoolConfigOption("dragon-fight.enabled", "dragon-fight." + Bukkit.getWorlds().get(2).getUID(), false, "kamstweaks.configure");
         cmd.config = KamsTweaks.get().getDataConfig();
-        ConfigCommand.addConfig(cmd);
+        Config.addConfig(cmd);
     }
 
     @EventHandler
     public void onAttack(EntityDamageEvent event) {
         var world = event.getEntity().getWorld();
-        if (KamsTweaks.get().getDataConfig().getBoolean("dragon-fight." + world.getUID(), false)) return;
+        if (KamsTweaks.get().getDataConfig().getBoolean("dragon-fight." + world.getUID(), !Config.getBool("dragon-fight-lock", true))) return;
         if (event.getEntity() instanceof EnderDragon dragon) {
             event.setCancelled(true);
             if (event.getDamageSource().getCausingEntity() instanceof Player player) {
