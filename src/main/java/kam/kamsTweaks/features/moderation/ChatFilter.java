@@ -10,18 +10,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import github.scarsz.discordsrv.util.DiscordUtil;
+import kam.kamsTweaks.ext.SRVHelper;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.features.fun.Names;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.features.fun.nicknames.Names;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.Pair;
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.AnvilInventory;
-import org.bukkit.plugin.Plugin;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
 import kam.kamsTweaks.KamsTweaks;
@@ -76,21 +75,23 @@ public class ChatFilter extends Feature {
     List<Filter> filters = new ArrayList<>();
 
     public void setup() {
+        // eventually i need to add config extension here but just like the nickname color config thats for me to do another day
+
         instance = this;
         var cfg = KamsTweaks.get().getConfig();
-        if (cfg.contains("filters")) {
-            for (var str : Objects.requireNonNull(cfg.getConfigurationSection("filters")).getKeys(false)) {
+        if (cfg.contains("chat-filters")) {
+            for (var str : Objects.requireNonNull(cfg.getConfigurationSection("chat-filters")).getKeys(false)) {
                 Filter filter;
-                if (cfg.getBoolean("filters." + str + ".fetch.enabled", false)) {
-                    filter = new Filter(str, cfg.getString("filters." + str + ".message", "Your message contains words banned by the server."), cfg.getString("filters." + str + ".fetch.link", ""));
+                if (cfg.getBoolean("chat-filters." + str + ".fetch.enabled", false)) {
+                    filter = new Filter(str, cfg.getString("chat-filters." + str + ".message", "Your message contains words banned by the server."), cfg.getString("chat-filters." + str + ".fetch.link", ""));
                     filter.fetch();
                 } else {
-                    List<String> terms = Arrays.stream(cfg.getString("filters." + str + ".regex", "").split("[,\n]")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+                    List<String> terms = Arrays.stream(cfg.getString("chat-filters." + str + ".regex", "").split("[,\n]")).map(String::trim).filter(s -> !s.isEmpty()).toList();
                     String regex = ("\\b(" + String.join("|", terms) + ")\\b").replace("*", ".*");
-                    if (cfg.getString("filters." + str + ".regex", "").isEmpty()) return;
-                    filter = new Filter(str, cfg.getString("filters." + str + ".message", "Your message contains words banned by the server."), Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
+                    if (cfg.getString("chat-filters." + str + ".regex", "").isEmpty()) return;
+                    filter = new Filter(str, cfg.getString("chat-filters." + str + ".message", "Your message contains words banned by the server."), Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
                 }
-                filter.enabled = cfg.getBoolean("filters." + str + ".enabled", true);
+                filter.enabled = cfg.getBoolean("chat-filters." + str + ".enabled", true);
                 filters.add(filter);
             }
         }
@@ -119,7 +120,7 @@ public class ChatFilter extends Feature {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onChat(AsyncChatEvent e) {
-        var str = Names.instance.pt.serialize(e.message());
+        var str = Names.pt.serialize(e.message());
         var res = isFiltered(str);
         if (res.first) {
             warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_CHAT, Component.text(e.getPlayer().getName()), Component.text(res.second.name), Component.text(str)));
@@ -133,13 +134,13 @@ public class ChatFilter extends Feature {
         var comps = Component.text("");
         var f = true;
         for (var line : e.lines()) {
-            var s = Names.instance.pt.serialize(line);
+            var s = Names.pt.serialize(line);
             if (s.isBlank()) continue;
             if (!f) comps = comps.appendNewline();
             comps = comps.append(line);
             f = false;
         }
-        var str = Names.instance.pt.serialize(comps);
+        var str = Names.pt.serialize(comps);
         var res = isFiltered(str);
         if (res.first) {
             warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_SIGN, Component.text(e.getPlayer().getName()), Component.text(res.second.name), Component.text(str)));
@@ -154,7 +155,7 @@ public class ChatFilter extends Feature {
             if (e.getSlot() == 2) {
                 var item = inv.getResult();
                 if (item == null) return;
-                var str = Names.instance.pt.serialize(item.displayName());
+                var str = Names.pt.serialize(item.displayName());
                 var res = isFiltered(str);
                 if (res.first) {
                     warnStaff(KTStrings.getFor(KTStrings.AUTOMOD_NAME, Component.text(e.getWhoClicked().getName()), Component.text(res.second.name), Component.text(str)));
@@ -165,24 +166,9 @@ public class ChatFilter extends Feature {
         }
     }
 
-
     public static void warnStaff(Component message) {
-        Logger.warn(Names.instance.pt.serialize(message));
+        Logger.warn(Names.pt.serialize(message));
         KamsTweaks.get().sendToOps(message.color(NamedTextColor.RED));
-        Plugin dsPlugin = Bukkit.getPluginManager().getPlugin("DiscordSRV");
-        if (dsPlugin != null && dsPlugin.isEnabled()) {
-            try {
-                var channel = DiscordUtil.getTextChannelById("1487994679579508836");
-                if (channel != null) {
-                    var pt = Names.instance.pt.serialize(message);
-                    channel.sendMessage("<@&1488275345252810882> " + pt).queue();
-                } else {
-                    Logger.info("Automod channel did not exist.");
-                }
-            } catch (Exception e) {
-                Logger.error("Failed to send message to discord. Exception printed below.");
-                Logger.handleException(e);
-            }
-        }
+        SRVHelper.messageAutomodChannel(PlainTextComponentSerializer.plainText().serialize(message));
     }
 }

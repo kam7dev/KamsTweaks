@@ -8,10 +8,12 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.utils.Logger;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.claims.Claims.OptBool;
 import kam.kamsTweaks.features.claims.gui.EntityClaimPage;
 import net.kyori.adventure.text.Component;
@@ -40,6 +42,9 @@ public class EntityClaims {
     public EntityProtections prots = new EntityProtections();
 
     public void setup(Claims instance) {
+        Config.bool("entity-claims.enabled", true).build().add();
+        Config.integer("entity-claims.max-claims", 1000).build().add();
+
         this.instance = instance;
         prots.setup(this);
         Bukkit.getServer().getPluginManager().registerEvents(prots, KamsTweaks.get());
@@ -47,12 +52,16 @@ public class EntityClaims {
 
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands, LiteralArgumentBuilder<CommandSourceStack> baseCmd) {
         Command<CommandSourceStack> bcb = ctx -> {
+            if (!Config.getBool("entity-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.EC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
                 new EntityClaimPage(player).show();
                 if (player != sender) {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getRenderedName(player)).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.getName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
@@ -65,7 +74,11 @@ public class EntityClaims {
 
         List<LiteralArgumentBuilder<CommandSourceStack>> cmdList = new ArrayList<>();
 
-        var create = Commands.literal("create").then(Commands.argument("entity", ArgumentTypes.entity()).executes(ctx -> {
+        var create = Commands.literal("create").then(Commands.argument("entity", ArgumentTypes.entity()).requires(source -> KTPerms.hasPermission(source, KTPerms.CLAIMS_ENTITY)).executes(ctx -> {
+            if (!Config.getBool("entity-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.EC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             var target = ctx.getArgument("entity", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst();
@@ -92,6 +105,10 @@ public class EntityClaims {
             });
             return builder.buildFuture();
         }).executes(ctx -> {
+            if (!Config.getBool("entity-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.EC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             var id = ctx.getArgument("id", Integer.class);
@@ -107,6 +124,10 @@ public class EntityClaims {
             sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/claims entity delete")).color(NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         })).then(Commands.argument("uuid", ArgumentTypes.entity()).executes(ctx -> {
+            if (!Config.getBool("entity-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.EC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             var id = ctx.getArgument("uuid", EntitySelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst();
@@ -125,6 +146,10 @@ public class EntityClaims {
         cmdList.add(delete);
 
         cmdList.add(Commands.literal("list").executes(ctx -> {
+            if (!Config.getBool("entity-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.EC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
@@ -337,7 +362,7 @@ public class EntityClaims {
                     ref.i++;
                     ref.msg = ref.msg.appendNewline().append(KTStrings.getFor(KTStrings.EC_INFO,
                             Component.text(claim.id).color(NamedTextColor.GOLD),
-                        Names.instance.getEntityRenderedName(entity).color(NamedTextColor.AQUA),
+                        Names.getEName(entity).color(NamedTextColor.AQUA),
                             Component.text(entity.getLocation().getBlockX() + ", " + entity.getLocation().getBlockY() + ", " + entity.getLocation().getBlockZ()).color(NamedTextColor.GREEN),
                             Component.text(entity.getLocation().getWorld().getName()).color(NamedTextColor.LIGHT_PURPLE)));
                 }
@@ -346,7 +371,7 @@ public class EntityClaims {
         if (receiver == who) {
             receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_YOU_HAVE, Component.text(ref.i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.EC)).append(ref.msg));
         } else {
-            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.instance.getRenderedName(who), Component.text(ref.i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.EC)).append(ref.msg));
+            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.getName(who), Component.text(ref.i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.EC)).append(ref.msg));
         }
     }
 
@@ -355,6 +380,10 @@ public class EntityClaims {
     }
 
     public void createClaim(Player who, Entity entity) {
+        if (!Config.getBool("entity-claims.enabled", true)) {
+            who.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.EC)));
+            return;
+        }
         var max = KamsTweaks.get().getConfig().getInt("entity-claims.max-claims", 1000);
         int count = 0;
         for (var c : claims.values()) {
@@ -381,11 +410,15 @@ public class EntityClaims {
                 mob.setRemoveWhenFarAway(false);
             }
             entity.setPersistent(true);
-            who.sendMessage(KTStrings.getFor(KTStrings.EC_CLAIMED, Names.instance.getEntityRenderedName(entity), Component.text(claim.id).color(NamedTextColor.GOLD)));
+            who.sendMessage(KTStrings.getFor(KTStrings.EC_CLAIMED, Names.getEName(entity), Component.text(claim.id).color(NamedTextColor.GOLD)));
         }
     }
 
     public void deleteClaim(EntityClaim claim, Player who) {
+        if (!Config.getBool("entity-claims.enabled", true)) {
+            who.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.EC)));
+            return;
+        }
         var mt = claim.getManagementType(who);
         if (mt == Claims.ManagementType.None) {
             who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_CANT_MANAGE).color(NamedTextColor.RED));
@@ -399,6 +432,7 @@ public class EntityClaims {
     }
 
     public @Nullable EntityClaim getClaim(Entity entity) {
+        if (!Config.getBool("entity-claims.enabled", true)) return null;
         if (entity == null) return null;
         return claims.getOrDefault(entity.getUniqueId(), null);
     }
@@ -671,7 +705,7 @@ public class EntityClaims {
         public Claims.ManagementType getManagementType(OfflinePlayer who) {
             if (owner != null && who.getUniqueId().equals(owner.getUniqueId())) return Claims.ManagementType.Owner;
             if (getPerms(who.getUniqueId()).trusted) return Claims.ManagementType.Trusted;
-            if (who.isOnline() && who.getPlayer().hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
+            if (who.isOnline() && KTPerms.hasPermission(who.getPlayer(), KTPerms.CLAIMS_MANAGE)) return Claims.ManagementType.Op;
             return Claims.ManagementType.None;
         }
 
@@ -687,7 +721,7 @@ public class EntityClaims {
 
         public Component getOwnerName() {
             if (owner == null) return KTStrings.getFor(KTStrings.THE_SERVER).color(NamedTextColor.GOLD);
-            return Names.instance.getRenderedName(owner);
+            return Names.getName(owner);
         }
 
         public String getOwnerUsername() {
@@ -699,6 +733,7 @@ public class EntityClaims {
     NamespacedKey unclaimable = new NamespacedKey("kamstweaks", "unclaimable");
 
     public boolean isClaimable(Entity e) {
+        if (!Config.getBool("entity-claims.enabled", true)) return false;
         if (e instanceof Boat) return true;
         if (!(e instanceof Mob)) return false;
         if (e.getEntitySpawnReason() == CreatureSpawnEvent.SpawnReason.TRIAL_SPAWNER) return false;

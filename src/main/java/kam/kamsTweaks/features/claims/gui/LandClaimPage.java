@@ -7,11 +7,12 @@ import io.papermc.paper.registry.data.dialog.body.*;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.*;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Logger;
 import kam.kamsTweaks.features.moderation.ChatFilter;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.claims.LandClaims.*;
 import net.kyori.adventure.text.*;
@@ -45,7 +46,7 @@ public class LandClaimPage extends GuiLayer {
                     totalClaims += claim.slots;
             }
 
-            if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30) && !Claims.get().landClaims.currentlyClaiming.containsKey(who)) {
+            if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30) && !Claims.get().landClaims.currentlyClaiming.containsKey(who) && KTPerms.hasPermission(who, KTPerms.CLAIMS_LAND)) {
                 var createBtn = ActionButton.builder(KTStrings.getFor(KTStrings.CLAIM_CREATE)).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.startClaiming(who, true), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
                 btns.add(createBtn);
             }
@@ -265,9 +266,9 @@ public class LandClaimPage extends GuiLayer {
             dialog = Dialog.create(builder -> {
                 var base = DialogBase.builder(switch (mode) {
                     case ENTITY ->
-                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getEntityRenderedName(entity), Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.getEName(entity), Component.text(claim.config.name).color(NamedTextColor.GOLD));
                     case OFFLINE_PLAYER ->
-                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getRenderedName(player, true), Component.text(claim.config.name).color(NamedTextColor.GOLD));
+                            KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.getName(player, true), Component.text(claim.config.name).color(NamedTextColor.GOLD));
                     case DEFAULT ->
                             KTStrings.getFor(KTStrings.PERMS_EDIT_DEFAULT, Component.text(claim.config.name).color(NamedTextColor.GOLD));
                     case ENTITY_DEFAULT ->

@@ -3,26 +3,18 @@ package kam.kamsTweaks;
 import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import kam.kamsTweaks.ext.GeyserItemData;
-import kam.kamsTweaks.ext.SRVHelper;
+import kam.kamsTweaks.ext.*;
 import kam.kamsTweaks.features.*;
 import kam.kamsTweaks.features.claims.Claims;
-import kam.kamsTweaks.features.fun.Names;
-import kam.kamsTweaks.features.fun.SlashHat;
-import kam.kamsTweaks.features.fun.VirtualInsanity;
+import kam.kamsTweaks.features.fun.*;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.gameplay.*;
-import kam.kamsTweaks.features.moderation.ChatFilter;
-import kam.kamsTweaks.features.moderation.ItemDataFilter;
-import kam.kamsTweaks.features.moderation.NoBoom;
-import kam.kamsTweaks.features.moderation.Vanish;
+import kam.kamsTweaks.features.moderation.*;
 import kam.kamsTweaks.features.teleportation.TeleportFeatures;
-import kam.kamsTweaks.ext.KamsTweaksPlaceholder;
-import kam.kamsTweaks.gameplay.DragonFightLock;
-import kam.kamsTweaks.gameplay.ItemManager;
-import kam.kamsTweaks.utils.ConfigCommand;
-import kam.kamsTweaks.utils.KTStrings;
-import kam.kamsTweaks.utils.Logger;
-import kam.kamsTweaks.utils.UserDataManager;
+import kam.kamsTweaks.managers.KTItems;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
+import kam.kamsTweaks.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -61,7 +53,6 @@ public final class KamsTweaks extends JavaPlugin {
         features.add(new UserKeepInv());
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
-        features.add(new ItemDataFilter());
         features.add(new VirtualInsanity());
         features.add(new DragonFightLock());
         features.add(new TeleportFeatures());
@@ -73,7 +64,10 @@ public final class KamsTweaks extends JavaPlugin {
         Logger.init();
         this.saveDefaultConfig();
         loadConfigs();
-        Logger.loadData();
+
+        KTPerms.registerPermissions();
+        KTItems.init();
+        if (Config.getBool("gameplay-pack.enabled", true)) features.add(new GameplayPack());
 
         for (var feature : features) {
             try {
@@ -92,7 +86,7 @@ public final class KamsTweaks extends JavaPlugin {
         for (var feature : features) {
             getServer().getPluginManager().registerEvents(feature, this);
         }
-        getServer().getPluginManager().registerEvents(new ItemManager(), this);
+        getServer().getPluginManager().registerEvents(new KTItems(), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             for (var feature : features) {
@@ -109,7 +103,7 @@ public final class KamsTweaks extends JavaPlugin {
                 KamsTweaks.get().save();
                 ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.SAVED).color(NamedTextColor.GREEN));
                 return Command.SINGLE_SUCCESS;
-            }).requires(source -> source.getSender().hasPermission("kamstweaks.save")));
+            }).requires(source -> KTPerms.hasPermission(source, KTPerms.SAVE)));
             for (var feature : features) {
                 try {
                     feature.registerKTSub(base);
@@ -117,21 +111,23 @@ public final class KamsTweaks extends JavaPlugin {
                     Logger.handleException(e);
                 }
             }
-            ConfigCommand.registerKTSub(base);
+            Config.registerKTSub(base);
+            Logger.registerKTSub(base);
             commands.registrar().register(base.build(), List.of("kt"));
-            ItemManager.registerCommand(commands);
+            KTItems.registerCommand(commands);
         });
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, this::save, 20 * 60 * 5, 20 * 60 * 5);
 
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) { //
-            new KamsTweaksPlaceholder().register();
-        }
+        Config.bool("ext.discordsrv.enabled", true).requiresRestart(true).build().add();
+        Config.string("ext.discordsrv.chat-filter.channel-id").requiresRestart(true).build().add();
+        Config.string("ext.discordsrv.chat-filter.role-id").requiresRestart(true).build().add();
+        if (Config.getBool("ext.discordsrv.enabled", true)) SRVHelper.init();
 
-        ItemManager.init();
-        SRVHelper.init();
-
-        if (getServer().getPluginManager().isPluginEnabled("Geyser-Spigot")) bits = new GeyserItemData();
+        Config.bool("ext.geyser.enabled", true).requiresRestart(true).build().add();
+        Config.bool("ext.geyser.kamstweaks-item", true).requiresRestart(true).build().add();
+        Config.bool("ext.geyser.anvixos-bits-items", true).requiresRestart(true).build().add();
+        if (getServer().getPluginManager().isPluginEnabled("Geyser-Spigot") && Config.getBool("ext.geyser.enabled", true)) bits = new GeyserItemData();
     }
 
     @Override
@@ -154,7 +150,6 @@ public final class KamsTweaks extends JavaPlugin {
                 Logger.handleException(e);
             }
         }
-        Logger.saveData();
         saveConfigs();
         Logger.info("Saved KamsTweaks.");
     }

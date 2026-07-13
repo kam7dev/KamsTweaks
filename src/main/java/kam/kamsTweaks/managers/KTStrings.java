@@ -1,7 +1,8 @@
-package kam.kamsTweaks.utils;
+package kam.kamsTweaks.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import kam.kamsTweaks.utils.Logger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -20,6 +21,8 @@ public enum KTStrings {
 
     ITEM_TAG_WAXED,
 
+    ITEM_GIVE,
+    ITEM_NOT_EXIST,
     TOO_EXPENSIVE_FIX,
 
     // Generic
@@ -47,6 +50,7 @@ public enum KTStrings {
     COOLDOWN,
     COOLDOWN_MS,
     TRUSTED,
+    OTHER_NO_PERMS,
 
     // Automod
     AUTOMOD_NAME,
@@ -174,6 +178,7 @@ public enum KTStrings {
     GRAVE_COUNT,
     GRAVE_RECOVERY_MAX,
     GRAVE_RECOVERY,
+    GRAVE_RECOVERY_LIMITED,
     GRAVE_NO_ID,
     GRAVE_DELETED,
     GRAVE_NEW,
@@ -197,6 +202,8 @@ public enum KTStrings {
 
     // Names
     NAMES,
+    NAME_COLORS,
+    NAME_MINIMESSAGE,
     NAME_LENGTH,
     NAME_EMPTY,
     NAME_IN_USE,
@@ -245,6 +252,7 @@ public enum KTStrings {
     WARP_INFO,
     TP_TO_WARP,
 
+    BACK_INFO,
     BACK_NO_RECENT,
     TP_TO_BACK,
 
@@ -311,6 +319,12 @@ public enum KTStrings {
             }
             case ITEM_TAG_WAXED -> {
                 return Component.translatable("kamstweaks.item.tag.waxed", "Waxed", args);
+            }
+            case ITEM_GIVE -> {
+                return Component.translatable("kamstweaks.item.give", "Item %s doesn't exist.", args);
+            }
+            case ITEM_NOT_EXIST -> {
+                return Component.translatable("kamstweaks.item.nonexistent", "Gave %s.", args);
             }
             case TOO_EXPENSIVE_FIX -> {
                 return Component.translatable("kamstweaks.item.hint.too_expensive_fix", "If the anvil says too expensive, try installing %s and try again. If you already have the mod installed you can ignore this.", args);
@@ -387,6 +401,9 @@ public enum KTStrings {
             }
             case TRUSTED -> {
                 return Component.translatable("kamstweaks.generic.trusted", "Trusted", args);
+            }
+            case OTHER_NO_PERMS -> {
+                return Component.translatable("kamstweaks.generic.other_no_perms", "That person doesn't have permission for this.", args);
             }
 
             case AUTOMOD_NAME -> {
@@ -751,7 +768,10 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.graves.recovery_max", "You are already recovering %s graves.", args);
             }
             case GRAVE_RECOVERY -> {
-                return Component.translatable("kamstweaks.graves.recovery", "You have 10 minutes to recover your grave. You can recover a grave repeatedly, but only %s can be recovered at a time.", args);
+                return Component.translatable("kamstweaks.graves.recovery", "You have 10 minutes to recover your grave. You can recover this grave repeatedly.", args);
+            }
+            case GRAVE_RECOVERY_LIMITED -> {
+                return Component.translatable("kamstweaks.graves.recovery_limited", "You have 10 minutes to recover your grave. This grave has %s more recoveries.", args);
             }
             case GRAVE_NO_ID -> {
                 return Component.translatable("kamstweaks.graves.no_id", "You don't have a grave with id %s.", args);
@@ -811,6 +831,12 @@ public enum KTStrings {
 
             case NAMES -> {
                 return Component.translatable("kamstweaks.names", "Nicknames", args);
+            }
+            case NAME_COLORS -> {
+                return Component.translatable("kamstweaks.names.colors", "Name Colors", args);
+            }
+            case NAME_MINIMESSAGE -> {
+                return Component.translatable("kamstweaks.names.minimessage", "Minimessage support for names", args);
             }
             case NAME_LENGTH -> {
                 return Component.translatable("kamstweaks.names.length", "Nicknames cannot be longer than %s characters.", args);
@@ -932,6 +958,9 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.tp.warp.to", "Teleporting to the %s warp in %s seconds, please do not move.", args);
             }
 
+            case BACK_INFO -> {
+                return Component.translatable("kamstweaks.tp.back.info", "Return to your death location with %s.", args);
+            }
             case BACK_NO_RECENT -> {
                 return Component.translatable("kamstweaks.tp.back.no_recent", "You have not teleported anywhere recently.", args);
             }

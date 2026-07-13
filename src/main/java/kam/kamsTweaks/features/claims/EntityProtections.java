@@ -5,9 +5,11 @@ import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import io.papermc.paper.event.entity.FishHookStateChangeEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import kam.kamsTweaks.gameplay.ItemManager;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTItems;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.claims.gui.EntityClaimPage;
 import kam.kamsTweaks.features.claims.gui.FLAlertLayer;
 import net.kyori.adventure.text.Component;
@@ -56,7 +58,7 @@ public class EntityProtections implements Listener {
         var entity = e.getRightClicked();
         if (claims.isClaimable(entity)) {
             var claim = claims.getClaim(entity);
-            if (ItemManager.getType(who.getInventory().getItemInMainHand()) == ItemManager.ItemType.CLAIM_TOOL) {
+            if (KTItems.getType(who.getInventory().getItemInMainHand()) == KTItems.ItemType.CLAIM_TOOL) {
                 e.setCancelled(true);
                 if (entity instanceof Tameable tameable && tameable.getOwnerUniqueId() != null) {
                     if (tameable.getOwnerUniqueId() != who.getUniqueId()) {
@@ -65,14 +67,14 @@ public class EntityProtections implements Listener {
                     }
                 }
                 if (claim != null) {
-                    if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId()) || who.hasPermission("kamstweaks.claims.manage")) {
+                    if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId()) || KTPerms.hasPermission(who, KTPerms.CLAIMS_MANAGE)) {
                         new EntityClaimPage(who, entity).show();
                         return;
                     }
                     message(who, KTStrings.getFor(KTStrings.EC_ALREADY_CLAIMED, claim.getOwnerName()));
                     return;
                 }
-                if (!who.hasPermission("kamstweaks.claims.claim")) {
+                if (!KTPerms.hasPermission(who, KTPerms.CLAIMS_ENTITY)) {
                     return;
                 }
                 int count = 0;
@@ -85,7 +87,7 @@ public class EntityProtections implements Listener {
                     return;
                 }
                 new FLAlertLayer(who,
-                        KTStrings.getFor(KTStrings.EC_CONFIRM, Names.instance.getEntityRenderedName(entity)),
+                        KTStrings.getFor(KTStrings.EC_CONFIRM, Names.getEName(entity)),
                         Component.empty(),
                         KTStrings.getFor(KTStrings.YES),
                         KTStrings.getFor(KTStrings.NO),
@@ -155,7 +157,7 @@ public class EntityProtections implements Listener {
                     }
                 }
                 if (event.getDamageSource().getCausingEntity() instanceof Player player) {
-                    if (ItemManager.ItemType.CLAIM_TOOL.equals(ItemManager.getType(player.getInventory().getItemInMainHand())) && claims.isClaimable(event.getEntity())) {
+                    if (KTItems.ItemType.CLAIM_TOOL.equals(KTItems.getType(player.getInventory().getItemInMainHand())) && claims.isClaimable(event.getEntity())) {
                         if (claim == null) {
                             player.sendMessage(KTStrings.getFor(KTStrings.EC_UNCLAIMED));
                         } else {
@@ -188,6 +190,7 @@ public class EntityProtections implements Listener {
 
     @EventHandler
     public void onTarget(EntityTargetEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (event.getTarget() == null) return;
         if (event.getEntity() instanceof Mob entity) {
             var claim = claims.getClaim(entity);
@@ -199,6 +202,7 @@ public class EntityProtections implements Listener {
 
     @EventHandler
     public void onTransform(EntityTransformEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (e.getEntity() instanceof Mob entity) {
             var claim = claims.getClaim(entity);
             switch (e.getTransformReason()) {
@@ -230,6 +234,7 @@ public class EntityProtections implements Listener {
 
     @EventHandler
     public void onBurn(EntityCombustEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (event.getEntity() instanceof Mob entity) {
             var claim = claims.getClaim(entity);
             if (claim != null) {
@@ -240,6 +245,7 @@ public class EntityProtections implements Listener {
 
     @EventHandler
     public void entityDie(EntityDeathEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         // delayed to next tick so transformations work
         Bukkit.getScheduler().scheduleSyncDelayedTask(KamsTweaks.get(), () -> claims.claims.remove(e.getEntity().getUniqueId()), 0);
         if (e.getEntity() instanceof EnderDragon && e.getEntity().getWorld().getEnvironment() == World.Environment.THE_END) {
@@ -249,6 +255,7 @@ public class EntityProtections implements Listener {
 
     @EventHandler
     public void onFish(FishHookStateChangeEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (e.getNewHookState() == FishHook.HookState.HOOKED_ENTITY) {
             var caught = e.getEntity().getHookedEntity();
             var claim = claims.getClaim(caught);
@@ -261,6 +268,7 @@ public class EntityProtections implements Listener {
 
     @EventHandler
     public void onKnockback(EntityKnockbackByEntityEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         var entity = e.getEntity();
         var attacker = getTrueHitter(e.getHitBy());
         var claim = claims.getClaim(entity);
@@ -292,6 +300,7 @@ public class EntityProtections implements Listener {
 
     @EventHandler
     public void onKnockback(EntityKnockbackEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (e instanceof EntityKnockbackByEntityEvent) return;
         var entity = e.getEntity();
         var claim = claims.getClaim(entity);
@@ -303,6 +312,7 @@ public class EntityProtections implements Listener {
     @SuppressWarnings("deprecation")
     @EventHandler
     public void onSleep(PlayerBedEnterEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("entity-claims.enabled", true)) return;
         if (event.getBedEnterResult() != PlayerBedEnterEvent.BedEnterResult.NOT_SAFE)
             return;
 

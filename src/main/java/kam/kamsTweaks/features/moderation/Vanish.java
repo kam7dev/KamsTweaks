@@ -9,7 +9,9 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ext.SRVHelper;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.utils.UserDataManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -31,23 +33,35 @@ import java.util.*;
 
 @SuppressWarnings("deprecation")
 public class Vanish extends Feature {
+    @Override
+    public void setup() {
+        Config.bool("staff.vanish.enabled", true).build().add();
+    }
 
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        commands.registrar().register(Commands.literal("vanish").requires(source -> source.getSender().isOp())
+        commands.registrar().register(Commands.literal("vanish").requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                 .executes(ctx -> {
                     var sender = ctx.getSource().getSender();
                     if (!(ctx.getSource().getExecutor() instanceof Player plr)) {
                         sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/vanish")).color(NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
+                    if (!Config.getBool("staff.vanish.enabled", true)) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/vanish")).color(NamedTextColor.RED));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     setVanished(plr, sender, true);
                     return Command.SINGLE_SUCCESS;
-                }).then(Commands.argument("targets", ArgumentTypes.playerProfiles()).requires(source -> source.getSender().isOp())
+                }).then(Commands.argument("targets", ArgumentTypes.playerProfiles()).requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                         .executes(ctx -> {
                             var targets = ctx.getArgument("targets", PlayerProfileListResolver.class).resolve(ctx.getSource());
                             if (targets.isEmpty()) return Command.SINGLE_SUCCESS;
                             var sender = ctx.getSource().getSender();
+                            if (!Config.getBool("staff.vanish.enabled", true)) {
+                                sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/vanish")).color(NamedTextColor.RED));
+                                return Command.SINGLE_SUCCESS;
+                            }
                             StringBuilder who = new StringBuilder();
                             for (var target : targets) {
                                 if (target.getId() == null) continue;
@@ -59,16 +73,20 @@ public class Vanish extends Feature {
                             if (!built.equals(sender.getName())) sender.sendMessage(KTStrings.getFor(KTStrings.VANISH_VANISHED_OTHER, Component.text(built)).color(NamedTextColor.GOLD));
                             return Command.SINGLE_SUCCESS;
                         })).build());
-        commands.registrar().register(Commands.literal("unvanish").requires(source -> source.getSender().isOp())
+        commands.registrar().register(Commands.literal("unvanish").requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                 .executes(ctx -> {
                     var sender = ctx.getSource().getSender();
                     if (!(ctx.getSource().getExecutor() instanceof Player plr)) {
                         sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/unvanish")).color(NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
+                    if (!Config.getBool("staff.unvanish.enabled", true)) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/vanish")).color(NamedTextColor.RED));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     setVanished(plr, sender, false);
                     return Command.SINGLE_SUCCESS;
-                }).then(Commands.argument("targets", ArgumentTypes.playerProfiles()).requires(source -> source.getSender().isOp())
+                }).then(Commands.argument("targets", ArgumentTypes.playerProfiles()).requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                         .executes(ctx -> {
                             var targets = ctx.getArgument("targets", PlayerProfileListResolver.class).resolve(ctx.getSource());
                             if (targets.isEmpty()) return Command.SINGLE_SUCCESS;
@@ -85,7 +103,7 @@ public class Vanish extends Feature {
                             return Command.SINGLE_SUCCESS;
                         })).build());
 
-        commands.registrar().register(Commands.literal("vanished").requires(source -> source.getSender().isOp())
+        commands.registrar().register(Commands.literal("vanished").requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                 .executes(ctx -> {
                     var sender = ctx.getSource().getSender();
                     if (!(ctx.getSource().getExecutor() instanceof Player plr)) {
@@ -99,6 +117,7 @@ public class Vanish extends Feature {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
+        if (!Config.getBool("staff.vanish.enabled", true)) return;
         var plr = e.getPlayer();
         if (UserDataManager.get(plr.getUniqueId(), "vanished", false)) {
             plr.sendMessage(KTStrings.getFor(KTStrings.VANISH_STATUS_V).color(NamedTextColor.GOLD));
@@ -115,6 +134,7 @@ public class Vanish extends Feature {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
+        if (!Config.getBool("staff.vanish.enabled", true)) return;
         if (UserDataManager.get(event.getPlayer().getUniqueId(), "vanished", false)) {
             event.setCancelled(true);
             Bukkit.broadcast(Component.text("[Server] ").append(event.message()));
@@ -123,6 +143,7 @@ public class Vanish extends Feature {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
+        if (!Config.getBool("staff.vanish.enabled", true)) return;
         var plr = e.getPlayer();
         if (UserDataManager.get(plr.getUniqueId(), "vanished", false)) {
             plr.removeMetadata("vanished", KamsTweaks.get());
@@ -134,6 +155,7 @@ public class Vanish extends Feature {
     }
 
     public void setVanished(@NonNull OfflinePlayer who, CommandSender sender, boolean isVanished) {
+        if (!Config.getBool("staff.vanish.enabled", true)) return;
         assert who.getName() != null;
         if (UserDataManager.get(who.getUniqueId(), "vanished", false) == isVanished) return;
         UserDataManager.put(who.getUniqueId(), "vanished", isVanished);
@@ -173,6 +195,7 @@ public class Vanish extends Feature {
 
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
+        if (!Config.getBool("staff.vanish.enabled", true)) return;
         var split = event.getMessage().split(" ");
         switch (split[0]) {
             case "/tell", "/w", "/msg": {

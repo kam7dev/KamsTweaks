@@ -2,9 +2,9 @@ package kam.kamsTweaks.features.teleportation;
 
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
-import kam.kamsTweaks.utils.ConfigCommand;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.claims.Claims;
 import kam.kamsTweaks.features.claims.EntityClaims;
@@ -56,13 +56,15 @@ public class TeleportFeatures extends Feature {
         for (var feature : features) {
             Bukkit.getServer().getPluginManager().registerEvents(feature, KamsTweaks.get());
         }
-        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.timer", "teleportation.timer", 5, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.IntegerConfig("teleportation.cooldown", "teleportation.cooldown", 10, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.homes.enabled", "teleportation.homes.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.spawn.enabled", "teleportation.spawn.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.tpa.enabled", "teleportation.tpa.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.warp.enabled", "teleportation.warp.enabled", true, "kamstweaks.configure"));
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("teleportation.back.enabled", "teleportation.back.enabled", true, "kamstweaks.configure"));
+        Config.integer("teleportation.timer", 5).build().add();
+        Config.integer("teleportation.cooldown", 10).build().add();
+        Config.bool("teleportation.homes.enabled", true).build().add();
+        Config.integer("teleportation.homes.sethome-cooldown", 900).build().add();
+        Config.bool("teleportation.spawn.enabled", true).build().add();
+        Config.bool("teleportation.tpa.enabled", true).build().add();
+        Config.bool("teleportation.warp.enabled", true).build().add();
+        Config.bool("teleportation.back.enabled", true).build().add();
+        Config.bool("teleportation.back.on-death", false).build().add();
     }
 
     @Override

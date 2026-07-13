@@ -1,8 +1,91 @@
-# Seed Dispenser configuration (allow dispensers to place seeds on farmland)
-seed-dispenser:
+# Fun stuff
+
+
+# Joke command that spawns an armor stand, which moves towards you in the pose from Jamiroquai's Virtual Insanity
+# If you have the KamsTweaks resource pack installed, a clip from the song plays as well.
+virtual-insanity:
+  enabled: true
+  # How long in seconds to wait between running the command.
+  # Since this command spawns an entity and moves it for about 5 seconds,
+  # without a cooldown this could be abused to lag the server.
+  cooldown: 60
+
+# Lets players put the held item on their head.
+# No, this does not let you take off curse of binding helmets.
+slash-hat:
   enabled: true
 
-# Land Claims configuration
+# Allows players to change their name in chat.
+nicknames:
+  enabled: true
+
+  # How long a name can be.
+  max-length: 30
+
+  # Changing a player's name to a color or gradient
+  colors:
+    enabled: true
+
+    # Named combos that can be used in /color.
+    # They are combinable with other colors and combos.
+    combos:
+      # Colors used by Geode SDK (https://geode-sdk.org/) as seen in its mod layer.
+      geode:
+        - "#F4D48E"
+        - "#F5AE7D"
+        - "#EC897C"
+        - "#D56985"
+        - "#AD5492"
+        - "#714A9A"
+
+  # If minimessage should be allowed in names (via /mmname)
+  # https://docs.papermc.io/adventure/minimessage/format/
+  # https://webui.advntr.dev/
+  allow-minimessage: true
+
+
+# Gameplay stuff
+
+
+# Graves are no longer used on the server the plugin was made for, so issues may be more common.
+# Spawns a grave where a player died. Stores player loot and experience.
+graves:
+  enabled: false
+
+  # How long, in seconds, it takes for a grave to expire.
+  time-limit: 600
+
+  # How long, in seconds, it takes for a grave in recovery to expire.
+  recovery-time-limit: 300
+
+  # How many times a grave can be recovered after it expires.
+  # Set to -1 for infinite.
+  recovery-limit: -1
+
+  # How many graves can be recovered at a time.
+  # Set to -1 for infinite.
+  max-active-recoveries: 3
+
+# User specific keep inventory. Users can choose to enable/disable keep inventory.
+keepinv:
+  enabled: true
+
+mob-edits:
+  # Always zombify villagers when zombies kill them, regardless of difficulty.
+  always-zombify: true
+
+  # Spawn armor stands with arms.
+  stand-arms: true
+
+pvp:
+  # Spawns a dummy if the player combat logs, allowing the other player(s) to kill the dummy.
+  # Upon rejoin, anything that happened to the dummy will happen to the combat logger, including totem pops.
+  combat-log: true
+
+
+# Utility stuff
+
+# Players can claim land, and allow or deny certain things within their claims.
 land-claims:
   enabled: true
   # How many claims each player can have.
@@ -12,75 +95,177 @@ land-claims:
   # Make sure to consider vertical and horizontal sizes.
   max-claim-size: 50000
 
-# Entity Claiming configuration
+# Like land claims, but for specific entities.
 entity-claims:
   enabled: true
   # How many entities a player can claim.
   max-claims: 1000
 
-# Silk Touch Spawners configuration
+
+# Lets dispensers place seeds onto farmland.
+seed-dispenser:
+  enabled: true
+
+# Allows spawners to be mined with silk touch.
 silk-spawners:
   enabled: true
 
-# What level of console logging to do.
-# This is mainly so when I forget to commit info logs, it doesn't spam console
-# Must be one of 'error', 'warn', 'info', or 'debug'
-log-level: warn
-
-# /hat
-slash-hat: true
-
-# nicknames
-nicknames: true
-
+# The various teleportation based features.
 teleportation:
-  # How long you stay in place before teleporting, in seconds
-  timer: 5
-  # How long you wait between teleports, in seconds
+  # How long to wait between teleports.
   cooldown: 10
+
+  # How long to wait before teleporting after running the command.
+  timer: 5
+
+  # A location you can teleport back to.
   homes:
     enabled: true
-  tpa:
-    enabled: true
-  warp:
-    enabled: true
+    # Cooldown, in seconds, to prevent abuse.
+    # Set to 0 for no cooldown.
+    sethome-cooldown: 900
+
+  # Teleporting back to where you last teleported from.
   back:
     enabled: true
+    # If /back should return you to where you died if you haven't teleported since.
+    on-death: false
+
+  # Teleporting to spawn.
   spawn:
     enabled: true
 
-graves:
-  enabled: false
-
-zombify:
-  enabled: true
-
-stand-arms:
-  enabled: true
-  
-filters:
-  brainrot:
-    enabled: false
-    regex: ":shushing_face: :deaf_man:, :shushing_face::deaf_man:, *461n 9055*, *4d1n r0ss*, *5c1b1di*, *5k1b1dy*, *a6in ross*, *adin ross*, *admin ross*, *baby gronk*, *bb gr0nk*, *bb gronk*, *BOMBARDINO CROCODILO*, *bopboompow*, *f4num*, *fanum*, *fire in the hole*, *g00n1ng*, *g00ning*, *g74tt*, *gedagedi*, *gooning*, *gy4tt*, *gyatt*, *hawk 2*, *hawk tua*, *hawk tuah*, *hawk two*, *kai cenat*, *low taper fade*, *m3w*, *m4xx1ng*, *m4xxing*, *maxx1ng*, maxxing, *mewer*, *mewing*, *quandale dingle*, *r177*, *r1zz*, rizz, *sc1b1d1*, *sc1b1dy*, *scibidi*, *scibidy*, *sigma*, *six*seven*, *sk1b1*, *sk1bi*, *skbidi*, *skibi*, *skibiddi*, *skibide*, *skibidi*, *skibidy*, *skibity*, *skybidi*, *tralalero*, tuah, *tung*, *tung sahur*, *unohio*, *water on the hill*"
-    message: "Please take your brainrot somewhere else."
-  slur:
+  # Locations everyone can teleport to, which are created by staff.
+  warps:
     enabled: true
-    fetch:
-      enabled: true
-      link: "https://extras.km7dev.me/slurFilter"
-    message: "Slurs aren't allowed on this server, please don't attempt to type them."
 
+  # Requesting to teleport to/from another player.
+  tpa:
+    enabled: true
+
+# Changes to the anvil cost.
+no-too-expensive:
+  # If changes to anvils should be applied.
+  enabled: true
+
+  # What level the anvil will show Too Expensive! at
+  # 2147483647 is the maximum value for this.
+  new-limit: 2147483647
+
+  # Uses a modified curve after level 39.
+  # Designed to be a bit more fair since higher levels require more XP,
+  # and vanilla tends to get absurdly high prices after a bit.
+  use-modified-curve: true
+
+
+# Moderation
+
+
+# Prevents explosives. More likely to be used in a creative server.
 no-explosions:
   enabled: false
 
-potion-filter:
-  enabled: false
+# Chat filters. These can be in file or fetched from a list on the internet.
+# In the DiscordSRV section towards the bottom, there is an option for sending alerts to Discord.
+# It uses regex to block words, you can use https://regex101.com/?flavor=java to help get the regex you want.
+chat-filters:
+#  In file example
+#  myInFileFilter:
+#    enabled: true
+#    regex: "YOUR_REGEX_TO_BLOCK_HERE"
+#    message: "This message is blocked by the server."
+#  Fetched from site example
+#  myFetchedFilter:
+#    enabled: true
+#    fetch:
+#      enabled: true
+#      link: https://example.com/myFilter
+#    message: "This message is blocked by the server."
 
-not-too-expensive:
+# Stuff for staff to use for moderation.
+staff:
+  # Hides the player to other players and fakes a leave message.
+  # If a player is vanished when they join, they won't have a join message.
+  # In my testing, antivanish hacks think it's a real disconnect.
+  vanish:
+    enabled: true
+
+
+# Locks the dragon fight until an admin enables it.
+# When enabled, new world means the fight relocks.
+dragon-fight-lock:
+  # Whether the fight should be locked.
   enabled: true
 
-player-pvp:
+
+
+# Extra
+
+
+# If the plugin should suggest the KamsTweaks resource pack.
+# This is recommended to stay true.
+suggest-resource-pack: true
+
+# Additions that KamsTweaks makes to gameplay like datapacks.
+# This includes the Jungle House structure, Freezeflame discs, and Stone Brickstep
+# These require a restart.
+gameplay-pack:
+  # If the pack should load.
+  # Due to how the pack is implemented, the structures will not have their own toggles.
   enabled: true
 
-keepinv:
-  enabled: true
+  # Music disc obtained by having a ghast or blaze kill a stray.
+  freezeflame:
+    # If the freezeflame disc is obtainable through normal means.
+    obtainable: true
+
+    # If the freezeflame disc can be waxed / scraped in the crafting grid.
+    # Waxing prevents the disc from changing variants in the nether/end.
+    waxable: true
+
+  # Joke item created by smithing Pigstep with a stone brick wall.
+  stone-brickstep:
+    # If stone brickstep is creatable through normal means.
+    obtainable: true
+
+
+# Compatibility for other plugins.
+# All ext options require server restarts even if changed in game.
+ext:
+  # Integration for DiscordSRV. Used for /vanish, automod warnings, and the ub3r bot joke feature.
+  discordsrv:
+    # Toggle for the entire DiscordSRV compatibility feature.
+    enabled: true
+
+    # Configuration for the discord integration of the chat filter.
+    # This won't do anything if the chat filter is disabled.
+    chat-filter:
+      # ID of the channel that the plugin should send automod alerts to.
+      # Leave blank or default for no discord messages.
+      channel-id: AUTOMOD_CHANNEL_ID_HERE
+      # ID of the role that the plugin should ping in the automod message.
+      # Leave blank or default to not ping.
+      role-id: AUTOMOD_ROLE_ID_HERE
+
+  # Integration for Geyser. Registers bedrock items and resource packs for KamsTweaks and optionally Anvixo's Bits
+  # This is recommended if you have geyser.
+  # If Geyser is not installed, this will do nothing.
+  geyser:
+    # Toggle for the entire Geyser compatibility feature.
+    enabled: true
+
+    # Registers bedrock items and resource packs for KamsTweaks.
+    # This is recommended to stay true.
+    kamstweaks-items: true
+
+    # Registers bedrock items and resource packs for Anvixo's Bits
+    # Anvixo's Bits support is included because both are designed for the same server.
+    # Check it out at https://modrinth.com/datapack/anvixosbits, it's pretty cool
+    anvixos-bits-items: true
+
+# Stuff based around the plugin's logger.
+logger:
+  # The level of logging the plugin does. Mostly a development focused option.
+  # Possible values: error, warn, info, debug
+  # It's recommended you keep this on info.
+  log-level: info

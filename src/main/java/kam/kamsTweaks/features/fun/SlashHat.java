@@ -8,8 +8,9 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.ConfigCommand;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.utils.Config;
+import kam.kamsTweaks.managers.KTStrings;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -22,16 +23,16 @@ import org.jetbrains.annotations.NotNull;
 public class SlashHat extends Feature {
     @Override
     public void setup() {
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("slash-hat.enabled", "slash-hat.enabled", true, "kamstweaks.configure"));
+        Config.bool("slash-hat.enabled", true).build().add();
     }
 
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("hat")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.hat"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.SLASH_HAT))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    if (!KamsTweaks.get().getConfig().getBoolean("slash-hat", true)) {
+                    if (!KamsTweaks.get().getConfig().getBoolean("slash-hat.enabled", true)) {
                         sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/hat")));
                         return Command.SINGLE_SUCCESS;
                     }

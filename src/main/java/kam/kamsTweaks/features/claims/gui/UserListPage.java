@@ -5,7 +5,7 @@ import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import org.bukkit.Bukkit;
@@ -29,7 +29,7 @@ public class UserListPage extends GuiLayer {
             Arrays.sort(plrs, Comparator.comparing(OfflinePlayer::getName, Comparator.nullsLast(String::compareTo)));
             List<ActionButton> btns = new ArrayList<>();
             for (var plr : plrs) {
-                var name = Names.instance.getRenderedName(plr, true);
+                var name = Names.getName(plr, true);
                 var btn = ActionButton.builder(name);
                 btn.action(DialogAction.customClick((view, audience) -> callback.accept(plr), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build()));
                 btns.add(btn.build());

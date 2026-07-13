@@ -9,10 +9,10 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Logger;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.claims.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
@@ -91,7 +91,7 @@ public class EntityClaimPage extends GuiLayer {
             dialog = Dialog.create(builder -> {
                 var claim = Claims.get().entityClaims.getClaim(target);
                 if (claim == null) return;
-                var base = DialogBase.builder(KTStrings.getFor(KTStrings.CLAIM_EDIT_TITLE, Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD)));
+                var base = DialogBase.builder(KTStrings.getFor(KTStrings.CLAIM_EDIT_TITLE, Names.getEName(target).color(NamedTextColor.GOLD)));
                 if (claim.owner == null || !claim.owner.getUniqueId().equals(who.getUniqueId())) {
                     base.body(List.of(DialogBody.plainMessage(KTStrings.getFor(KTStrings.CLAIM_OP_WARNING, claim.getOwnerName()).color(NamedTextColor.RED))));
                 }
@@ -101,7 +101,7 @@ public class EntityClaimPage extends GuiLayer {
 
                 var entityBtn = ActionButton.builder(KTStrings.getFor(KTStrings.PERMS_DEFAULT_ENTITY)).action(DialogAction.customClick((view, audience) -> new PermissionPage(who, target, PermMode.ENTITY_DEFAULT).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
-                var permBtn = ActionButton.builder(KTStrings.getFor(KTStrings.PERMS_PLAYER)).action(DialogAction.customClick((view, audience) -> new UserListPage(who, KTStrings.getFor(KTStrings.PERMS_EDIT, Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD)), plr -> new PermissionPage(who, target, plr).show()).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
+                var permBtn = ActionButton.builder(KTStrings.getFor(KTStrings.PERMS_PLAYER)).action(DialogAction.customClick((view, audience) -> new UserListPage(who, KTStrings.getFor(KTStrings.PERMS_EDIT, Names.getEName(target).color(NamedTextColor.GOLD)), plr -> new PermissionPage(who, target, plr).show()).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
                 var settingsBtn = ActionButton.builder(KTStrings.getFor(KTStrings.SETTINGS)).action(DialogAction.customClick((view, audience) -> new SettingsPage(who, target).show(), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
 
@@ -128,7 +128,7 @@ public class EntityClaimPage extends GuiLayer {
             var claim = Claims.get().entityClaims.getClaim(target);
             if (claim == null) return;
             dialog = Dialog.create(builder -> {
-                var base = DialogBase.builder(KTStrings.getFor(KTStrings.CLAIM_SETTINGS, Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD)));
+                var base = DialogBase.builder(KTStrings.getFor(KTStrings.CLAIM_SETTINGS, Names.getEName(target).color(NamedTextColor.GOLD)));
                 var aggroBtn = DialogInput.bool("aggro", KTStrings.getFor(KTStrings.EC_AGGRO)).initial(claim.config.canAggro).build();
                 var testBtn = DialogInput.bool("test", KTStrings.getFor(KTStrings.PERMS_TEST_MODE)).initial(claim.config.testMode).build();
 
@@ -199,10 +199,10 @@ public class EntityClaimPage extends GuiLayer {
         void init() {
             dialog = Dialog.create(builder -> {
                 var base = DialogBase.builder(switch(mode) {
-                    case ENTITY -> KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getEntityRenderedName(entity), Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD));
-                    case OFFLINE_PLAYER -> KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.instance.getRenderedName(player), Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD));
-                    case DEFAULT -> KTStrings.getFor(KTStrings.PERMS_EDIT_DEFAULT, Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD));
-                    case ENTITY_DEFAULT -> KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY_DEFAULT, Names.instance.getEntityRenderedName(target).color(NamedTextColor.GOLD));
+                    case ENTITY -> KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.getEName(entity), Names.getEName(target).color(NamedTextColor.GOLD));
+                    case OFFLINE_PLAYER -> KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY, Names.getName(player), Names.getEName(target).color(NamedTextColor.GOLD));
+                    case DEFAULT -> KTStrings.getFor(KTStrings.PERMS_EDIT_DEFAULT, Names.getEName(target).color(NamedTextColor.GOLD));
+                    case ENTITY_DEFAULT -> KTStrings.getFor(KTStrings.PERMS_EDIT_ENTITY_DEFAULT, Names.getEName(target).color(NamedTextColor.GOLD));
                 });
 
                 var l = new ArrayList<>();

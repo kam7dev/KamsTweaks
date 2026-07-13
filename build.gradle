@@ -39,7 +39,6 @@ repositories {
 dependencies {
     paperweight.paperDevBundle("${project.minecraft_version}.build.+")
     compileOnly("com.discordsrv:discordsrv:${project.discordsrv_version}")
-    compileOnly("me.clip:placeholderapi:${project.placeholderapi_version}")
     compileOnly("org.geysermc.geyser:api:${project.geyser_version}")
 
     runtimeOnly("io.papermc.paper:paper-api:${project.minecraft_version}.build.+") // this is for genLang because im a bit stubborn and lazy
@@ -61,7 +60,7 @@ tasks.register("genLang") {
 
         URLClassLoader cl = new URLClassLoader(urls as URL[], (ClassLoader) null)
         try {
-            def clazz = cl.loadClass('kam.kamsTweaks.utils.KTStrings')
+            def clazz = cl.loadClass('kam.kamsTweaks.managers.KTStrings')
             def jsonMethod = clazz.getMethod('genJson')
             def jsonFile = file("res/kt-java/assets/kamstweaks/lang/en_us.json")
             jsonFile.text = jsonMethod.invoke(null)

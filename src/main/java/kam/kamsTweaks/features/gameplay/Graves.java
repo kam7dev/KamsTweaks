@@ -7,7 +7,9 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.gameplay.ItemManager;
+import kam.kamsTweaks.managers.KTItems;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -46,15 +48,18 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Graves extends Feature {
     public static final int MAIN_SIZE = 45;
     public static final int STATION_SIZE = 36;
-    public static final int RECOVERY_MAX = 3;
     public static NamespacedKey guiKey = new NamespacedKey("kamstweaks", "gui");
     public static NamespacedKey graveKey = new NamespacedKey("kamstweaks", "grave");
-    public Map<Integer, Grave> graves = new HashMap<>();
+    public static Map<Integer, Grave> graves = new HashMap<>();
     static int highest = 0;
 
     @Override
     public void setup() {
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("graves.enabled", "graves.enabled", true, "kamstweaks.configure"));
+        Config.bool("graves.enabled", false).build().add();
+        Config.integer("graves.time-limit", 600).build().add();
+        Config.integer("graves.recovery-time-limit", 300).build().add();
+        Config.integer("graves.recovery-limit", -1).build().add();
+        Config.integer("graves.max-active-recoveries", 3).build().add();
         Bukkit.getScheduler().runTaskTimer(KamsTweaks.get(), new Runnable() {
             long lastTime = System.currentTimeMillis();
 
@@ -111,8 +116,9 @@ public class Graves extends Feature {
                                     recovCount.getAndAdd(1);
                                 }
                             });
-                            if (recovCount.get() >= RECOVERY_MAX) {
-                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_RECOVERY_MAX, Component.text(RECOVERY_MAX)).color(NamedTextColor.RED));
+                            int maxActive = Config.getInt("graves.max-active-recoveries", 3);
+                            if (recovCount.get() >= maxActive) {
+                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_RECOVERY_MAX, Component.text(maxActive)).color(NamedTextColor.RED));
                                 return Command.SINGLE_SUCCESS;
                             }
                             int id = ctx.getArgument("id", Integer.class);
@@ -120,12 +126,18 @@ public class Graves extends Feature {
                             if (grave != null && grave.owner.getUniqueId().equals(player.getUniqueId()) // && !grave.recovery
                                     && grave.msLeft <= 0) {
                                 grave.recovery = true;
-                                grave.msLeft = 1000 * 60 * 10;
+                                grave.msLeft = Config.getLong("graves.recovery-time-limit", 300);
                                 grave.hasMessaged5 = false;
                                 grave.hasMessaged1 = false;
                                 grave.hasMessagedHalf = false;
                                 grave.hasMessagedExpire = false;
-                                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_RECOVERY, Component.text(RECOVERY_MAX)).color(NamedTextColor.AQUA));
+                                grave.recoveries++;
+                                int maxRecoveries = Config.getInt("graves.recovery-limit", -1);
+                                if (maxRecoveries == -1) {
+                                    ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_RECOVERY, Component.text(maxActive)).color(NamedTextColor.AQUA));
+                                } else {
+                                    ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.GRAVE_RECOVERY_LIMITED, Component.text(maxRecoveries - grave.recoveries), Component.text(maxActive)).color(NamedTextColor.AQUA));
+                                }
                                 grave.createStand();
                                 return Command.SINGLE_SUCCESS;
                             }
@@ -289,8 +301,8 @@ public class Graves extends Feature {
 
     @EventHandler
     public void onDie(PlayerDeathEvent event) {
-        if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", false))
-            return;
+        if (!Config.getBool("graves.enabled", false)) return;
+        if (!KTPerms.hasPermission(event.getPlayer(), KTPerms.GRAVES)) return;
 
         Player player = event.getPlayer();
         if (!UserDataManager.get(player.getUniqueId(), "graves.enabled", true)) return;
@@ -489,8 +501,6 @@ public class Graves extends Feature {
         if (entity instanceof ArmorStand stand) {
             if (!stand.getPersistentDataContainer().has(graveKey, PersistentDataType.INTEGER)) return;
             e.setCancelled(true);
-//            if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
-//                return;
             @SuppressWarnings("DataFlowIssue")
             int id = stand.getPersistentDataContainer().get(graveKey, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
@@ -549,8 +559,6 @@ public class Graves extends Feature {
             Player player = e.getPlayer();
             if (!stand.getPersistentDataContainer().has(graveKey, PersistentDataType.INTEGER)) return;
             e.setCancelled(true);
-//            if (!KamsTweaks.get().getConfig().getBoolean("graves.enabled", true))
-//                return;
             @SuppressWarnings("DataFlowIssue")
             int id = stand.getPersistentDataContainer().get(graveKey, PersistentDataType.INTEGER);
             if (!graves.containsKey(id)) return;
@@ -578,12 +586,13 @@ public class Graves extends Feature {
         ArmorStand stand;
         int experience;
         int id;
-        long msLeft = 1000 * 60 * 20; // 20 mins
+        long msLeft = Config.getLong("graves.time-limit", 600);
         boolean hasMessaged5 = false;
         boolean hasMessaged1 = false;
         boolean hasMessagedHalf = false;
         boolean hasMessagedExpire = false;
         boolean recovery = false;
+        int recoveries = 0;
 
         public void tick(long ms) {
             Player player = Bukkit.getPlayer(owner.getUniqueId());
@@ -599,9 +608,10 @@ public class Graves extends Feature {
                         player.sendMessage(KTStrings.getFor(KTStrings.GRAVE_EXPIRE_NOW, Component.text(id)).color(NamedTextColor.RED));
                         hasMessagedExpire = true;
                     }
-//                    if (recovery) {
-//                        Bukkit.getScheduler().runTask(KamsTweaks.getInstance(), () -> graves.remove(this.id));
-//                    }
+                    int maxRecoveries = Config.getInt("graves.recovery-limit", -1);
+                    if (recovery && maxRecoveries >= 0 && recoveries >= maxRecoveries) {
+                        Bukkit.getScheduler().runTask(KamsTweaks.get(), () -> graves.remove(this.id));
+                    }
                 } else {
                     if (this.msLeft <= 1000 * 60 * 5 && !hasMessaged5) {
                         hasMessaged5 = true;
@@ -798,7 +808,7 @@ public class Graves extends Feature {
         public void createStand() {
             stand = location.getWorld().spawn(location.clone().addRotation(90, 0).subtract(0, 1.4375, 0), ArmorStand.class);
             stand.setGravity(false);
-            stand.setItem(EquipmentSlot.HEAD, ItemManager.createItem(ItemManager.ItemType.GRAVE_HEAD));
+            stand.setItem(EquipmentSlot.HEAD, KTItems.createItem(KTItems.ItemType.GRAVE_HEAD));
             stand.setCustomNameVisible(true);
             stand.setBasePlate(false);
             stand.setPersistent(false);

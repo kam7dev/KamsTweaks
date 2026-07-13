@@ -4,9 +4,10 @@ import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
-import kam.kamsTweaks.utils.Logger;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.utils.UserDataManager;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
@@ -19,8 +20,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class UserKeepInv extends Feature {
     @Override
+    public void setup() {
+        Config.bool("keepinv.enabled", true).build().add();
+    }
+
+    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        commands.registrar().register(Commands.literal("keepinv")
+        commands.registrar().register(Commands.literal("keepinv").requires(source -> KTPerms.hasPermission(source, KTPerms.KEEPINV))
                 .then(Commands.literal("toggle").executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("keepinv.enabled", true)) {
@@ -54,6 +60,7 @@ public class UserKeepInv extends Feature {
     @EventHandler
     void onDeath(PlayerDeathEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("keepinv.enabled", true)) return;
+        if (!KTPerms.hasPermission(e.getPlayer(), KTPerms.KEEPINV)) return;
         if (UserDataManager.get(e.getPlayer().getUniqueId(), "keepinv.enabled", true)) {
             e.setKeepInventory(true);
             for (var item : e.getPlayer().getInventory().getContents()) {

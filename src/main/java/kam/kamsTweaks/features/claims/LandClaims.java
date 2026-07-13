@@ -10,10 +10,12 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.claims.gui.FLAlertLayer;
 import kam.kamsTweaks.features.claims.gui.LandClaimPage;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
+import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.utils.LocationUtils;
 import kam.kamsTweaks.utils.Logger;
 import net.kyori.adventure.text.Component;
@@ -48,6 +50,10 @@ public class LandClaims implements Listener {
     public LandProtections prots = new LandProtections();
 
     public void setup(Claims instance) {
+        Config.bool("land-claims.enabled", true).build().add();
+        Config.integer("land-claims.max-claims", 30).build().add();
+        Config.integer("land-claims.max-claim-size", 50000).build().add();
+
         this.instance = instance;
 
         prots.setup(this);
@@ -294,13 +300,17 @@ public class LandClaims implements Listener {
 
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands, LiteralArgumentBuilder<CommandSourceStack> baseCmd) {
         Command<CommandSourceStack> bcb = ctx -> {
+            if (!Config.getBool("land-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
                 new LandClaimPage(player).show();
 
                 if (player != sender) {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.instance.getRenderedName(player)).color(NamedTextColor.GOLD));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_SHOWED_GUI_TO, Names.getName(player)).color(NamedTextColor.GOLD));
                 }
                 return Command.SINGLE_SUCCESS;
             }
@@ -313,7 +323,11 @@ public class LandClaims implements Listener {
 
         List<LiteralArgumentBuilder<CommandSourceStack>> cmdList = new ArrayList<>();
 
-        var create = Commands.literal("create").executes(ctx -> {
+        var create = Commands.literal("create").requires(source -> KTPerms.hasPermission(source, KTPerms.CLAIMS_LAND)).executes(ctx -> {
+            if (!Config.getBool("land-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
@@ -339,6 +353,10 @@ public class LandClaims implements Listener {
             }
             return builder.buildFuture();
         }).executes(ctx -> {
+            if (!Config.getBool("land-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             var id = ctx.getArgument("id", Integer.class);
@@ -356,7 +374,11 @@ public class LandClaims implements Listener {
         }));
         cmdList.add(delete);
 
-        create.then(Commands.argument("pos1", ArgumentTypes.blockPosition()).then(Commands.argument("pos2", ArgumentTypes.blockPosition()).executes(ctx -> {
+        create.then(Commands.argument("pos1", ArgumentTypes.blockPosition()).then(Commands.argument("pos2", ArgumentTypes.blockPosition()).requires(source -> KTPerms.hasPermission(source, KTPerms.CLAIMS_LAND)).executes(ctx -> {
+            if (!Config.getBool("land-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
@@ -379,6 +401,10 @@ public class LandClaims implements Listener {
         })));
 
         cmdList.add(Commands.literal("cancel").executes(ctx -> {
+            if (!Config.getBool("land-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor != sender) {
@@ -394,6 +420,10 @@ public class LandClaims implements Listener {
         }));
 
         cmdList.add(Commands.literal("list").executes(ctx -> {
+            if (!Config.getBool("land-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
@@ -405,6 +435,10 @@ public class LandClaims implements Listener {
         }));
 
         cmdList.add(Commands.literal("view").executes(ctx -> {
+            if (!Config.getBool("land-claims.enabled", true)) {
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
+                return Command.SINGLE_SUCCESS;
+            }
             var sender = ctx.getSource().getSender();
             var executor = ctx.getSource().getExecutor();
             if (executor instanceof Player player) {
@@ -412,7 +446,7 @@ public class LandClaims implements Listener {
                 if (sender == player) {
                     sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_HIGHLIGHTED));
                 } else {
-                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_HIGHLIGHTED_FOR, Names.instance.getRenderedName(player)));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.CLAIM_HIGHLIGHTED_FOR, Names.getName(player)));
                 }
                 return Command.SINGLE_SUCCESS;
             }
@@ -435,6 +469,7 @@ public class LandClaims implements Listener {
     }
 
     public @Nullable LandClaim getClaim(Location where, boolean ignoresWorldDisable) {
+        if (!ignoresWorldDisable && !Config.getBool("land-claims.enabled", true)) return null;
         if (!ignoresWorldDisable && ((where.getWorld().getEnderDragonBattle() != null && where.getWorld().getEnderDragonBattle().getEnderDragon() != null) || disabled.containsKey(where.getWorld()))) {
             if (where.distance(new Location(where.getWorld(), 0.f, where.y(), 0.f)) < 200) return null;
         }
@@ -546,6 +581,10 @@ public class LandClaims implements Listener {
     }
 
     public void handleTool(Player plr, Location loc) {
+        if (!Config.getBool("land-claims.enabled", true)) {
+            plr.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
+            return;
+        }
         if (currentlyClaiming.containsKey(plr)) {
             var claim = currentlyClaiming.get(plr);
             if (claim.start == null) {
@@ -564,6 +603,10 @@ public class LandClaims implements Listener {
     }
 
     public void deleteClaim(LandClaim claim, Player who) {
+        if (!Config.getBool("land-claims.enabled", true)) {
+            who.sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
+            return;
+        }
         var mt = claim.getManagementType(who);
         if (mt == Claims.ManagementType.None) {
             who.sendMessage(KTStrings.getFor(KTStrings.CLAIM_CANT_MANAGE).color(NamedTextColor.RED));
@@ -780,7 +823,7 @@ public class LandClaims implements Listener {
         public Claims.ManagementType getManagementType(OfflinePlayer who) {
             if (owner != null && who.getUniqueId().equals(owner.getUniqueId())) return Claims.ManagementType.Owner;
             if (getPerms(who.getUniqueId()).trusted) return Claims.ManagementType.Trusted;
-            if (who.isOnline() && who.getPlayer().hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
+            if (who.isOnline() && KTPerms.hasPermission(who.getPlayer(), KTPerms.CLAIMS_MANAGE)) return Claims.ManagementType.Op;
             return Claims.ManagementType.None;
         }
 
@@ -1061,7 +1104,7 @@ public class LandClaims implements Listener {
 
         public Component getOwnerName() {
             if (owner == null) return KTStrings.getFor(KTStrings.THE_SERVER).color(NamedTextColor.GOLD);
-            return Names.instance.getRenderedName(owner);
+            return Names.getName(owner);
         }
 
         public String getOwnerUsername() {
@@ -1141,7 +1184,7 @@ public class LandClaims implements Listener {
         if (receiver == who) {
             receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_YOU_HAVE, Component.text(i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.LC)).append(msg));
         } else {
-            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.instance.getRenderedName(who), Component.text(i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.LC)).append(msg));
+            receiver.sendMessage(KTStrings.getFor(KTStrings.CLAIMS_THEY_HAVE, Names.getName(who), Component.text(i).color(NamedTextColor.GOLD), KTStrings.getFor(KTStrings.LC)).append(msg));
         }
 
     }
@@ -1174,6 +1217,7 @@ public class LandClaims implements Listener {
 
     @EventHandler
     public void onJoinWorld(EntityAddToWorldEvent event) {
+        if (!Config.getBool("land-claims.enabled", true)) return;
         if (event.getEntity() instanceof Player player) {
             if (event.getWorld().getEnderDragonBattle() != null && event.getWorld().getEnvironment() == World.Environment.THE_END && event.getWorld().getEnderDragonBattle().getEnderDragon() != null) {
                 player.sendMessage(KTStrings.getFor(KTStrings.LC_DISABLED).color(NamedTextColor.YELLOW));

@@ -4,7 +4,8 @@ import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.Feature;
 import kam.kamsTweaks.features.claims.Claims;
-import kam.kamsTweaks.features.fun.Names;
+import kam.kamsTweaks.features.fun.nicknames.Names;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -58,7 +59,7 @@ public class PVP extends Feature {
     @Override
     public void setup() {
         instance = this;
-        ConfigCommand.addConfig(new ConfigCommand.BoolConfig("player-pvp-toggle.enabled", "player-pvp-toggle.enabled", false, "kamstweaks.configure"));
+        Config.bool("pvp.combat-log", true).build().add();
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -70,6 +71,7 @@ public class PVP extends Feature {
     }
 
     void putInCombat(Player who, Component otherName) {
+        if (!Config.getBool("pvp.combat-log", true)) return;
         if (inCombat.containsKey(who.getUniqueId())) {
             inCombat.get(who.getUniqueId()).timeLeft = COMBAT_TIMER;
             return;
@@ -206,13 +208,11 @@ public class PVP extends Feature {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onAttack(EntityDamageByEntityEvent e) {
-        if (!KamsTweaks.get().getConfig().getBoolean("player-pvp-toggle.enabled", true))
-            return;
         if (e.getEntity() instanceof Player target && e.getDamageSource().getCausingEntity() instanceof Player causer) {
             if (target == causer) return;
             if (!canCombat(target)) {
                 e.setCancelled(true);
-                causer.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_CLAIM_DISABLED, Names.instance.getRenderedName(target)).color(NamedTextColor.RED));
+                causer.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_CLAIM_DISABLED, Names.getName(target)).color(NamedTextColor.RED));
             } else if (!canCombat(causer)) {
                 e.setCancelled(true);
                 causer.sendMessage(KTStrings.getFor(KTStrings.LC_PVP_CLAIM_DISABLED).color(NamedTextColor.RED));

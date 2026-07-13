@@ -7,18 +7,23 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.features.gameplay.Graves;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Logger;
 import kam.kamsTweaks.features.gameplay.PVP;
 import kam.kamsTweaks.utils.LocationUtils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -28,7 +33,7 @@ public class Back extends Feature {
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("back")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.back"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_BACK))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.back.enabled", true)) {
@@ -95,5 +100,13 @@ public class Back extends Feature {
         TeleportFeatures.get().locations.forEach((uuid, loc) -> {
             if (loc != null) config.set("back-locs." + uuid, LocationUtils.serializeLocation(loc));
         });
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent e) {
+        if (!KamsTweaks.get().getConfig().getBoolean("teleportation.back.on-death", false)) return;
+        Player player = e.getPlayer();
+        TeleportFeatures.get().locations.put(player.getUniqueId(), Graves.checkLocation(player.getLocation()));
+        player.sendMessage(KTStrings.getFor(KTStrings.BACK_INFO, Component.text("/back").color(NamedTextColor.RED).clickEvent(ClickEvent.runCommand("/back"))).color(NamedTextColor.GOLD));
     }
 }

@@ -10,7 +10,8 @@ import io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolv
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
-import kam.kamsTweaks.utils.KTStrings;
+import kam.kamsTweaks.managers.KTPerms;
+import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Logger;
 import kam.kamsTweaks.features.gameplay.PVP;
@@ -67,7 +68,7 @@ public class Warp extends Feature {
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> warpCmd = Commands.literal("warp")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.warp"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_WARP))
                 .then(Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
                     for (String warp : warps.keySet()) {
                         if (warp.toLowerCase().contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
@@ -114,7 +115,7 @@ public class Warp extends Feature {
                 }));
         commands.registrar().register(warpCmd.build());
         LiteralArgumentBuilder<CommandSourceStack> delWarpCmd = Commands.literal("delwarp")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.delwarp"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_WARP_ADD))
                 .then(Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
                     for (String warp : warps.keySet()) {
                         if (warp.toLowerCase().contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
@@ -138,7 +139,7 @@ public class Warp extends Feature {
                 }));
         commands.registrar().register(delWarpCmd.build());
         LiteralArgumentBuilder<CommandSourceStack> warpsCmd = Commands.literal("warps")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.warps"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_WARP))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
@@ -159,7 +160,7 @@ public class Warp extends Feature {
         commands.registrar().register(warpsCmd.build());
 
         LiteralArgumentBuilder<CommandSourceStack> addwarp = Commands.literal("addwarp")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.addwarp"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_WARP_ADD))
                 .then(Commands.argument("name", StringArgumentType.word()).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.warp.enabled", true)) {
