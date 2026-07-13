@@ -4,7 +4,6 @@ import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import io.papermc.paper.event.entity.FishHookStateChangeEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
-import kam.kamsTweaks.gameplay.ItemManager;
 import kam.kamsTweaks.managers.KTItems;
 import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
