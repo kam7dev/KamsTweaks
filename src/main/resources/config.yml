@@ -60,7 +60,7 @@ graves:
 
   # How many times a grave can be recovered after it expires.
   # Set to -1 for infinite.
-  recovery-limit: -1;
+  recovery-limit: -1
 
   # How many graves can be recovered at a time.
   # Set to -1 for infinite.
@@ -224,7 +224,7 @@ gameplay-pack:
     waxable: true
 
   # Joke item created by smithing Pigstep with a stone brick wall.
-  stone_brickstep:
+  stone-brickstep:
     # If stone brickstep is creatable through normal means.
     obtainable: true
 

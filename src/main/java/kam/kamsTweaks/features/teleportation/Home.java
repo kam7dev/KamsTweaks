@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Config;
@@ -84,7 +85,7 @@ public class Home extends Feature {
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> home = Commands.literal("home")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.homes"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_HOME))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.homes.enabled", true)) {
@@ -122,7 +123,7 @@ public class Home extends Feature {
         commands.registrar().register(home.build());
 
         LiteralArgumentBuilder<CommandSourceStack> sethome = Commands.literal("sethome")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.homes"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_HOME))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.homes.enabled", true)) {

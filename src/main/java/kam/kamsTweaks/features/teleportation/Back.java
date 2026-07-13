@@ -8,6 +8,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
 import kam.kamsTweaks.features.gameplay.Graves;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Logger;
@@ -32,7 +33,7 @@ public class Back extends Feature {
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("back")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.back"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_BACK))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.back.enabled", true)) {

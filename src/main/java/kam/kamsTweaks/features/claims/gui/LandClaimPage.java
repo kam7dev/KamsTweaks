@@ -7,6 +7,7 @@ import io.papermc.paper.registry.data.dialog.body.*;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.*;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Logger;
@@ -45,7 +46,7 @@ public class LandClaimPage extends GuiLayer {
                     totalClaims += claim.slots;
             }
 
-            if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30) && !Claims.get().landClaims.currentlyClaiming.containsKey(who)) {
+            if (totalClaims < KamsTweaks.get().getConfig().getInt("land-claims.max-claims", 30) && !Claims.get().landClaims.currentlyClaiming.containsKey(who) && KTPerms.hasPermission(who, KTPerms.CLAIMS_LAND)) {
                 var createBtn = ActionButton.builder(KTStrings.getFor(KTStrings.CLAIM_CREATE)).action(DialogAction.customClick((view, audience) -> Claims.get().landClaims.startClaiming(who, true), ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).lifetime(ClickCallback.DEFAULT_LIFETIME).build())).build();
                 btns.add(createBtn);
             }

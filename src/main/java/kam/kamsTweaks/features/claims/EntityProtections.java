@@ -4,6 +4,7 @@ import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import io.papermc.paper.event.entity.FishHookStateChangeEvent;
 import kam.kamsTweaks.managers.KTItems;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.fun.nicknames.Names;
@@ -62,14 +63,14 @@ public class EntityProtections implements Listener {
                     }
                 }
                 if (claim != null) {
-                    if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId()) || who.hasPermission("kamstweaks.claims.manage")) {
+                    if (claim.owner != null && claim.owner.getUniqueId().equals(who.getUniqueId()) || KTPerms.hasPermission(who, KTPerms.CLAIMS_MANAGE)) {
                         new EntityClaimPage(who, entity).show();
                         return;
                     }
                     message(who, KTStrings.getFor(KTStrings.EC_ALREADY_CLAIMED, claim.getOwnerName()));
                     return;
                 }
-                if (!who.hasPermission("kamstweaks.claims.claim")) {
+                if (!KTPerms.hasPermission(who, KTPerms.CLAIMS_ENTITY)) {
                     return;
                 }
                 int count = 0;

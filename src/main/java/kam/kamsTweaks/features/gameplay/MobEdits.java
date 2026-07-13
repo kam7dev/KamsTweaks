@@ -13,8 +13,8 @@ import org.bukkit.event.entity.EntityPlaceEvent;
 public class MobEdits extends Feature {
     @Override
     public void setup() {
-        Config.addConfig(new Config.BoolConfigOption("mob-edits.always-zombify", "mob-edits.always-zombify", true, "kamstweaks.configure"));
-        Config.addConfig(new Config.BoolConfigOption("mob-edits.stand-arms", "mob-edits.stand-arms", true, "kamstweaks.configure"));
+        Config.bool("mob-edits.always-zombify", true).build().add();
+        Config.bool("mob-edits.stand-arms", true).build().add();
     }
 
     @EventHandler

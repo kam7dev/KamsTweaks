@@ -21,6 +21,8 @@ public enum KTStrings {
 
     ITEM_TAG_WAXED,
 
+    ITEM_GIVE,
+    ITEM_NOT_EXIST,
     TOO_EXPENSIVE_FIX,
 
     // Generic
@@ -48,6 +50,7 @@ public enum KTStrings {
     COOLDOWN,
     COOLDOWN_MS,
     TRUSTED,
+    OTHER_NO_PERMS,
 
     // Automod
     AUTOMOD_NAME,
@@ -317,6 +320,12 @@ public enum KTStrings {
             case ITEM_TAG_WAXED -> {
                 return Component.translatable("kamstweaks.item.tag.waxed", "Waxed", args);
             }
+            case ITEM_GIVE -> {
+                return Component.translatable("kamstweaks.item.give", "Item %s doesn't exist.", args);
+            }
+            case ITEM_NOT_EXIST -> {
+                return Component.translatable("kamstweaks.item.nonexistent", "Gave %s.", args);
+            }
             case TOO_EXPENSIVE_FIX -> {
                 return Component.translatable("kamstweaks.item.hint.too_expensive_fix", "If the anvil says too expensive, try installing %s and try again. If you already have the mod installed you can ignore this.", args);
             }
@@ -392,6 +401,9 @@ public enum KTStrings {
             }
             case TRUSTED -> {
                 return Component.translatable("kamstweaks.generic.trusted", "Trusted", args);
+            }
+            case OTHER_NO_PERMS -> {
+                return Component.translatable("kamstweaks.generic.other_no_perms", "That person doesn't have permission for this.", args);
             }
 
             case AUTOMOD_NAME -> {

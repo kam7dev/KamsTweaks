@@ -12,6 +12,7 @@ import kam.kamsTweaks.features.gameplay.*;
 import kam.kamsTweaks.features.moderation.*;
 import kam.kamsTweaks.features.teleportation.TeleportFeatures;
 import kam.kamsTweaks.managers.KTItems;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.*;
 import net.kyori.adventure.text.Component;
@@ -64,6 +65,7 @@ public final class KamsTweaks extends JavaPlugin {
         this.saveDefaultConfig();
         loadConfigs();
 
+        KTPerms.registerPermissions();
         KTItems.init();
         if (Config.getBool("gameplay-pack.enabled", true)) features.add(new GameplayPack());
 
@@ -101,7 +103,7 @@ public final class KamsTweaks extends JavaPlugin {
                 KamsTweaks.get().save();
                 ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.SAVED).color(NamedTextColor.GREEN));
                 return Command.SINGLE_SUCCESS;
-            }).requires(source -> source.getSender().hasPermission("kamstweaks.save")));
+            }).requires(source -> KTPerms.hasPermission(source, KTPerms.SAVE)));
             for (var feature : features) {
                 try {
                     feature.registerKTSub(base);
@@ -117,8 +119,14 @@ public final class KamsTweaks extends JavaPlugin {
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, this::save, 20 * 60 * 5, 20 * 60 * 5);
 
+        Config.bool("ext.discordsrv.enabled", true).requiresRestart(true).build().add();
+        Config.string("ext.discordsrv.chat-filter.channel-id").requiresRestart(true).build().add();
+        Config.string("ext.discordsrv.chat-filter.role-id").requiresRestart(true).build().add();
         if (Config.getBool("ext.discordsrv.enabled", true)) SRVHelper.init();
 
+        Config.bool("ext.geyser.enabled", true).requiresRestart(true).build().add();
+        Config.bool("ext.geyser.kamstweaks-item", true).requiresRestart(true).build().add();
+        Config.bool("ext.geyser.anvixos-bits-items", true).requiresRestart(true).build().add();
         if (getServer().getPluginManager().isPluginEnabled("Geyser-Spigot") && Config.getBool("ext.geyser.enabled", true)) bits = new GeyserItemData();
     }
 

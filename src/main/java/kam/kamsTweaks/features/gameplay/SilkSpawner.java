@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features.gameplay;
 
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.KamsTweaks;
 import net.kyori.adventure.text.Component;
@@ -25,15 +26,14 @@ import java.util.Collections;
 public class SilkSpawner extends Feature {
     @Override
     public void setup() {
-        Config.addConfig(
-                new Config.BoolConfigOption("silk-spawners.enabled", "silk-spawners.enabled", true, "kamstweaks.configure"));
+        Config.bool("silk-spawners.enabled", true).build().add();
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))
             return;
-        if (!e.getPlayer().hasPermission("kamstweaks.silkspawner"))
+        if (!KTPerms.hasPermission(e.getPlayer(), KTPerms.SILK_SPAWNERS))
             return;
         if (e.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 0) {
             if (e.getBlock().getType() == Material.SPAWNER && e.isDropItems()) {
@@ -62,6 +62,10 @@ public class SilkSpawner extends Feature {
     public void onPlace(BlockPlaceEvent e) {
         if (!KamsTweaks.get().getConfig().getBoolean("silk-spawners.enabled", true))
             return;
+        if (!KTPerms.hasPermission(e.getPlayer(), KTPerms.SILK_SPAWNERS)) {
+            e.setCancelled(true);
+            return;
+        }
         if (e.getBlock().getState() instanceof CreatureSpawner spawner) {
             var name = e.getItemInHand().getItemMeta().getPersistentDataContainer()
                     .get(new NamespacedKey("kamstweaks", "spawner-mob"), PersistentDataType.STRING);

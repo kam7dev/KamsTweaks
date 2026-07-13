@@ -53,13 +53,16 @@ public class Names extends Feature {
         addInterpreter(new ColorNickNameInterpreter());
         addInterpreter(new MiniMessageInterpreter());
 
-        Config.addConfig(new Config.BoolConfigOption("nicknames.enabled", "nicknames.enabled", true, "kamstweaks.configure"));
+        Config.bool("nicknames.enabled", true).build().add();
+        Config.integer("nicknames.max-length", 30).build().add();
+        Config.bool("nicknames.colors.enabled", true).build().add();
+        // eventually i need to add a string list thing for combos but thats for another day
+        Config.bool("nicknames.allow-minimessage", true).build().add();
     }
 
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> whoIsCmd = Commands.literal("whois")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.names.nick"))
                 .then(Commands.argument("who", StringArgumentType.greedyString()).suggests((ctx, builder) -> {
                     data.forEach((uuid, comp) -> {
                             var ds = pt.serialize(comp.name());

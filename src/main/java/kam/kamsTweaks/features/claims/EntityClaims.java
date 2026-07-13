@@ -8,6 +8,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Config;
@@ -41,6 +42,9 @@ public class EntityClaims {
     public EntityProtections prots = new EntityProtections();
 
     public void setup(Claims instance) {
+        Config.bool("entity-claims.enabled", true).build().add();
+        Config.integer("entity-claims.max-claims", 1000).build().add();
+
         this.instance = instance;
         prots.setup(this);
         Bukkit.getServer().getPluginManager().registerEvents(prots, KamsTweaks.get());
@@ -70,7 +74,7 @@ public class EntityClaims {
 
         List<LiteralArgumentBuilder<CommandSourceStack>> cmdList = new ArrayList<>();
 
-        var create = Commands.literal("create").then(Commands.argument("entity", ArgumentTypes.entity()).executes(ctx -> {
+        var create = Commands.literal("create").then(Commands.argument("entity", ArgumentTypes.entity()).requires(source -> KTPerms.hasPermission(source, KTPerms.CLAIMS_ENTITY)).executes(ctx -> {
             if (!Config.getBool("entity-claims.enabled", true)) {
                 ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.EC)));
                 return Command.SINGLE_SUCCESS;
@@ -701,7 +705,7 @@ public class EntityClaims {
         public Claims.ManagementType getManagementType(OfflinePlayer who) {
             if (owner != null && who.getUniqueId().equals(owner.getUniqueId())) return Claims.ManagementType.Owner;
             if (getPerms(who.getUniqueId()).trusted) return Claims.ManagementType.Trusted;
-            if (who.isOnline() && who.getPlayer().hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
+            if (who.isOnline() && KTPerms.hasPermission(who.getPlayer(), KTPerms.CLAIMS_MANAGE)) return Claims.ManagementType.Op;
             return Claims.ManagementType.None;
         }
 

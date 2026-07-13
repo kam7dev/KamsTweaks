@@ -19,7 +19,7 @@ import org.bukkit.inventory.ItemStack;
 public class SeedDispenser extends Feature {
     @Override
     public void setup() {
-        Config.addConfig(new Config.BoolConfigOption("seed-dispenser.enabled", "seed-dispenser.enabled", true, "kamstweaks.configure"));
+        Config.bool("seed-dispenser.enabled", true).build().add();
     }
 
     public static Material matForSeed(ItemStack item) {

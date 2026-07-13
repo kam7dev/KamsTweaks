@@ -13,7 +13,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 public class NoBoom extends Feature {
     @Override
     public void setup() {
-        Config.addConfig(new Config.BoolConfigOption("no-explosions.enabled", "no-explosions.enabled", false, "kamstweaks.configure"));
+        Config.bool("no-explosions.enabled", false).build().add();
     }
 
     @EventHandler

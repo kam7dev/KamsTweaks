@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.gameplay.PVP;
@@ -22,7 +23,7 @@ public class Spawn extends Feature {
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> spawn = Commands.literal("spawn")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.teleports.spawn"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_SPAWN))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("teleportation.spawn.enabled", true)) {

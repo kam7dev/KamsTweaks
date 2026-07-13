@@ -5,7 +5,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.managers.KTPerms;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.command.ConsoleCommandSender;
 
@@ -30,15 +30,13 @@ public class Logger {
         } catch(Exception e) {
             Logger.error("Your log level ({}) seems to be invalid. Please make sure it's either 'debug', 'info', 'warn', or 'error'.", strLevel);
         }
-        var cmd = new Config.StringConfigOption("logger.log-level", "logger.log-level", "info", new String[]{"debug", "info", "warn", "error"}, "kamstweaks.configure");
-        cmd.callback = Logger::setLevel;
-        Config.addConfig(cmd);
+        Config.string("logger.log-level", "info", new String[]{"debug", "info", "warn", "error"}).callback(Logger::setLevel).build().add();
         initialized = true;
         logger = ComponentLogger.logger("KamsTweaks");
     }
 
     public static void registerKTSub(LiteralArgumentBuilder<CommandSourceStack> base) {
-        base.then(Commands.literal("exceptions").requires(source -> source.getSender().hasPermission("kamstweaks.logger")).executes(ctx -> {
+        base.then(Commands.literal("exceptions").requires(source -> KTPerms.hasPermission(source, KTPerms.LOGGER)).executes(ctx -> {
             ctx.getSource().getSender().sendMessage("There are " + Logger.exceptions.size() + " exceptions.");
             return Command.SINGLE_SUCCESS;
         }).then(Commands.literal("print").then(Commands.argument("id", IntegerArgumentType.integer()).executes(ctx -> {
@@ -54,12 +52,12 @@ public class Logger {
                 Logger.error("Stack trace print requested by {}:\n{}", ctx.getSource().getSender().getName(), sw);
             ctx.getSource().getSender().sendMessage(sw.toString());
             return Command.SINGLE_SUCCESS;
-        })).requires(source -> source.getSender().hasPermission("kamstweaks.logger")))
+        })).requires(source -> KTPerms.hasPermission(source, KTPerms.LOGGER)))
                 .then(Commands.literal("clear").executes(ctx -> {
                     Logger.exceptions.clear();
                     ctx.getSource().getSender().sendMessage("Exceptions cleared.");
                     return Command.SINGLE_SUCCESS;
-                }).requires(source -> source.getSender().hasPermission("kamstweaks.logger")))
+                }).requires(source -> KTPerms.hasPermission(source, KTPerms.LOGGER)))
                 .then(Commands.literal("throw").executes(ctx -> {
                     try {
                         throw new RuntimeException("Exception throw requested by " + ctx.getSource().getSender().getName());
@@ -68,7 +66,7 @@ public class Logger {
                     }
                     ctx.getSource().getSender().sendMessage("Threw a new exception.");
                     return Command.SINGLE_SUCCESS;
-                }).requires(source -> source.getSender().hasPermission("kamstweaks.logger"))));
+                }).requires(source -> KTPerms.hasPermission(source, KTPerms.LOGGER))));
     }
 
     public static void debug(String msg) {

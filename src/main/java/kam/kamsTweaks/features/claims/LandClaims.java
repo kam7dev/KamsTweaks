@@ -13,6 +13,7 @@ import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.fun.nicknames.Names;
 import kam.kamsTweaks.features.claims.gui.FLAlertLayer;
 import kam.kamsTweaks.features.claims.gui.LandClaimPage;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.utils.LocationUtils;
@@ -49,6 +50,10 @@ public class LandClaims implements Listener {
     public LandProtections prots = new LandProtections();
 
     public void setup(Claims instance) {
+        Config.bool("land-claims.enabled", true).build().add();
+        Config.integer("land-claims.max-claims", 30).build().add();
+        Config.integer("land-claims.max-claim-size", 50000).build().add();
+
         this.instance = instance;
 
         prots.setup(this);
@@ -318,7 +323,7 @@ public class LandClaims implements Listener {
 
         List<LiteralArgumentBuilder<CommandSourceStack>> cmdList = new ArrayList<>();
 
-        var create = Commands.literal("create").executes(ctx -> {
+        var create = Commands.literal("create").requires(source -> KTPerms.hasPermission(source, KTPerms.CLAIMS_LAND)).executes(ctx -> {
             if (!Config.getBool("land-claims.enabled", true)) {
                 ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
                 return Command.SINGLE_SUCCESS;
@@ -369,7 +374,7 @@ public class LandClaims implements Listener {
         }));
         cmdList.add(delete);
 
-        create.then(Commands.argument("pos1", ArgumentTypes.blockPosition()).then(Commands.argument("pos2", ArgumentTypes.blockPosition()).executes(ctx -> {
+        create.then(Commands.argument("pos1", ArgumentTypes.blockPosition()).then(Commands.argument("pos2", ArgumentTypes.blockPosition()).requires(source -> KTPerms.hasPermission(source, KTPerms.CLAIMS_LAND)).executes(ctx -> {
             if (!Config.getBool("land-claims.enabled", true)) {
                 ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_PLURAL, KTStrings.getFor(KTStrings.LC)));
                 return Command.SINGLE_SUCCESS;
@@ -818,7 +823,7 @@ public class LandClaims implements Listener {
         public Claims.ManagementType getManagementType(OfflinePlayer who) {
             if (owner != null && who.getUniqueId().equals(owner.getUniqueId())) return Claims.ManagementType.Owner;
             if (getPerms(who.getUniqueId()).trusted) return Claims.ManagementType.Trusted;
-            if (who.isOnline() && who.getPlayer().hasPermission("kamstweaks.claims.manage")) return Claims.ManagementType.Op;
+            if (who.isOnline() && KTPerms.hasPermission(who.getPlayer(), KTPerms.CLAIMS_MANAGE)) return Claims.ManagementType.Op;
             return Claims.ManagementType.None;
         }
 

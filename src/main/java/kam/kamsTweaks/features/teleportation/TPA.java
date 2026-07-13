@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.utils.Logger;
@@ -72,6 +73,10 @@ public class TPA extends Feature {
         }
         if (sender.isDead()) {
             sender.sendMessage(KTStrings.getFor(KTStrings.TPA_DEAD).color(NamedTextColor.RED));
+            return;
+        }
+        if (!KTPerms.hasPermission(sender, here ? KTPerms.TP_TPA : KTPerms.TP_TPA_HERE)) {
+            sender.sendMessage(KTStrings.getFor(KTStrings.OTHER_NO_PERMS).color(NamedTextColor.RED));
             return;
         }
 
@@ -190,7 +195,7 @@ public class TPA extends Feature {
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         commands.registrar().register(Commands.literal("tpa")
-                .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_TPA))
                 .then(Commands.argument("player", ArgumentTypes.player()).executes(ctx -> {
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
@@ -208,7 +213,7 @@ public class TPA extends Feature {
                     return Command.SINGLE_SUCCESS;
                 })).build());
         commands.registrar().register(Commands.literal("tpahere")
-                .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_TPA_HERE))
                 .then(Commands.argument("player", ArgumentTypes.player()).executes(ctx -> {
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
@@ -226,7 +231,6 @@ public class TPA extends Feature {
                     return Command.SINGLE_SUCCESS;
                 })).build());
         commands.registrar().register(Commands.literal("tpaccept")
-                .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
                 .executes(ctx -> {
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
@@ -243,7 +247,6 @@ public class TPA extends Feature {
                     return Command.SINGLE_SUCCESS;
                 }).build());
         commands.registrar().register(Commands.literal("tpdecline")
-                .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
                 .executes(ctx -> {
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
@@ -260,7 +263,6 @@ public class TPA extends Feature {
                     return Command.SINGLE_SUCCESS;
                 }).build());
         commands.registrar().register(Commands.literal("tpcancel")
-                .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
                 .executes(ctx -> {
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
@@ -276,7 +278,6 @@ public class TPA extends Feature {
                     return Command.SINGLE_SUCCESS;
                 }).build());
         commands.registrar().register(Commands.literal("tpauto")
-                .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
                 .executes(ctx -> {
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
@@ -294,7 +295,6 @@ public class TPA extends Feature {
                     return Command.SINGLE_SUCCESS;
                 }).build());
         commands.registrar().register(Commands.literal("tpblock")
-                .requires(src -> src.getSender().hasPermission("kamstweaks.teleports.tpa"))
                 .then(Commands.argument("player", ArgumentTypes.player())
                         .executes(ctx -> {
                             Entity exec = ctx.getSource().getExecutor();

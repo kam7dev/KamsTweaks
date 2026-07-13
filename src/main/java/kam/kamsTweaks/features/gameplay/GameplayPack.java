@@ -40,7 +40,12 @@ public class GameplayPack extends Feature {
 
     @Override
     public void setup() {
-        if (Config.getBool("gameplay-pack.stone_brickstep.obtainable", true)) {
+        Config.bool("gameplay-pack.enabled", true).requiresRestart(true).build().add();
+        Config.bool("gameplay-pack.freezeflame.obtainable", true).requiresRestart(true).build().add();
+        Config.bool("gameplay-pack.freezeflame.waxable", true).requiresRestart(true).build().add();
+        Config.bool("gameplay-pack.stone-brickstep.obtainable", true).requiresRestart(true).build().add();
+
+        if (Config.getBool("gameplay-pack.stone-brickstep.obtainable", true)) {
             Bukkit.addRecipe(new SmithingTransformRecipe(
                     new NamespacedKey("kamstweaks", "stone_brickstep"),
                     KTItems.createItem(KTItems.ItemType.STONE_BRICKSTEP),

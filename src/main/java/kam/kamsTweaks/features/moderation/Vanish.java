@@ -9,6 +9,7 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.ext.SRVHelper;
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.utils.UserDataManager;
@@ -32,10 +33,14 @@ import java.util.*;
 
 @SuppressWarnings("deprecation")
 public class Vanish extends Feature {
+    @Override
+    public void setup() {
+        Config.bool("staff.vanish.enabled", true).build().add();
+    }
 
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        commands.registrar().register(Commands.literal("vanish").requires(source -> source.getSender().isOp())
+        commands.registrar().register(Commands.literal("vanish").requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                 .executes(ctx -> {
                     var sender = ctx.getSource().getSender();
                     if (!(ctx.getSource().getExecutor() instanceof Player plr)) {
@@ -48,7 +53,7 @@ public class Vanish extends Feature {
                     }
                     setVanished(plr, sender, true);
                     return Command.SINGLE_SUCCESS;
-                }).then(Commands.argument("targets", ArgumentTypes.playerProfiles()).requires(source -> source.getSender().isOp())
+                }).then(Commands.argument("targets", ArgumentTypes.playerProfiles()).requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                         .executes(ctx -> {
                             var targets = ctx.getArgument("targets", PlayerProfileListResolver.class).resolve(ctx.getSource());
                             if (targets.isEmpty()) return Command.SINGLE_SUCCESS;
@@ -68,7 +73,7 @@ public class Vanish extends Feature {
                             if (!built.equals(sender.getName())) sender.sendMessage(KTStrings.getFor(KTStrings.VANISH_VANISHED_OTHER, Component.text(built)).color(NamedTextColor.GOLD));
                             return Command.SINGLE_SUCCESS;
                         })).build());
-        commands.registrar().register(Commands.literal("unvanish").requires(source -> source.getSender().isOp())
+        commands.registrar().register(Commands.literal("unvanish").requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                 .executes(ctx -> {
                     var sender = ctx.getSource().getSender();
                     if (!(ctx.getSource().getExecutor() instanceof Player plr)) {
@@ -81,7 +86,7 @@ public class Vanish extends Feature {
                     }
                     setVanished(plr, sender, false);
                     return Command.SINGLE_SUCCESS;
-                }).then(Commands.argument("targets", ArgumentTypes.playerProfiles()).requires(source -> source.getSender().isOp())
+                }).then(Commands.argument("targets", ArgumentTypes.playerProfiles()).requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                         .executes(ctx -> {
                             var targets = ctx.getArgument("targets", PlayerProfileListResolver.class).resolve(ctx.getSource());
                             if (targets.isEmpty()) return Command.SINGLE_SUCCESS;
@@ -98,7 +103,7 @@ public class Vanish extends Feature {
                             return Command.SINGLE_SUCCESS;
                         })).build());
 
-        commands.registrar().register(Commands.literal("vanished").requires(source -> source.getSender().isOp())
+        commands.registrar().register(Commands.literal("vanished").requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
                 .executes(ctx -> {
                     var sender = ctx.getSource().getSender();
                     if (!(ctx.getSource().getExecutor() instanceof Player plr)) {

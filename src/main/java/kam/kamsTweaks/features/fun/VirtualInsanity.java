@@ -6,6 +6,7 @@ import io.papermc.paper.math.Rotations;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.Config;
 import net.kyori.adventure.key.Key;
@@ -47,8 +48,14 @@ public class VirtualInsanity extends Feature {
     }
 
     @Override
+    public void setup() {
+        Config.bool("virtual-insanity.enabled", true).build().add();
+        Config.integer("virtual-insanity.cooldown", 60).build().add();
+    }
+
+    @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
-        commands.registrar().register(Commands.literal("jamiroquai").executes(ctx -> {
+        commands.registrar().register(Commands.literal("jamiroquai").requires(ctx -> KTPerms.hasPermission(ctx, KTPerms.VIRTUAL_INSANITY)).executes(ctx -> {
             if (!KamsTweaks.get().getConfig().getBoolean("virtual-insanity.enabled", true)) {
                 ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, Component.text("/jamiroquai")));
                 return Command.SINGLE_SUCCESS;

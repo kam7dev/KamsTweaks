@@ -8,6 +8,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.Feature;
 import kam.kamsTweaks.managers.KTItems;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.*;
 import net.kyori.adventure.text.Component;
@@ -54,7 +55,11 @@ public class Graves extends Feature {
 
     @Override
     public void setup() {
-        Config.addConfig(new Config.BoolConfigOption("graves.enabled", "graves.enabled", true, "kamstweaks.configure"));
+        Config.bool("graves.enabled", false).build().add();
+        Config.integer("graves.time-limit", 600).build().add();
+        Config.integer("graves.recovery-time-limit", 300).build().add();
+        Config.integer("graves.recovery-limit", -1).build().add();
+        Config.integer("graves.max-active-recoveries", 3).build().add();
         Bukkit.getScheduler().runTaskTimer(KamsTweaks.get(), new Runnable() {
             long lastTime = System.currentTimeMillis();
 
@@ -297,6 +302,7 @@ public class Graves extends Feature {
     @EventHandler
     public void onDie(PlayerDeathEvent event) {
         if (!Config.getBool("graves.enabled", false)) return;
+        if (!KTPerms.hasPermission(event.getPlayer(), KTPerms.GRAVES)) return;
 
         Player player = event.getPlayer();
         if (!UserDataManager.get(player.getUniqueId(), "graves.enabled", true)) return;

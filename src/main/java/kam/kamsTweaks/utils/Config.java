@@ -8,6 +8,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import kam.kamsTweaks.KamsTweaks;
+import kam.kamsTweaks.managers.KTPerms;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.ArrayList;
@@ -36,44 +37,217 @@ public class Config {
         return KamsTweaks.get().getConfig().getString(id, defaultValue);
     }
 
+    public static BoolOption.Builder bool(String id, boolean defaultValue) {
+        return new BoolOption.Builder().configId(id).name(id).defaultValue(defaultValue);
+    }
+
+    public static BoolOption.Builder bool(String id) {
+        return new BoolOption.Builder().configId(id).name(id);
+    }
+
+    public static BoolOption.Builder bool() {
+        return new BoolOption.Builder();
+    }
+
+    public static IntOption.Builder integer() {
+        return new IntOption.Builder();
+    }
+
+    public static IntOption.Builder integer(String id, int defaultValue) {
+        return new IntOption.Builder().configId(id).name(id).defaultValue(defaultValue);
+    }
+
+    public static IntOption.Builder integer(String id) {
+        return new IntOption.Builder().configId(id).name(id);
+    }
+
+    public static StringOption.Builder string() {
+        return new StringOption.Builder();
+    }
+
+    public static StringOption.Builder string(String id, String defaultValue) {
+        return new StringOption.Builder().configId(id).name(id).defaultValue(defaultValue);
+    }
+
+    public static StringOption.Builder string(String id, String defaultValue, String[] options) {
+        return new StringOption.Builder().configId(id).name(id).defaultValue(defaultValue).options(options);
+    }
+
+    public static StringOption.Builder string(String id) {
+        return new StringOption.Builder().configId(id).name(id);
+    }
+
     public abstract static class ConfigOption {
         public String name;
         public String configId;
-        public String permission;
-        public boolean requiresRestart;
+        public String permission = "kamstweaks.configure";
+        public boolean requiresRestart = false;
         public FileConfiguration config = KamsTweaks.get().getConfig();
 
         public abstract LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command);
+
+        ConfigOption() {}
+
+        ConfigOption(Builder<?> builder) {
+            this.name = builder.name;
+            this.configId = builder.configId;
+            if (builder.permission != null) this.permission = builder.permission;
+            this.requiresRestart = builder.requiresRestart;
+            if (builder.config != null) this.config = builder.config;
+        }
+
+        public void add() {
+            addConfig(this);
+        }
+
+        @SuppressWarnings("unchecked")
+        protected static class Builder<Class extends Builder<Class>> {
+            String name;
+            String configId;
+            public String permission = "kamstweaks.configure";
+            boolean requiresRestart = false;
+            public FileConfiguration config = KamsTweaks.get().getConfig();
+
+            public Class name(String name) {
+                this.name = name;
+                return (Class) this;
+            }
+
+            public Class configId(String configId) {
+                this.configId = configId;
+                if (this.name == null) this.name =  configId;
+                return (Class) this;
+            }
+
+            public Class permission(String permission) {
+                this.permission = permission;
+                return (Class) this;
+            }
+
+            public Class permission(KTPerms permission) {
+                this.permission = permission.id;
+                return (Class) this;
+            }
+
+            public Class requiresRestart(boolean requiresRestart) {
+                this.requiresRestart = requiresRestart;
+                return (Class) this;
+            }
+
+            public Class config(FileConfiguration config) {
+                this.config = config;
+                return (Class) this;
+            }
+        }
     }
 
-    public static class StringConfigOption extends ConfigOption {
-        public String[] options;
-        public boolean freeType = false;
-        public Consumer<String> callback;
-        public String default_;
-
-        public StringConfigOption(String name, String configId, String default_, String[] options, boolean requiresRestart, String permission) {
-            this.name = name;
-            this.configId = configId;
-            this.default_ = default_;
-            this.options = options;
-            this.requiresRestart = requiresRestart;
-            this.permission = permission;
-        }
-        public StringConfigOption(String name, String configId, String default_, String[] options, boolean requiresRestart) {
-            this(name, configId, default_, options, requiresRestart, null);
-        }
-        public StringConfigOption(String name, String configId, String default_, String[] options, String permission) {
-            this(name, configId, default_, options, false, permission);
-        }
-        public StringConfigOption(String name, String configId, String default_, String[] options) {
-            this(name, configId, default_, options, false, null);
-        }
+    public static class BoolOption extends ConfigOption {
+        public boolean defaultValue = false;
+        public Consumer<Boolean> callback;
 
         @Override
         public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
             return command.then(Commands.literal(name).executes(ctx -> {
-                String val = config.getString(configId, default_);
+                boolean val = config.getBoolean(configId, defaultValue);
+                ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
+                return Command.SINGLE_SUCCESS;
+            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", BoolArgumentType.bool()).executes(ctx -> {
+                Boolean val = ctx.getArgument("value", Boolean.class);
+                config.set(configId, val);
+                KamsTweaks.get().saveConfig();
+                if (callback != null) callback.accept(val);
+                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\"." + (requiresRestart ? " This option requires a restart to take effect." : ""));
+                return Command.SINGLE_SUCCESS;
+            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
+        }
+
+        BoolOption() {}
+
+        BoolOption(Builder builder) {
+            super(builder);
+            this.defaultValue = builder.defaultValue;
+            this.callback = builder.callback;
+        }
+
+        public static class Builder extends ConfigOption.Builder<Builder> {
+            boolean defaultValue = false;
+            Consumer<Boolean> callback;
+
+            public Builder defaultValue(boolean defaultValue) {
+                this.defaultValue = defaultValue;
+                return this;
+            }
+
+            public Builder callback(Consumer<Boolean> callback) {
+                this.callback = callback;
+                return this;
+            }
+
+            public BoolOption build() {
+                return new BoolOption(this);
+            }
+        }
+    }
+
+    public static class IntOption extends ConfigOption {
+        public int defaultValue = 0;
+        public Consumer<Integer> callback;
+
+        @Override
+        public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
+            return command.then(Commands.literal(name).executes(ctx -> {
+                int val = config.getInt(configId, defaultValue);
+                ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
+                return Command.SINGLE_SUCCESS;
+            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", IntegerArgumentType.integer()).executes(ctx -> {
+                Integer val = ctx.getArgument("value", Integer.class);
+                config.set(configId, val);
+                KamsTweaks.get().save();
+                ctx.getSource().getSender().sendMessage("Set value of " + name + " to " + val + ".");
+                if (callback != null) callback.accept(val);
+                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\"." + (requiresRestart ? " This option requires a restart to take effect." : ""));
+                return Command.SINGLE_SUCCESS;
+            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
+        }
+
+        IntOption() {}
+
+        IntOption(Builder builder) {
+            super(builder);
+            this.defaultValue = builder.defaultValue;
+            this.callback = builder.callback;
+        }
+
+        public static class Builder extends ConfigOption.Builder<Builder> {
+            int defaultValue = 0;
+            Consumer<Integer> callback;
+
+            public Builder defaultValue(int defaultValue) {
+                this.defaultValue = defaultValue;
+                return this;
+            }
+
+            public Builder callback(Consumer<Integer> callback) {
+                this.callback = callback;
+                return this;
+            }
+
+            public IntOption build() {
+                return new IntOption(this);
+            }
+        }
+    }
+
+    public static class StringOption extends ConfigOption {
+        public String[] options = new String[]{};
+        public boolean freeType = false;
+        public String defaultValue = "";
+        public Consumer<String> callback;
+
+        @Override
+        public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
+            return command.then(Commands.literal(name).executes(ctx -> {
+                String val = config.getString(configId, defaultValue);
                 ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", StringArgumentType.word()).suggests((ctx, builder) -> {
@@ -90,86 +264,49 @@ public class Config {
                 config.set(configId, val);
                 KamsTweaks.get().saveConfig();
                 if (callback != null) callback.accept(val);
-                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
+                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\"." + (requiresRestart ? " This option requires a restart to take effect." : ""));
                 return Command.SINGLE_SUCCESS;
             }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
         }
-    }
 
-    public static class BoolConfigOption extends ConfigOption {
-        Consumer<Boolean> callback;
-        boolean default_;
+        StringOption() {}
 
-        public BoolConfigOption(String name, String configId, boolean default_, boolean requiresRestart, String permission) {
-            this.name = name;
-            this.configId = configId;
-            this.default_ = default_;
-            this.requiresRestart = requiresRestart;
-            this.permission = permission;
-        }
-        public BoolConfigOption(String name, String configId, boolean default_, boolean requiresRestart) {
-            this(name, configId, default_, requiresRestart, null);
-        }
-        public BoolConfigOption(String name, String configId, boolean default_, String permission) {
-            this(name, configId, default_, false, permission);
-        }
-        public BoolConfigOption(String name, String configId, boolean default_) {
-            this(name, configId, default_, false, null);
+        StringOption(Builder builder) {
+            super(builder);
+            this.options = builder.options;
+            this.freeType = builder.freeType;
+            this.defaultValue = builder.defaultValue;
+            this.callback = builder.callback;
         }
 
-        @Override
-        public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
-            return command.then(Commands.literal(name).executes(ctx -> {
-                boolean val = config.getBoolean(configId, default_);
-                ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
-                return Command.SINGLE_SUCCESS;
-            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", BoolArgumentType.bool()).executes(ctx -> {
-                Boolean val = ctx.getArgument("value", Boolean.class);
-                config.set(configId, val);
-                KamsTweaks.get().saveConfig();
-                if (callback != null) callback.accept(val);
-                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
-                return Command.SINGLE_SUCCESS;
-            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
-        }
-    }
+        public static class Builder extends ConfigOption.Builder<Builder> {
+            public String[] options = new String[]{};
+            public boolean freeType = false;
+            String defaultValue = "";
+            Consumer<String> callback;
 
-    public static class IntConfigOption extends ConfigOption {
-        Consumer<Integer> callback;
-        Integer default_;
+            public Builder options(String[] options) {
+                this.options = options;
+                return this;
+            }
+            public Builder freeType(boolean freeType) {
+                this.freeType = freeType;
+                return this;
+            }
 
-        public IntConfigOption(String name, String configId, int default_, boolean requiresRestart, String permission) {
-            this.name = name;
-            this.configId = configId;
-            this.default_ = default_;
-            this.requiresRestart = requiresRestart;
-            this.permission = permission;
-        }
-        public IntConfigOption(String name, String configId, int default_, boolean requiresRestart) {
-            this(name, configId, default_, requiresRestart, null);
-        }
-        public IntConfigOption(String name, String configId, int default_, String permission) {
-            this(name, configId, default_, false, permission);
-        }
-        public IntConfigOption(String name, String configId, int default_) {
-            this(name, configId, default_, false, null);
-        }
+            public Builder defaultValue(String defaultValue) {
+                this.defaultValue = defaultValue;
+                return this;
+            }
 
-        @Override
-        public LiteralArgumentBuilder<CommandSourceStack> registerSubcommand(LiteralArgumentBuilder<CommandSourceStack> command) {
-            return command.then(Commands.literal(name).executes(ctx -> {
-                int val = config.getInt(configId, default_);
-                ctx.getSource().getSender().sendMessage("Current value for " + name + " is " + val + ".");
-                return Command.SINGLE_SUCCESS;
-            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission)).then(Commands.argument("value", IntegerArgumentType.integer()).executes(ctx -> {
-                Integer val = ctx.getArgument("value", Integer.class);
-                config.set(configId, val);
-                KamsTweaks.get().save();
-                ctx.getSource().getSender().sendMessage("Set value of " + name + " to " + val + ".");
-                if (callback != null) callback.accept(val);
-                ctx.getSource().getSender().sendMessage("Successfully set " + configId + " to \"" + val + "\".");
-                return Command.SINGLE_SUCCESS;
-            }).requires(sender -> permission == null || sender.getSender().hasPermission(permission))));
+            public Builder callback(Consumer<String> callback) {
+                this.callback = callback;
+                return this;
+            }
+
+            public StringOption build() {
+                return new StringOption(this);
+            }
         }
     }
 

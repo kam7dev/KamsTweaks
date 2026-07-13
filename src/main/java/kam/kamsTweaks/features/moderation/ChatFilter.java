@@ -75,6 +75,8 @@ public class ChatFilter extends Feature {
     List<Filter> filters = new ArrayList<>();
 
     public void setup() {
+        // eventually i need to add config extension here but just like the nickname color config thats for me to do another day
+
         instance = this;
         var cfg = KamsTweaks.get().getConfig();
         if (cfg.contains("chat-filters")) {

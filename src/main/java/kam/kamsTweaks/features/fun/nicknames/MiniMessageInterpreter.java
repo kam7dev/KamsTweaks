@@ -7,6 +7,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.features.moderation.ChatFilter;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.Config;
 import net.kyori.adventure.text.Component;
@@ -49,7 +50,7 @@ public class MiniMessageInterpreter extends Names.NameInterpreter{
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> nickCmd = Commands.literal("mmnick")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.names.nick") && source.getSender().hasPermission("kamstweaks.names.nick.minimessage"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.NICKNAME_MINIMESSAGE))
                 .then(Commands.argument("name", StringArgumentType.greedyString()).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!Config.getBool("nicknames.enabled", true)) {

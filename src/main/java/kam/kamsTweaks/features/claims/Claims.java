@@ -41,11 +41,6 @@ public class Claims extends Feature {
 
     @Override
     public void setup() {
-
-        Config.addConfig(new Config.BoolConfigOption("land-claims.enabled", "land-claims.enabled", true, "kamstweaks.configure"));
-        Config.addConfig(new Config.IntConfigOption("land-claims.max-claims", "land-claims.max-claims", 30, "kamstweaks.configure"));
-        Config.addConfig(new Config.IntConfigOption("land-claims.max-claim-size", "land-claims.max-claim-size", 50000, "kamstweaks.configure"));
-
         landClaims.setup(this);
         entityClaims.setup(this);
 

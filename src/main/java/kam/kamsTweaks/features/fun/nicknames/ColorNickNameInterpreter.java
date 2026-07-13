@@ -9,6 +9,7 @@ import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEven
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.fun.nicknames.Names.NameData;
 import kam.kamsTweaks.features.moderation.ChatFilter;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.managers.KTStrings;
 import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.utils.Logger;
@@ -112,7 +113,7 @@ public class ColorNickNameInterpreter extends Names.NameInterpreter {
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> nickCmd = Commands.literal("nick")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.names.nick"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.NICKNAME))
                 .then(Commands.argument("name", StringArgumentType.greedyString()).executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!Config.getBool("nicknames.enabled", true)) {
@@ -153,7 +154,7 @@ public class ColorNickNameInterpreter extends Names.NameInterpreter {
         commands.registrar().register(nickCmd.build());
 
         LiteralArgumentBuilder<CommandSourceStack> colorCmd = Commands.literal("color")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.names.color"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.NICKNAME_COLORS))
                 .then(Commands.argument("colors", StringArgumentType.greedyString())
                         .suggests((ctx, builder) -> {
                             String input = builder.getInput();

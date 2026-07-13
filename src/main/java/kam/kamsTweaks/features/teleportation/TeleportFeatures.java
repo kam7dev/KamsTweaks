@@ -56,13 +56,15 @@ public class TeleportFeatures extends Feature {
         for (var feature : features) {
             Bukkit.getServer().getPluginManager().registerEvents(feature, KamsTweaks.get());
         }
-        Config.addConfig(new Config.IntConfigOption("teleportation.timer", "teleportation.timer", 5, "kamstweaks.configure"));
-        Config.addConfig(new Config.IntConfigOption("teleportation.cooldown", "teleportation.cooldown", 10, "kamstweaks.configure"));
-        Config.addConfig(new Config.BoolConfigOption("teleportation.homes.enabled", "teleportation.homes.enabled", true, "kamstweaks.configure"));
-        Config.addConfig(new Config.BoolConfigOption("teleportation.spawn.enabled", "teleportation.spawn.enabled", true, "kamstweaks.configure"));
-        Config.addConfig(new Config.BoolConfigOption("teleportation.tpa.enabled", "teleportation.tpa.enabled", true, "kamstweaks.configure"));
-        Config.addConfig(new Config.BoolConfigOption("teleportation.warp.enabled", "teleportation.warp.enabled", true, "kamstweaks.configure"));
-        Config.addConfig(new Config.BoolConfigOption("teleportation.back.enabled", "teleportation.back.enabled", true, "kamstweaks.configure"));
+        Config.integer("teleportation.timer", 5).build().add();
+        Config.integer("teleportation.cooldown", 10).build().add();
+        Config.bool("teleportation.homes.enabled", true).build().add();
+        Config.integer("teleportation.homes.sethome-cooldown", 900).build().add();
+        Config.bool("teleportation.spawn.enabled", true).build().add();
+        Config.bool("teleportation.tpa.enabled", true).build().add();
+        Config.bool("teleportation.warp.enabled", true).build().add();
+        Config.bool("teleportation.back.enabled", true).build().add();
+        Config.bool("teleportation.back.on-death", false).build().add();
     }
 
     @Override

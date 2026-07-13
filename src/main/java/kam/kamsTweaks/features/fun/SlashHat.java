@@ -8,6 +8,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.managers.KTStrings;
 import net.kyori.adventure.text.Component;
@@ -22,13 +23,13 @@ import org.jetbrains.annotations.NotNull;
 public class SlashHat extends Feature {
     @Override
     public void setup() {
-        Config.addConfig(new Config.BoolConfigOption("slash-hat.enabled", "slash-hat.enabled", true, "kamstweaks.configure"));
+        Config.bool("slash-hat.enabled", true).build().add();
     }
 
     @Override
     public void registerCommands(ReloadableRegistrarEvent<@NotNull Commands> commands) {
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("hat")
-                .requires(source -> source.getSender().hasPermission("kamstweaks.hat"))
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.SLASH_HAT))
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
                     if (!KamsTweaks.get().getConfig().getBoolean("slash-hat.enabled", true)) {

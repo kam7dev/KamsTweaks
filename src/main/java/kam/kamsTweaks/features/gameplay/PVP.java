@@ -59,7 +59,7 @@ public class PVP extends Feature {
     @Override
     public void setup() {
         instance = this;
-        Config.addConfig(new Config.BoolConfigOption("player-pvp-toggle.enabled", "player-pvp-toggle.enabled", false, "kamstweaks.configure"));
+        Config.bool("pvp.combat-log", true).build().add();
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

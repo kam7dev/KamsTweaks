@@ -104,6 +104,8 @@ public class KTItems implements Listener {
     }
 
     public static void init() {
+        Config.bool("suggest-resource-pack", true).build().add();
+
         items = new HashMap<>();
         {
             var item = makeBaseItem(ItemType.CLAIM_TOOL);
@@ -188,30 +190,27 @@ public class KTItems implements Listener {
     }
 
     public static void registerKTSub(LiteralArgumentBuilder<CommandSourceStack> base) {
-        base.then(Commands.literal("give").requires(source -> source.getSender().hasPermission("kamstweaks.items.give")).then(Commands.argument("item", StringArgumentType.word()).requires(source -> {
-            if (source.getSender() instanceof Player plr) {
-                return plr.getUniqueId().toString().equals("b638c3bb-1c3b-4928-97f7-1c8f75d7a59b");
-            }
-            return false;
-        }).suggests((ctx, builder) -> {
-            for (var val : ItemType.values()) {
-                if (val.key.getKey().contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
-                    builder.suggest(val.key.getKey());
-            }
-            return builder.buildFuture();
-        }).executes(ctx -> {
-            var pre = ctx.getArgument("item", String.class);
-            var type = fromString(pre);
-            var sender = ctx.getSource().getSender();
-            // i dont really see a need to use translation strings for a dev command
-            if (type == null) {
-                sender.sendMessage(Component.text("Item '" + pre + "' doesn't exist."));
-                return Command.SINGLE_SUCCESS;
-            }
-            ((Player) sender).getInventory().addItem(KTItems.createItem(type));
-            sender.sendMessage(Component.text("Gave '" + pre + "'."));
-            return Command.SINGLE_SUCCESS;
-        })));
+        base.then(Commands.literal("give").requires(source -> KTPerms.hasPermission(source, KTPerms.ITEM_GIVE)).then(Commands.argument("item", StringArgumentType.word())
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.LOGGER))
+                .suggests((ctx, builder) -> {
+                    for (var val : ItemType.values()) {
+                        if (val.key.getKey().contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
+                            builder.suggest(val.key.getKey());
+                    }
+                    return builder.buildFuture();
+                }).executes(ctx -> {
+                    var pre = ctx.getArgument("item", String.class);
+                    var type = fromString(pre);
+                    var sender = ctx.getSource().getSender();
+                    // i dont really see a need to use translation strings for a dev command
+                    if (type == null) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.ITEM_NOT_EXIST, Component.text(pre)));
+                        return Command.SINGLE_SUCCESS;
+                    }
+                    ((Player) sender).getInventory().addItem(KTItems.createItem(type));
+                    sender.sendMessage(KTStrings.getFor(KTStrings.ITEM_GIVE, Component.text(pre)));
+                    return Command.SINGLE_SUCCESS;
+                })));
     }
 
     private static final String PACK_ID = "1V21rNSU933OJpMYJrVIbovwbocVGlmq1";

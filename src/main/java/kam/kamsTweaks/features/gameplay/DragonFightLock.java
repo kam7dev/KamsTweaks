@@ -2,6 +2,7 @@ package kam.kamsTweaks.features.gameplay;
 
 import kam.kamsTweaks.KamsTweaks;
 import kam.kamsTweaks.features.Feature;
+import kam.kamsTweaks.managers.KTPerms;
 import kam.kamsTweaks.utils.Config;
 import kam.kamsTweaks.managers.KTStrings;
 import net.kyori.adventure.text.Component;
@@ -17,9 +18,8 @@ import org.bukkit.event.entity.EntityDamageEvent;
 public class DragonFightLock extends Feature {
     @Override
     public void setup() {
-        var cmd = new Config.BoolConfigOption("dragon-fight.enabled", "dragon-fight." + Bukkit.getWorlds().get(2).getUID(), false, "kamstweaks.configure");
-        cmd.config = KamsTweaks.get().getDataConfig();
-        Config.addConfig(cmd);
+        Config.bool("dragon-fight." + Bukkit.getWorlds().get(2).getUID(), false).name("dragon-fight.enabled").permission(KTPerms.ENABLE_DRAGON_FIGHT).config(KamsTweaks.get().getDataConfig()).build().add();
+        Config.bool("dragon-fight-lock.enabled", true).build().add();
     }
 
     @EventHandler
