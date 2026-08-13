@@ -42,7 +42,7 @@ public class Spawn extends Feature {
                             return Command.SINGLE_SUCCESS;
                         }
                         if (handler.onCooldown.containsKey(player)) {
-                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_COOLDOWN, Component.text(handler.onCooldown.get(player)).color(NamedTextColor.RED)).color(NamedTextColor.GOLD));
+                            sender.sendMessage(KTStrings.getFor(KTStrings.TP_COOLDOWN, Component.text(handler.onCooldown.get(player))).color(NamedTextColor.RED));
                             return Command.SINGLE_SUCCESS;
                         }
                         int time = KamsTweaks.get().getConfig().getInt("teleportation.timer");
