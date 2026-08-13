@@ -197,6 +197,11 @@ public class TPA extends Feature {
         commands.registrar().register(Commands.literal("tpa")
                 .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_TPA))
                 .then(Commands.argument("player", ArgumentTypes.player()).executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, KTStrings.getFor(KTStrings.TPA)));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
                         if (PVP.instance.inCombat.containsKey(p.getUniqueId())) {
@@ -215,6 +220,11 @@ public class TPA extends Feature {
         commands.registrar().register(Commands.literal("tpahere")
                 .requires(source -> KTPerms.hasPermission(source, KTPerms.TP_TPA_HERE))
                 .then(Commands.argument("player", ArgumentTypes.player()).executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, KTStrings.getFor(KTStrings.TPA)));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
                         if (PVP.instance.inCombat.containsKey(p.getUniqueId())) {
@@ -232,6 +242,11 @@ public class TPA extends Feature {
                 })).build());
         commands.registrar().register(Commands.literal("tpaccept")
                 .executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, KTStrings.getFor(KTStrings.TPA)));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
                         if (PVP.instance.inCombat.containsKey(p.getUniqueId())) {
@@ -248,6 +263,11 @@ public class TPA extends Feature {
                 }).build());
         commands.registrar().register(Commands.literal("tpdecline")
                 .executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, KTStrings.getFor(KTStrings.TPA)));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
                         if (PVP.instance.inCombat.containsKey(p.getUniqueId())) {
@@ -264,6 +284,11 @@ public class TPA extends Feature {
                 }).build());
         commands.registrar().register(Commands.literal("tpcancel")
                 .executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, KTStrings.getFor(KTStrings.TPA)));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
                         TPARequest req = tpas.get(p);
@@ -279,6 +304,11 @@ public class TPA extends Feature {
                 }).build());
         commands.registrar().register(Commands.literal("tpauto")
                 .executes(ctx -> {
+                    CommandSender sender = ctx.getSource().getSender();
+                    if (!KamsTweaks.get().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, KTStrings.getFor(KTStrings.TPA)));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     Entity exec = ctx.getSource().getExecutor();
                     if (exec instanceof Player p) {
                         UUID playerUUID = p.getUniqueId();
@@ -297,6 +327,11 @@ public class TPA extends Feature {
         commands.registrar().register(Commands.literal("tpblock")
                 .then(Commands.argument("player", ArgumentTypes.player())
                         .executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            if (!KamsTweaks.get().getConfig().getBoolean("teleportation.tpa.enabled", true)) {
+                                sender.sendMessage(KTStrings.getFor(KTStrings.DISABLED_SINGULAR, KTStrings.getFor(KTStrings.TPA)));
+                                return Command.SINGLE_SUCCESS;
+                            }
                             Entity exec = ctx.getSource().getExecutor();
                             if (exec instanceof Player p) {
                                 UUID playerUUID = p.getUniqueId();
