@@ -42,7 +42,7 @@ public class MiniMessageInterpreter extends Names.NameInterpreter{
 
     @Override
     public NameData interpret(@NonNull ConfigurationSection sect, @NonNull OfflinePlayer who) {
-        var name = sect.getString("name");
+        var name = sect.getString("mm");
         if (name == null) return null;
         return new NameData(getTypeId(), Component.text().append(mm.deserialize(name)).build().hoverEvent(HoverEvent.showText(Component.text(Objects.requireNonNullElse(who.getName(), "Unknown")))));
     }
