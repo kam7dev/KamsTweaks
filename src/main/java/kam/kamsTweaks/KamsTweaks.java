@@ -122,7 +122,7 @@ public final class KamsTweaks extends JavaPlugin {
         Config.bool("ext.discordsrv.enabled", true).requiresRestart(true).build().add();
         Config.string("ext.discordsrv.chat-filter.channel-id").requiresRestart(true).build().add();
         Config.string("ext.discordsrv.chat-filter.role-id").requiresRestart(true).build().add();
-        if (Config.getBool("ext.discordsrv.enabled", true)) SRVHelper.init();
+        if (Config.getBool("ext.discordsrv.enabled", true) && getServer().getPluginManager().isPluginEnabled("DiscordSRV")) SRVHelper.init();
 
         Config.bool("ext.geyser.enabled", true).requiresRestart(true).build().add();
         Config.bool("ext.geyser.kamstweaks-item", true).requiresRestart(true).build().add();

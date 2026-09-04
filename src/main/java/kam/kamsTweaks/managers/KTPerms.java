@@ -39,7 +39,7 @@ public enum KTPerms {
     TP_WARP_ADD("kamstweaks.teleportation.warp.add", "Add warps", PermissionDefault.OP),
     TP_HOME("kamstweaks.teleportation.home", "Use homes", PermissionDefault.TRUE),
     TP_TPA_HERE("kamstweaks.teleportation.tpa.here", "Request to teleport other players to them", PermissionDefault.TRUE),
-    TP_TPA("kamstweaks.teleportation.tpa", "Request to teleport to other players", PermissionDefault.FALSE, Map.of(TP_TPA_HERE, true)),
+    TP_TPA("kamstweaks.teleportation.tpa", "Request to teleport to other players", PermissionDefault.TRUE, Map.of(TP_TPA_HERE, true)),
     TP("kamstweaks.teleportation", "Use the teleportation features", PermissionDefault.TRUE, Map.of(
             TP_BACK, true,
             TP_SPAWN, true,
