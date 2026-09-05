@@ -880,7 +880,7 @@ public class LandClaims implements Listener {
                 // owner
                 if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
                     if (config.testMode) Claims.get().messageTest((Entity) who);
-                    else return OptBool.Default;
+                    else return OptBool.True;
                 }
             }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
@@ -921,7 +921,7 @@ public class LandClaims implements Listener {
                 // owner
                 if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
                     if (config.testMode) Claims.get().messageTest((Entity) who);
-                    else return OptBool.Default;
+                    else return OptBool.True;
                 }
             }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
@@ -954,7 +954,7 @@ public class LandClaims implements Listener {
                 // owner
                 if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
                     if (config.testMode) Claims.get().messageTest((Entity) who);
-                    else return OptBool.Default;
+                    else return OptBool.True;
                 }
             }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
@@ -983,10 +983,12 @@ public class LandClaims implements Listener {
             {
                 for (var perm : perms) {
                     var has = hasPermissionNoFallback(who, perm);
+                    Logger.info("Has Permission {}: {}", perm, has);
                     if (has != OptBool.Default) return new MPRes(has == OptBool.True, perm.label);
                 }
                 var has = hasPermissionNoFallback(who, gen);
                 if (has != OptBool.Default) return new MPRes(has == OptBool.True, gen.label);
+                Logger.info("Has Permission {}: {}", gen, has);
             }
             // Default Entity
             if (!(who instanceof OfflinePlayer)) {
@@ -1003,10 +1005,13 @@ public class LandClaims implements Listener {
 
             for (var perm : perms) {
                 var has = defaultPerms.getBoolPermission(perm);
+                Logger.info("Default Has Permission {}: {}", perm, has);
                 if (has != OptBool.Default) {
                     return new MPRes(has == OptBool.True, perm.label);
                 }
             }
+
+            Logger.info("Default Has Permission {}: {}", gen, defaultPerms.getBoolPermission(gen));
 
             return new MPRes(defaultPerms.getBoolPermission(gen) == OptBool.True, gen.label);
         }

@@ -672,7 +672,7 @@ public class EntityClaims {
                 // owner
                 if (getManagementType(plr) == Claims.ManagementType.Owner || getManagementType(plr) == Claims.ManagementType.Trusted) {
                     if (config.testMode) Claims.get().messageTest((Entity) who);
-                    else return OptBool.Default;
+                    else return OptBool.True;
                 }
             }
             else if (who instanceof Entity e) uuid = e.getUniqueId();
