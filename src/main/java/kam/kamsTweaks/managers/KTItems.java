@@ -1,10 +1,13 @@
 package kam.kamsTweaks.managers;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Equippable;
 import io.papermc.paper.datacomponent.item.JukeboxPlayable;
@@ -19,7 +22,9 @@ import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.minecraft.commands.arguments.EntityArgument;
 import org.bukkit.*;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -152,8 +157,14 @@ public class KTItems implements Listener {
         }
     }
 
+    public static ItemStack createItem(ItemType type, int count) {
+        var ret = items.get(type).clone();
+        ret.setAmount(count);
+        return ret;
+    }
+
     public static ItemStack createItem(ItemType type) {
-        return items.get(type).clone();
+        return createItem(type, 1);
     }
 
     private static ItemType fromString(String type) {
@@ -189,9 +200,22 @@ public class KTItems implements Listener {
     public static void registerCommand(ReloadableRegistrarEvent<@NotNull Commands> commands) {
     }
 
+    private static void give(CommandSender sender, Collection<Player> players, String pre, int count) {
+        var type = fromString(pre);
+        if (type == null) {
+            sender.sendMessage(KTStrings.getFor(KTStrings.ITEM_NOT_EXIST, Component.text(pre)));
+            return;
+        }
+        var stack = KTItems.createItem(type, count);
+        players.forEach(player -> player.getInventory().addItem(stack.clone()));
+        sender.sendMessage(KTStrings.getFor(KTStrings.ITEM_GIVE, Component.text(pre), Component.text(count)));
+    }
+
     public static void registerKTSub(LiteralArgumentBuilder<CommandSourceStack> base) {
-        base.then(Commands.literal("give").requires(source -> KTPerms.hasPermission(source, KTPerms.ITEM_GIVE)).then(Commands.argument("item", StringArgumentType.word())
-                .requires(source -> KTPerms.hasPermission(source, KTPerms.LOGGER))
+        base.then(Commands.literal("give").requires(source -> KTPerms.hasPermission(source, KTPerms.ITEM_GIVE))
+                .then(Commands.argument("players", ArgumentTypes.players())
+                .then(Commands.argument("item", StringArgumentType.word())
+                .requires(source -> KTPerms.hasPermission(source, KTPerms.ITEM_GIVE))
                 .suggests((ctx, builder) -> {
                     for (var val : ItemType.values()) {
                         if (val.key.getKey().contains(builder.getRemaining().toLowerCase()) || builder.getRemaining().isEmpty())
@@ -199,18 +223,29 @@ public class KTItems implements Listener {
                     }
                     return builder.buildFuture();
                 }).executes(ctx -> {
-                    var pre = ctx.getArgument("item", String.class);
-                    var type = fromString(pre);
                     var sender = ctx.getSource().getSender();
-                    // i dont really see a need to use translation strings for a dev command
-                    if (type == null) {
-                        sender.sendMessage(KTStrings.getFor(KTStrings.ITEM_NOT_EXIST, Component.text(pre)));
+                    if (!(ctx.getSource().getExecutor() instanceof Player player)) {
+                        sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/give")));
                         return Command.SINGLE_SUCCESS;
                     }
-                    ((Player) sender).getInventory().addItem(KTItems.createItem(type));
-                    sender.sendMessage(KTStrings.getFor(KTStrings.ITEM_GIVE, Component.text(pre)));
+                    var pre = ctx.getArgument("item", String.class);
+                    var players = ctx.getArgument("players", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource());
+                    give(sender, players, pre, 1);
                     return Command.SINGLE_SUCCESS;
-                })));
+                }).then(Commands.argument("count", IntegerArgumentType.integer())
+                        .requires(source -> KTPerms.hasPermission(source, KTPerms.ITEM_GIVE))
+                        .executes(ctx -> {
+                            var sender = ctx.getSource().getSender();
+                            if (!(ctx.getSource().getExecutor() instanceof Player player)) {
+                                sender.sendMessage(KTStrings.getFor(KTStrings.PLAYERS_ONLY, Component.text("/give")));
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            var pre = ctx.getArgument("item", String.class);
+                            var players = ctx.getArgument("players", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource());
+                            var count = ctx.getArgument("count", Integer.class);
+                            give(sender, players, pre, count);
+                            return Command.SINGLE_SUCCESS;
+                        })))));
     }
 
     private static final String PACK_ID = "1V21rNSU933OJpMYJrVIbovwbocVGlmq1";

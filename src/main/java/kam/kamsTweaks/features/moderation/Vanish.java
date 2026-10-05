@@ -1,6 +1,7 @@
 package kam.kamsTweaks.features.moderation;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver;
@@ -113,6 +114,12 @@ public class Vanish extends Feature {
                     sender.sendMessage(KTStrings.getFor(UserDataManager.get(plr.getUniqueId(), "vanished", false) ? KTStrings.VANISH_STATUS_V : KTStrings.VANISH_STATUS_U));
                     return Command.SINGLE_SUCCESS;
                 }).build());
+
+        commands.registrar().register(Commands.literal("serversay").requires(source -> KTPerms.hasPermission(source, KTPerms.VANISH))
+                .then(Commands.argument("message", StringArgumentType.greedyString()).executes(ctx -> {
+                    Bukkit.getServer().broadcast(Component.translatable("chat.type.announcement", Component.text("Server"), Component.text(ctx.getArgument("message", String.class))));
+                    return 1;
+                })).build());
     }
 
     @EventHandler
@@ -132,15 +139,6 @@ public class Vanish extends Feature {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onChat(AsyncChatEvent event) {
-        if (!Config.getBool("staff.vanish.enabled", true)) return;
-        if (UserDataManager.get(event.getPlayer().getUniqueId(), "vanished", false)) {
-            event.setCancelled(true);
-            Bukkit.broadcast(Component.text("[Server] ").append(event.message()));
-        }
-    }
-
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         if (!Config.getBool("staff.vanish.enabled", true)) return;
@@ -157,7 +155,7 @@ public class Vanish extends Feature {
     public void setVanished(@NonNull OfflinePlayer who, CommandSender sender, boolean isVanished) {
         if (!Config.getBool("staff.vanish.enabled", true)) return;
         assert who.getName() != null;
-        if (UserDataManager.get(who.getUniqueId(), "vanished", false) == isVanished) return;
+        if (UserDataManager.get(who.getUniqueId(), "vanished", false) == isVanished) isVanished = !isVanished;
         UserDataManager.put(who.getUniqueId(), "vanished", isVanished);
         List<Player> ignore = new ArrayList<>();
         if (sender instanceof Player p) ignore.add(p);

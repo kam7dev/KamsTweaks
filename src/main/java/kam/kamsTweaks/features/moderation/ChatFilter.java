@@ -66,7 +66,7 @@ public class ChatFilter extends Feature {
                 Logger.handleException(e);
                 str = KamsTweaks.get().getDataConfig().getString("filter-cache." + name, "");
             }
-            List<String> terms = Arrays.stream(str.split("[,\n]")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+            List<String> terms = Arrays.stream(String.join("|", str.split(", ")).split("[,\n]")).map(String::trim).filter(s -> !s.isEmpty()).toList();
             String regex = ("\\b(" + String.join("|", terms) + ")\\b").replace("*", ".*");
             pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
         }
@@ -86,7 +86,7 @@ public class ChatFilter extends Feature {
                     filter = new Filter(str, cfg.getString("chat-filters." + str + ".message", "Your message contains words banned by the server."), cfg.getString("chat-filters." + str + ".fetch.link", ""));
                     filter.fetch();
                 } else {
-                    List<String> terms = Arrays.stream(cfg.getString("chat-filters." + str + ".regex", "").split("[,\n]")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+                    List<String> terms = Arrays.stream(String.join("|", cfg.getString("chat-filters." + str + ".regex", "").split(", ")).split("[,\n]")).map(String::trim).filter(s -> !s.isEmpty()).toList();
                     String regex = ("\\b(" + String.join("|", terms) + ")\\b").replace("*", ".*");
                     if (cfg.getString("chat-filters." + str + ".regex", "").isEmpty()) return;
                     filter = new Filter(str, cfg.getString("chat-filters." + str + ".message", "Your message contains words banned by the server."), Pattern.compile(regex, Pattern.CASE_INSENSITIVE));

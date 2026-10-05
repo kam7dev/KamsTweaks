@@ -44,10 +44,8 @@ public class Claims extends Feature {
         landClaims.setup(this);
         entityClaims.setup(this);
 
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), () -> {
-            hasMessaged.clear();
-            hasMessagedTM.clear();
-        }, 1, 1);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), hasMessaged::clear, 1, 1);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(KamsTweaks.get(), hasMessagedTM::clear, 100, 100);
     }
 
     @Override

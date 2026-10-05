@@ -63,7 +63,7 @@ public class VirtualInsanity extends Feature {
             var exec = ctx.getSource().getExecutor();
             if (!(exec instanceof Player plr)) return Command.SINGLE_SUCCESS;
             if (onCooldown.containsKey(plr.getUniqueId())) {
-                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.COOLDOWN, Component.text(onCooldown.get(plr.getUniqueId()))));
+                ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.COOLDOWN, Component.text("/jamiroquai"), Component.text(onCooldown.get(plr.getUniqueId()))));
                 return Command.SINGLE_SUCCESS;
             }
             cooldown(plr);

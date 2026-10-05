@@ -321,10 +321,10 @@ public enum KTStrings {
                 return Component.translatable("kamstweaks.item.tag.waxed", "Waxed", args);
             }
             case ITEM_GIVE -> {
-                return Component.translatable("kamstweaks.item.give", "Item %s doesn't exist.", args);
+                return Component.translatable("kamstweaks.item.give", "Gave %s (%s).", args);
             }
             case ITEM_NOT_EXIST -> {
-                return Component.translatable("kamstweaks.item.nonexistent", "Gave %s.", args);
+                return Component.translatable("kamstweaks.item.nonexistent", "Item %s doesn't exist.", args);
             }
             case TOO_EXPENSIVE_FIX -> {
                 return Component.translatable("kamstweaks.item.hint.too_expensive_fix", "If the anvil says too expensive, try installing %s and try again. If you already have the mod installed you can ignore this.", args);

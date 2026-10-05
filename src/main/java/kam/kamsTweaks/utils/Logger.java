@@ -30,7 +30,7 @@ public class Logger {
         } catch(Exception e) {
             Logger.error("Your log level ({}) seems to be invalid. Please make sure it's either 'debug', 'info', 'warn', or 'error'.", strLevel);
         }
-        Config.string("logger.log-level", "info", new String[]{"debug", "info", "warn", "error"}).callback(Logger::setLevel).build().add();
+        Config.string("logger.log-level", "info", new String[]{"debug", "info", "warn", "error"}).freeType(false).callback(Logger::setLevel).build().add();
         initialized = true;
         logger = ComponentLogger.logger("KamsTweaks");
     }

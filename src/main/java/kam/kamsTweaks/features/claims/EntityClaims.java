@@ -387,7 +387,7 @@ public class EntityClaims {
         var max = KamsTweaks.get().getConfig().getInt("entity-claims.max-claims", 1000);
         int count = 0;
         for (var c : claims.values()) {
-            if (c.owner == null || (!c.owner.getUniqueId().equals(who.getUniqueId()))) {
+            if (c.owner != null && c.owner.getUniqueId().equals(who.getUniqueId())) {
                 count += 1;
             }
         }

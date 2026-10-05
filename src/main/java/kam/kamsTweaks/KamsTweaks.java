@@ -53,6 +53,7 @@ public final class KamsTweaks extends JavaPlugin {
         features.add(new UserKeepInv());
         features.add(new SilkSpawner());
         features.add(new SeedDispenser());
+        features.add(new NoTooExpensive());
         features.add(new VirtualInsanity());
         features.add(new DragonFightLock());
         features.add(new TeleportFeatures());
@@ -103,6 +104,10 @@ public final class KamsTweaks extends JavaPlugin {
                 KamsTweaks.get().save();
                 ctx.getSource().getSender().sendMessage(KTStrings.getFor(KTStrings.SAVED).color(NamedTextColor.GREEN));
                 return Command.SINGLE_SUCCESS;
+            }).requires(source -> KTPerms.hasPermission(source, KTPerms.SAVE))).then(Commands.literal("reload-config").executes(ctx -> {
+                reloadConfig();
+                ctx.getSource().getSender().sendMessage("Reloaded config."); // I am quite honestly too lazy to make this use a translation string
+                return Command.SINGLE_SUCCESS;
             }).requires(source -> KTPerms.hasPermission(source, KTPerms.SAVE)));
             for (var feature : features) {
                 try {
@@ -113,6 +118,7 @@ public final class KamsTweaks extends JavaPlugin {
             }
             Config.registerKTSub(base);
             Logger.registerKTSub(base);
+            KTItems.registerKTSub(base);
             commands.registrar().register(base.build(), List.of("kt"));
             KTItems.registerCommand(commands);
         });

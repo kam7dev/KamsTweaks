@@ -240,7 +240,7 @@ public class Config {
 
     public static class StringOption extends ConfigOption {
         public String[] options = new String[]{};
-        public boolean freeType = false;
+        public boolean freeType = true;
         public String defaultValue = "";
         public Consumer<String> callback;
 
@@ -281,7 +281,7 @@ public class Config {
 
         public static class Builder extends ConfigOption.Builder<Builder> {
             public String[] options = new String[]{};
-            public boolean freeType = false;
+            public boolean freeType = true;
             String defaultValue = "";
             Consumer<String> callback;
 

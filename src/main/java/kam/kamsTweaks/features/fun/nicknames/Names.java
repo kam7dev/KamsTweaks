@@ -12,6 +12,8 @@ import kam.kamsTweaks.utils.Logger;
 import kam.kamsTweaks.*;
 import kam.kamsTweaks.managers.KTStrings;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.TranslationArgument;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
@@ -22,6 +24,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
@@ -176,6 +179,20 @@ public class Names extends Feature {
         var comp = getName(player);
         player.displayName(comp);
         player.playerListName(comp);
+
+        if (!(event.joinMessage() instanceof TranslatableComponent translatable)) return;
+        var args = new ArrayList<>(translatable.arguments());
+        args.set(0, TranslationArgument.component(comp));
+        event.joinMessage(translatable.arguments(args));
+    }
+
+    @EventHandler
+    public void onLeave(PlayerQuitEvent event) {
+        if (!KamsTweaks.get().getConfig().getBoolean("nicknames.enabled", true)) return;
+        if (!(event.quitMessage() instanceof TranslatableComponent translatable)) return;
+        var args = new ArrayList<>(translatable.arguments());
+        args.set(0, TranslationArgument.component(getName(event.getPlayer())));
+        event.quitMessage(translatable.arguments(args));
     }
 
     public static Component getName(@NotNull OfflinePlayer player) {

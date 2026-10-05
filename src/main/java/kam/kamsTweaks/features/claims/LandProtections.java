@@ -584,11 +584,13 @@ public class LandProtections implements Listener {
                 return;
             }
         }
+        Logger.info("A");
         if (!(entity instanceof Hangable || entity instanceof Hanging || entity instanceof ArmorStand
                 || entity instanceof Boat || entity instanceof Minecart))
             return;
         LandClaim claim = claims.getClaim(e.getEntity().getLocation());
         if (claim == null) return;
+        Logger.info("B");
         LandClaim origin = null;
         if (entity.getPersistentDataContainer().has(new NamespacedKey("kamstweaks", "origin"))) {
             Location loc = LocationUtils.deserializeBlockPos(Objects.requireNonNull(entity.getPersistentDataContainer().get(new NamespacedKey("kamstweaks", "origin"), PersistentDataType.STRING)));
@@ -597,16 +599,16 @@ public class LandProtections implements Listener {
         if (entity instanceof ItemFrame frame && !frame.getItem().isEmpty()) {
             var res = claim.hasPermissions(damager, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE);
             if (!res.result()) {
-                if (origin == null || !origin.hasPermissions(entity, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE).result())  {
-                    message(entity, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
+                if (origin == null || !origin.hasPermissions(damager, LandPermission.BLOCK_BREAK, AdvancedLandPermission.ITEM_FRAME_ITEM_TAKE).result())  {
+                    message(damager, KTStrings.getFor(KTStrings.LC_NO_PERM, res.message(), claim.getOwnerName()));
                     e.setCancelled(true);
                 }
             }
         } else {
             var perm = LandPermission.BLOCK_BREAK;
             if (!claim.hasPermission(damager, perm)) {
-                if (origin == null || !origin.hasPermission(entity, perm)) {
-                    message(entity, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
+                if (origin == null || !origin.hasPermission(damager, perm)) {
+                    message(damager, KTStrings.getFor(KTStrings.LC_NO_PERM, perm.label, claim.getOwnerName()));
                     e.setCancelled(true);
                 }
             }
